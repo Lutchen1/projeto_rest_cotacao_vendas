@@ -26,7 +26,6 @@ Data       	|Desenvolvedor    |Motivo
 //--------------------------------------------------------------------------------------- 
 User Function PIWSCOTV()
 
-
 Return()
 
 //-----------------------------------------------------------------------------------------------
@@ -1101,6 +1100,9 @@ If cCampo == "ZD_PRODUTO"
 
 	For nX := 1 to Len(aDadAux)
 
+		//--Reseta variavel para buscar imposto por item.
+		lBscImp := .T.
+
 		//Carrega variáveis que sao necessárias para o recalculo.
 		FCarVar(nX,@aDadAux)
 
@@ -1180,6 +1182,9 @@ If cCampo == "ZD_PREPROD"
 
 	For nX := 1 to Len(aDadAux)
 
+		//--Reseta variavel para buscar imposto por item.
+		lBscImp := .T.
+
 		//Carrega variáveis que sao necessárias para o recalculo.
 		FCarVar(nX,@aDadAux)
 
@@ -1243,6 +1248,9 @@ EndIf
 If cCampo == "ZD_QUANT1" //.And. AllTrim(cUMPad) == AllTrim(cQtdUM1)
 
 	For nX := 1 to Len(aDadAux)
+		
+		//--Reseta variavel para buscar imposto por item.
+		lBscImp := .T.
 
 		//Carrega variáveis que sao necessárias para o recalculo.
 		FCarVar(nX,@aDadAux)
@@ -1336,6 +1344,7 @@ If cCampo == "ZD_QUANT1" //.And. AllTrim(cUMPad) == AllTrim(cQtdUM1)
 			
 			//--Função que atualiza array com as variaveis já recalculadas.
 			FAtuArr(nX,@aDadAux)
+
 		EndIf
 	Next nX
 EndIf
@@ -1344,6 +1353,9 @@ EndIf
 If cCampo == "ZD_QUANT2" //.And. AllTrim(cUMPad) == AllTrim(cQtdUM2)
 
 	For nX := 1 to Len(aDadAux)
+
+		//--Reseta variavel para buscar imposto por item.
+		lBscImp := .T.
 
 		//Carrega variáveis que sao necessárias para o recalculo.
 		FCarVar(nX,@aDadAux)
@@ -1445,6 +1457,9 @@ EndIf
 If cCampo $ "ZD_CUSTUSU"
 
 	For nX := 1 to Len(aDadAux)
+
+		//--Reseta variavel para buscar imposto por item.
+		lBscImp := .T.
 
 		//Carrega variáveis que sao necessárias para o recalculo.
 		FCarVar(nX,@aDadAux)
@@ -1734,26 +1749,12 @@ Função que atualiza array com as variaveis já recalculadas.
 //-------------------------------------------------------------------
 Static Function FAtuArr(n_REG,aDadAux)
 
-	//Local nXi := 0
-	//-- Carrega produto
-	/*aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_ITEM")})][2] := cIteAtu 
-	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PRODUTO")})][2] := cCodPrd 
-	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PREPROD")})][2] := cPrePrd 
-	If !Empty(cCodPrd)
-		cDscPrd := POSICIONE("SB1",1,xFilial("SB1")+AvKey(cCodPrd,"B1_COD"),"B1_DESC")
-		cQtdUM1 := POSICIONE("SB1",1,xFilial("SB1")+AvKey(cCodPrd,"B1_COD"),"B1_UM")
-		cQtdUM2 := POSICIONE("SB1",1,xFilial("SB1")+AvKey(cCodPrd,"B1_COD"),"B1_SEGUM")
-	Else
-		cDscPrd := POSICIONE("SZA",1,xFilial("SZA")+AvKey(cPrePrd,"B1_COD"),"ZA_DESCRIC")
-		cQtdUM1 := POSICIONE("SZA",1,xFilial("SZA")+AvKey(cPrePrd,"B1_COD"),"ZA_UM")
-		cQtdUM2 := POSICIONE("SZA",1,xFilial("SZA")+AvKey(cPrePrd,"B1_COD"),"ZA_SEGUM")
-	EndIf
-	nQtdUM1 := aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT1")})][2]
-	nQtdUM2 := aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT2")})][2]
-	cUMPad	:= aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_UMPAD")})][2]
-	aIteUM	:= {cQtdUM1,cQtdUM2}*/
 
-	//-- Carrega variaveis de formação de preço default
+	//-- Atualiza variáveis de quantidade
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT1")})][2] := nQtdUM1 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT2")})][2] := nQtdUM2 
+
+	//-- Atualiza variaveis de formação de preço default
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_AUTDDEF")})][2] := nDefAut  
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CUSTDEF")})][2] := nDefCst  
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CUSDDEF")})][2] := nDeDCst  
@@ -1779,7 +1780,7 @@ Static Function FAtuArr(n_REG,aDadAux)
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABDDEF")})][2] := nDeDMBR  
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALDDEF")})][2] := nDEDMLQ  
 
-	//-- Carrega variaveis de formação de preço de usuário
+	//-- Atualiza variaveis de formação de preço de usuário
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_AUTDUSU")})][2] := nUsuAut 
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CUSTUSU")})][2] := nUsuCst 
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MARGUSU")})][2] := nUsuMrg 
@@ -1807,24 +1808,19 @@ Static Function FAtuArr(n_REG,aDadAux)
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABDUSM")})][2] := nUsDMBM 
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSM")})][2] := nUsuMLM 
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALDUSM")})][2] := nUsDMLM 
-
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CALCMRC")})][2] := cClcCRN 
-
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PROCESS")})][2] := cProcess //--23/04/2020 - Wemerson Souza - Variavel para tratar Processo de Cotação de Venda
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PROCAPV")})][2] := cProcApv //--23/04/2020 - Wemerson Souza - Variavel para tratar Processo de Cotação de Venda
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_BLODIR")})][2] := cBloDir //--AS - Aleluia - Bloqueio Diretoria
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MSGDIR")})][2] := cBloDir //--AS - Aleluia - Msg. de Bloqueio Dir
-
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RDEF")})][2] := nDef2PRE //--Preço Sugerido Defaut Real UM2
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSU")})][2] := nUsu2PRE //--Preço Sugerido Usuario Real UM2
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2DDEF")})][2] := nDef2PUS //--Preço Sugerido Defaut Dolar UM2
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2DUSU")})][2] := nUsu2PUS //--Preço Sugerido Usuario Dolar UM2
-	
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2DDEM")})][2] := nDeDPRM2 // -- Preco Minimo Default Dolar UM2
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2DUSM")})][2] := nUsDPRM2 // -- Preco Minimo Usuario Dolar UM2
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RDEM")})][2] := nDefPRM2 // -- Preco Minimo Default Real UM2	
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSM")})][2] := nUsuPRM2 // -- Preco Minimo Usuario Real UM2	
-
 	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CODTABC")})][2] := cCodTabCot // -- Codigo Tabela Comissao
 	
 
