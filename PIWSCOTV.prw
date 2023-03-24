@@ -44,37 +44,13 @@ Data       	|Desenvolvedor    |Motivo
 ------------+-----------------+--------------------------------------------------------------
 /*/
 //-----------------------------------------------------------------------------------------------
-/*WSRESTFUL cadastraOrcamento DESCRIPTION "Serviço REST - Cadastra Orcamento" FORMAT "application/json;charset=UTF-8,text/hml"
+WSRESTFUL cadastraOrcamento DESCRIPTION "Serviço REST - Cadastra Orcamento" FORMAT "application/json;charset=UTF-8,text/hml"
 		
-	WSDATA cgc 		AS STRING OPTIONAL
-	WSDATA cgcUser  AS STRING OPTIONAL	
-	WSMETHOD POST DESCRIPTION "Recebe dados e cadastra orcamentos" WSSYNTAX "/wspontoini/cadastraOrcamento?cgc={param},cgcUser={param}" PATH "wspontoini/cadastraOrcamento"
+	WSDATA c_fil 		AS STRING OPTIONAL
+	WSMETHOD POST DESCRIPTION "Recebe dados e cadastra/altera orcamentos" WSSYNTAX "/cadastraOrcamento?c_fil={param}" PATH "cadastraOrcamento"
 
-END WSRESTFUL*/
+END WSRESTFUL
 
-//-----------------------------------------------------------------------------------------------
-/*/
-{Protheus.doc} alteraOrcamento
-Web Service Rest para comunicação com o App de portal do cliente
-@author		.iNi Sistemas
-@since     	01/04/2022
-@version  	P.12
-@param 		Nenhum
-@return    	Nenhum
-@obs        Serviço REST para ambiente WEB
-Alterações Realizadas desde a Estruturação Inicial
-------------+-----------------+--------------------------------------------------------------
-Data       	|Desenvolvedor    |Motivo
-------------+-----------------+--------------------------------------------------------------
-/*/
-//-----------------------------------------------------------------------------------------------
-/*WSRESTFUL alteraOrcamento DESCRIPTION "Serviço REST - Altera Orcamento" FORMAT "application/json;charset=UTF-8,text/hml"
-		
-	WSDATA cgc 		AS STRING OPTIONAL
-	WSDATA cgcUser  AS STRING OPTIONAL	
-	WSMETHOD POST DESCRIPTION "Recebe dados e altera orcamentos" WSSYNTAX "/wspontoini/alteraOrcamento?cgc={param},cgcUser={param}" PATH "wspontoini/cadastraOrcamento"
-
-END WSRESTFUL*/
 
 //-----------------------------------------------------------------------------------------------
 /*/
@@ -175,7 +151,7 @@ Data       	|Desenvolvedor    |Motivo
 ------------+-----------------+---------------------------------------------------------
 /*/
 //---------------------------------------------------------------------------------------
-User Function fCadOrcamento(oResponse, oParseJSON, cErros, cCgcEmp,cOperad, cNumOrc, cCodVend)
+/*User Function fCadOrcamento(oResponse, oParseJSON, cErros, cCgcEmp,cOperad, cNumOrc, cCodVend)
 
 	//Local aLog 		:= {}
 	Local aCabec 	:= {}
@@ -299,7 +275,7 @@ User Function fCadOrcamento(oResponse, oParseJSON, cErros, cCgcEmp,cOperad, cNum
 	//--Restuara area
 	Aeval(aAreaOld,{|x| RestArea(x)})
 	
-Return(lRet)
+Return(lRet)*/
 
 
 //-----------------------------------------------------------------------------
@@ -432,7 +408,7 @@ Data       Programador     Motivo
 	//--Resposta ao Json
 	::SetResponse(oJson:toJSON())
 
-Return(lRet)*/
+Return(lRet)
 
 
 //--Função de reclock.
@@ -502,47 +478,41 @@ Static Function zLimpaEsp(cCampo)
     cConteudo += Space(nTamOrig - Len(cConteudo))
 	cConteudo := FwNoAccent(cConteudo)
 
-Return(cConteudo)
+Return(cConteudo)*/
 
 
-
-
-User Function fTestCot()
+WSMETHOD POST WSRECEIVE c_fil WSSERVICE cadastraOrcamento
+//User Function fTestCot()
 
 	Local aArea     := {}
     Local cTabela   := "SZC"
 	Local cTabIt   := "SZD"
-    Local aDados    := {}
+    Local aCabec    := {}
 	Local aItens    := {}
 	Local aItAux := {}
-    Local cTransact := ""
-    Local nRetorno  := 0
 	Local aFields := {}
 	Local aCPOS := {}
 	Local nX := 0
 	Local nY := 0
-	Local nXz := 0
-	Local nXi := 0
 	Local oJson := JsonObject():New()
 	Local cRet := ""
 	Local lRet := .T.
+	Local lAlt := .F.
 	Local aRet := {}
-	Local nFilial := 0
-	Local aDadAux := {}
-	Local nPosIte := 0
     Private lMsErroAuto := .F.
 	Private aTELA[0][0],aGETS[0]
 
 	RpcSetEnv("01","010001")
 
 	cBody := '{ '
+	cBody += '"ZC_CODIGO" : "002345051",'
 	cBody += '"ZC_CLIENTE" : "000007",'
 	cBody += '"ZC_LOJACLI" : "01",'
 	cBody += '"ZC_TIPFRET" : "C",'
 	cBody += '"ZC_DTVALID" : "'+dtoc(DDATABASE+20)+'",'
 	cBody += '"ZC_DTINIFO" : "'+dtoc(DDATABASE)+'",'
-	cBody += '"ZC_DTFIMFO" : "'+dtoc(DDATABASE+1)+'",'	
-	cBody += '"ZC_CONDPAG" : "001",'
+	cBody += '"ZC_DTFIMFO" : "'+dtoc(DDATABASE+2)+'",'	
+	cBody += '"ZC_CONDPAG" : "002",'
 	cBody += '"ZC_MOEDA" : "1",'
 	cBody += '"ZC_VEND1" : "000557",'		
 	cBody += '"ZC_VEND2" : "000557",'	
@@ -571,30 +541,35 @@ User Function fTestCot()
 	cRet := oJson:FromJson(cBody)
 	
 	If ValType(cRet) == "C"
-		//("Falha ao transformar texto em objeto json. Erro: " + ret)
+		SetRestFault(403, "Falha ao transformar texto em objeto json. Erro: " + cRet)
 		lRet := .F.
 	endif
-
 
 	//--Monta Array com todos os campos da SZC (CABEÇALHO)
 	aFields := FWSX3Util():GetAllFields( cTabela , .F. ) //-- Retornará todos os campos presentes na SX3 de contexto real do alias.
 	For nX := 1 to Len(aFields)
    		If X3Uso(GetSx3Cache(aFields[nX],"X3_USADO"))
+
+			//IF AllTrim(aFields[nX]) != "ZC_CODIGO"
 			AADD(aCPOS,AllTrim(aFields[nX]))
+			//EndIf
 
 			//Adiciona os campos para o ExecAuto de acordo com json passado.
 			IF VALTYPE(oJson[aFields[nX]]) != "U"
 				If GetSx3Cache(aFields[nX],"X3_TIPO") == "D"
-					aAdd(aDados, {aFields[nX], ctod(oJson[aFields[nX]]), Nil})
+					aAdd(aCabec, {aFields[nX], ctod(oJson[aFields[nX]]), Nil})
 				Else
-					aAdd(aDados, {aFields[nX], oJson[aFields[nX]], Nil})
+					aAdd(aCabec, {aFields[nX], oJson[aFields[nX]], Nil})
+					//Se for passado o campo código é alteração.
+					If AllTrim(GetSx3Cache(aFields[nX],"X3_CAMPO")) == "ZC_CODIGO"
+						lAlt := .T.
+					EndIf
 				EndIf
 			EndIf
 
 		EndIf
 	Next nX
-	aAdd(aDados, {"ZC_STATUS", "I", Nil})
-
+	aAdd(aCabec, {"ZC_STATUS", "I", Nil})
 
 	//--Monta Array com todos os campos da SZD (ITENS)
 	aFields := FWSX3Util():GetAllFields( cTabIt , .F. ) //-- Retornará todos os campos presentes na SX3 de contexto real do alias.
@@ -612,93 +587,190 @@ User Function fTestCot()
 		aItAux := {}
 	Next nX
 
-    //Inicializa a transação
+	//Chama Execauto da cotação de vendas. Par1=Cabeçalho; Par2=Itens; par3=Campos da tabela para validar; par4=Opçoes: 3-inclusão; 4-Alteração
+	aRet := U_F_ExCotV(aCabec,aItens,aCPOS,iif(lAlt,4,3))
+
+	If aRet[1]
+		//--Retorno Erro
+		SetRestFault(403, StrTran( aRet[2], CHR(13)+CHR(10), " " ))
+		lRet := .F.
+	Else
+		//--Retorno ao json
+		::SetResponse(aRet[3])
+		lRet := .T.
+	EndIf
+
+Return(lRet)
+
+
+User Function F_ExCotV(aCabec,aItens,aCPOS,nOpc)
+
+    Local cTabela   := "SZC"
+	Local nXz := 0
+	Local nXi := 0
+	Local lAchou
+	Local cMsgErro 	:= ""
+	Local aRet := {}
+	Local nFilial := 0
+	Local aDadAux := {}
+	Local nPosIte := 0
+	Local cTransact := ""
+    Local nRetorno  := 0
+	Local lRet := .T.
+	Private oJson1 := JsonObject():New()
+	Private oJsonCot := JsonObject():New()
+	Private oJsonPrd := JsonObject():New()
+
+    //--Inicializa a transação
     Begin Transaction
-        //Joga a tabela para a memória (M->)
-        RegToMemory(;
-            cTabela,; // cAlias - Alias da Tabela
-            .T.,;     // lInc   - Define se é uma operação de inclusão ou atualização
-            .F.;      // lDic   - Define se irá inicilizar os campos conforme o dicionário
-        )
-  
-        //Se conseguir fazer a execução automática - Validação do cabeçalho.
-        If EnchAuto(;
-            cTabela,; // cAlias  - Alias da Tabela
-            aDados,;  // aField  - Array com os campos e valores
-            { || Obrigatorio( aGets, aTela ) },; // uTUDOOK - Validação do botão confirmar
-            3,;        // nOPC    - Operação do Menu (3=inclusão, 4=alteração, 5=exclusão)
-			aCPOS;
-        )
 
-			//Validação dos itens.
-			aRet :=  FValidIt(aItens,@aDadAux)
-			If aRet[1]
-
-				//Aciona a efetivação da gravação do cabeçalho.
-				nRetorno := AxIncluiAuto(;
-					cTabela,;   // cAlias     - Alias da Tabela
-					,;          // cTudoOk    - Operação do TudoOk (se usado no EnchAuto não precisa usar aqui)
-					cTransact,; // cTransact  - Operação acionada após a gravação mas dentro da transação
-					3;          // nOpcaoAuto - Operação do Menu (3=inclusão, 4=alteração, 5=exclusão)
-				)
-
-				//Aciona a efetivação da gravação dos itens.						
-				dbSelectArea("SZD")
-				nFilial := aScan(dbStruct(), {|x| "_FILIAL" $ x[1]})	//-- Procura no array a filial
-
-				For nXi := 1 to Len(aDadAux)                  			//-- FOR de 1 ateh a quantidade do numero do aDadAux
-
-					nPosIte := aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_ITEM")})
-
-
-					SZD->(dbSetOrder(1))
-					SZD->(dbGoTop())
-					lAchou := SZD->(dbSeek(xFilial("SZD")+M->ZC_CODIGO+aDadAux[nXi][nPosIte][2]))
-
-					/*If aDadAux[nXi][Len(aDadAux[nXi])][2] 	//-- Se for registro deletado
-						If lAchou							//-- Se achar o registro tem que deletar!!!
-							RecLock("SZD",.F.)           //-- Trava a tabela
-							dbDelete()
-							SZD->(MsUnlock())
-						EndIf
-						Loop         									//-- Loop da condicao For
-					EndIf*/
-
-					//-- Se achou o registro altera os dados se não inclui.
-					If lAchou
-						RecLock("SZD",.F.)
-					Else
-						RecLock("SZD",.T.)
-					EndIf
-
-					//-- Grava os campos da SZD
-					For nXz := 1 to Len(aDadAux[nXi])
-						If (nFieldPos := FieldPos(aDadAux[nXi][nXz][1])) > 0
-							FieldPut(nFieldPos, aDadAux[nXi][nXz][2])
-						Endif
-					Next nXz
-
-					//-- Grava o conteudo da filial
-					If nFilial > 0
-						FieldPut(nFilial, xFilial("SZD"))
-					Endif
-
-					SZD->(MsUnlock())
-
-				Next nXi
+		//--Validação da alteração, O da função EnchAuto retorna um erro que não indica o motivo correto.
+		If nOpc == 4
+			SZC->(dbSetOrder(1))
+			If !SZC->(dbSeek(xFilial("SZC")+ACABEC[aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZC_CODIGO" })][2]))
+				cMsgErro += "Cotação não encontrada "+"Filial: "+xFilial("SZC")+"Cotação: "+ACABEC[aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZC_CODIGO" })][2]
+				lRet := .F.
 			EndIf
-        Else
-            AutoGrLog("Falha na geração do orçamento!")
-            MostraErro()
-            DisarmTransaction()
-        EndIf
-    End Transaction
-  
+		EndIf
+
+		If lRet
+
+			//Joga a tabela para a memória (M->)
+			RegToMemory(;
+				cTabela,; // cAlias - Alias da Tabela
+				iif(nOpc==4,.F.,.T.),;     // lInc   - Define se é uma operação de inclusão ou atualização
+				.F.;      // lDic   - Define se irá inicilizar os campos conforme o dicionário
+			)
+			
+		
+			//--Se conseguir fazer a execução automática - Validação do cabeçalho.
+			If EnchAuto(;
+				cTabela,; // cAlias  - Alias da Tabela
+				aCabec,;  // aField  - Array com os campos e valores
+				{ || Obrigatorio( aGets, aTela ) },; // uTUDOOK - Validação do botão confirmar
+				nOpc,;        // nOPC    - Operação do Menu (3=inclusão, 4=alteração, 5=exclusão)
+				aCPOS;
+			)
+
+				//--Validação dos itens.
+				aRet :=  FValidIt(aItens,@aDadAux)
+				If aRet[1]
+
+					//--Aciona a efetivação da gravação do cabeçalho.
+					nRetorno := AxIncluiAuto(;
+						cTabela,;   // cAlias     - Alias da Tabela
+						,;          // cTudoOk    - Operação do TudoOk (se usado no EnchAuto não precisa usar aqui)
+						cTransact,; // cTransact  - Operação acionada após a gravação mas dentro da transação
+						nOpc,;          // nOpcaoAuto - Operação do Menu (3=inclusão, 4=alteração, 5=exclusão)
+						SZC->(recno());
+					)
+
+					//--Aciona a efetivação da gravação dos itens.						
+					dbSelectArea("SZD")
+					nFilial := aScan(dbStruct(), {|x| "_FILIAL" $ x[1]})	//-- Procura no array a filial
+
+					For nXi := 1 to Len(aDadAux)                  			//-- FOR de 1 ateh a quantidade do numero do aDadAux
+
+						nPosIte := aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_ITEM")})
+
+						SZD->(dbSetOrder(1))
+						SZD->(dbGoTop())
+						lAchou := SZD->(dbSeek(xFilial("SZD")+M->ZC_CODIGO+aDadAux[nXi][nPosIte][2]))
+
+						/*If aDadAux[nXi][Len(aDadAux[nXi])][2] 	//-- Se for registro deletado
+							If lAchou							//-- Se achar o registro tem que deletar!!!
+								RecLock("SZD",.F.)           //-- Trava a tabela
+								dbDelete()
+								SZD->(MsUnlock())
+							EndIf
+							Loop         									//-- Loop da condicao For
+						EndIf*/
+
+						//-- Se achou o registro altera os dados se não inclui.
+						If lAchou
+							RecLock("SZD",.F.)
+						Else
+							RecLock("SZD",.T.)
+						EndIf
+
+						//--Grava os campos da SZD
+						For nXz := 1 to Len(aDadAux[nXi])
+							If (nFieldPos := FieldPos(aDadAux[nXi][nXz][1])) > 0
+								FieldPut(nFieldPos, aDadAux[nXi][nXz][2])
+							Endif
+						Next nXz
+
+						//--Grava o conteudo da filial
+						If nFilial > 0
+							FieldPut(nFilial, xFilial("SZD"))
+						Endif
+
+						SZD->(MsUnlock())
+
+					Next nXi
+				Else
+					lRet := .F.
+					cMsgErro := aRet[2]
+				EndIf
+			Else            
+				//MostraErro()
+				cMsgErro := MemoRead(NomeAutoLog())
+				Ferase(NomeAutoLog())
+				DisarmTransaction()
+			EndIf
+		EndIf
+    End Transaction  
+
+	If lRet
+		SZC->(dbSetOrder(1))
+		If SZC->(dbSeek(xFilial("SZC")+ACABEC[aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZC_CODIGO" })][2]))
+
+			oJson1['status'] 		:= "200"
+			oJson1['mensagem'] 		:= "Sucesso!"	
+			oJson1['conteudo'] 		:= {}			
+			
+			oJsonCot['ZC_FILIAL'] 	= SZC->ZC_FILIAL
+			oJsonCot['ZC_CODIGO'] 	:= SZC->ZC_CODIGO
+			oJsonCot['ZC_CLIENTE'] 	:= SZC->ZC_CLIENTE
+			oJsonCot['ZC_LOJACLI'] 	:= SZC->ZC_LOJACLI
+			oJsonCot['ZC_TIPFRET'] 	:= SZC->ZC_TIPFRET
+			oJsonCot['ZC_DTVALID'] 	:= SZC->ZC_DTVALID
+			oJsonCot['ZC_DTINIFO'] 	:= SZC->ZC_DTINIFO
+			oJsonCot['ZC_DTFIMFO'] 	:= SZC->ZC_DTFIMFO
+			oJsonCot['ZC_CONDPAG'] 	:= SZC->ZC_CONDPAG
+			oJsonCot['ZC_VEND1'] 	:= SZC->ZC_VEND1
+			oJsonCot['ZC_VEND2'] 	:= SZC->ZC_VEND2
+			oJsonCot['itens'] 		:= {}		
+
+			SZD->(dbSetOrder(1))
+			If SZD->(dbSeek(xFilial("SZD")+SZC->ZC_CODIGO))
+
+				While !SZD->(Eof()) .and. SZD->ZD_FILIAL = SZC->ZC_FILIAL .and. SZC->ZD_COTACAO == SZC->ZC_CODIGO
+
+					oJsonPrd := JsonObject():New()
+					oJsonPrd['ZD_ITEM'] 	:= SZD->ZD_ITEM
+					oJsonPrd['ZD_PRODUTO'] 	:= SZD->ZD_PRODUTO
+					oJsonPrd['ZD_PV1RUSU'] 	:= SZD->ZD_PV1RUSU
+
+					Aadd(oJsonCot['itens'],oJsonPrd)
+
+					SZD->(dbSkip())
+				EndDo
+			EndIf
+
+			Aadd(oJson1['conteudo'],oJsonCot)
+
+		EndIf
+	Else
+		lErro := .T.		
+	EndIf
+
+
     FWRestArea(aArea)
 
 	RpcClearEnv()
 
-Return()
+Return({lErro,cMsgErro,oJson1})
 
 
 
@@ -1102,6 +1174,7 @@ If cCampo == "ZD_PRODUTO"
 
 		//--Reseta variavel para buscar imposto por item.
 		lBscImp := .T.
+		//nImposto := 0
 
 		//Carrega variáveis que sao necessárias para o recalculo.
 		FCarVar(nX,@aDadAux)
@@ -1184,6 +1257,7 @@ If cCampo == "ZD_PREPROD"
 
 		//--Reseta variavel para buscar imposto por item.
 		lBscImp := .T.
+		//nImposto := 0
 
 		//Carrega variáveis que sao necessárias para o recalculo.
 		FCarVar(nX,@aDadAux)
@@ -1251,6 +1325,7 @@ If cCampo == "ZD_QUANT1" //.And. AllTrim(cUMPad) == AllTrim(cQtdUM1)
 		
 		//--Reseta variavel para buscar imposto por item.
 		lBscImp := .T.
+		//nImposto := 0
 
 		//Carrega variáveis que sao necessárias para o recalculo.
 		FCarVar(nX,@aDadAux)
@@ -1356,6 +1431,7 @@ If cCampo == "ZD_QUANT2" //.And. AllTrim(cUMPad) == AllTrim(cQtdUM2)
 
 		//--Reseta variavel para buscar imposto por item.
 		lBscImp := .T.
+		//nImposto := 0
 
 		//Carrega variáveis que sao necessárias para o recalculo.
 		FCarVar(nX,@aDadAux)
@@ -1460,6 +1536,7 @@ If cCampo $ "ZD_CUSTUSU"
 
 		//--Reseta variavel para buscar imposto por item.
 		lBscImp := .T.
+		//nImposto := 0
 
 		//Carrega variáveis que sao necessárias para o recalculo.
 		FCarVar(nX,@aDadAux)
@@ -1489,6 +1566,27 @@ If cCampo $ "ZD_CUSTUSU"
 
 		If AllTrim(cUMPad) == AllTrim(cQtdUM1)			
 				
+			//-- Calcula o Preço de Venda Default
+			FsClcPrc(1,@nPrcRea,@nPrcDol,1,nDefCst) //-- Preço Mínimo Default
+
+			aImposDef	:= aImpostos
+			nImposto := 0
+			For nXi := 1 To Len(aImposDef)
+				nImposto += aImpostos[nXi]
+			Next nXi
+			nDefImp := nImposto
+
+			nDefPRM2 := nPrcRea //-- Preco Minimo Real
+			nDeDPRM2 := nPrcDol //-- Preco Minimo Dolar
+
+			FsClcPrc(1,@nPrcRea,@nPrcDol,2,nDefCst) //-- Preço Sugerido Default
+
+			nDef2PRE := nPrcRea //-- Preço Sugerido Real
+			nDef2PUS := nPrcDol //-- Preço Sugerido Dolar
+
+			nDefTRE := nQtdUM2 * nPrcRea
+			nDefTUS := nQtdUM2 * nPrcDol
+
 			//-- Calcula o Preço de Venda Usuario UM1
 			FsClcPrc(2,@nPrcRea,@nPrcDol,1,nUsuCst)
 
@@ -1540,6 +1638,26 @@ If cCampo $ "ZD_CUSTUSU"
 			Endif
 
 		Else
+			//-- Calcula o Preço de Venda Default
+			FsClcPrc(1,@nPrcRea,@nPrcDol,1,nDefCst) //-- Preço Mínimo Default
+
+			aImposDef	:= aImpostos
+			nImposto := 0
+			For nXi := 1 To Len(aImposDef)
+				nImposto += aImpostos[nXi]
+			Next nXi
+			nDefImp := nImposto
+
+			nDefPRM2 := nPrcRea //-- Preco Minimo Real
+			nDeDPRM2 := nPrcDol //-- Preco Minimo Dolar
+
+			FsClcPrc(1,@nPrcRea,@nPrcDol,2,nDefCst) //-- Preço Sugerido Default
+
+			nDef2PRE := nPrcRea //-- Preço Sugerido Real
+			nDef2PUS := nPrcDol //-- Preço Sugerido Dolar
+
+			nDefTRE := nQtdUM2 * nPrcRea
+			nDefTUS := nQtdUM2 * nPrcDol
 
 			//-- Calcula o Preço de Venda Usuario UM2
 			FsClcPrc(2,@nPrcRea,@nPrcDol,1,nUsuCst)
@@ -1915,7 +2033,7 @@ Static Function FsClcPrc(nTipo,nPrcRea,nPrcDol,nTpPrc,nCusto)
 				//-- .iNi Retirado Percentual de Comissão Sugerido do Cálculo de Preço
 				nDespesa  := nDefDes
 				nFrete    := nDefFre
-				nImposto  := nDefImp
+				//nImposto  := nDefImp
 				aImpostos := aImposDef
 				nAutDsc   := nDefAut
 			ElseIf nTipo == 2 //-- Usuário
@@ -1933,7 +2051,7 @@ Static Function FsClcPrc(nTipo,nPrcRea,nPrcDol,nTpPrc,nCusto)
 				//-- .iNi Retirado Percentual de Comissão Sugerido do Cálculo de Preço
 				nDespesa  := nUsuDes
 				nFrete    := nUsuFre
-				nImposto  := nUsuImp
+				//nImposto  := nUsuImp
 				aImpostos := aImposUsu
 				nAutDsc   := nUsuAut
 			ElseIf nTipo == 3 //-- Outra Unidade de Medida do Usuario
@@ -1941,7 +2059,7 @@ Static Function FsClcPrc(nTipo,nPrcRea,nPrcDol,nTpPrc,nCusto)
 				nComisao  := nUsuCMi + nUsuCHi
 				nDespesa  := nUsuDes
 				nFrete    :=  iif(AllTrim(cUMPad) == 'KG',nUsuFre * nPesPrd,nUsuFre) //FsBscFrt(cCodigo,iif(AllTrim(cUMPad) == AllTrim(cQtdUM1),cQtdUM2,cQtdUM1),1)
-				nImposto  := nUsuImp
+				//nImposto  := nUsuImp
 				aImpostos := aImposUsu
 				nAutDsc   := nUsuAut
 			EndIf
