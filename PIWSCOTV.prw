@@ -44,20 +44,20 @@ Data       	|Desenvolvedor    |Motivo
 ------------+-----------------+--------------------------------------------------------------
 /*/
 //-----------------------------------------------------------------------------------------------
-WSRESTFUL cadastraOrcamento DESCRIPTION "Serviço REST - Cadastra Orcamento" FORMAT "application/json;charset=UTF-8,text/hml"
+WSRESTFUL integraOrcamento DESCRIPTION "Serviço REST - Cadastra Orcamento" FORMAT "application/json;charset=UTF-8,text/hml"
 		
 	WSDATA c_fil 		AS STRING OPTIONAL
-	WSMETHOD POST DESCRIPTION "Recebe dados e cadastra/altera orcamentos" WSSYNTAX "/cadastraOrcamento?c_fil={param}" PATH "cadastraOrcamento"
+	WSMETHOD POST DESCRIPTION "Recebe dados e cadastra/altera orcamentos" WSSYNTAX "/integraOrcamento?c_fil={param}" PATH "integraOrcamento"
 
 END WSRESTFUL
 
 
 //-----------------------------------------------------------------------------------------------
 /*/
-{Protheus.doc} POST
-Metodo para receber dados e criar orcamento
+{Protheus.doc} POST - integraOrcamento
+Metodo para receber dados e criar/alterar orcamento
 @author		.iNi Sistemas
-@since     	01/04/2022
+@since     	27/03/2023
 @version  	P.12
 @param 		Nenhum
 @return    	Nenhum
@@ -68,420 +68,7 @@ Data       	|Desenvolvedor    |Motivo
 ------------+-----------------+--------------------------------------------------------------
 /*/
 //----------------------------------------------------------------------------------------------
-/*WSMETHOD POST WSRECEIVE cgc, cgcUser WSSERVICE cadastraOrcamento
-
-	Local lRet 		:= .T.
-	Local oResponse	:= JsonObject():New()
-	Local oParseJSON:= Nil
-	Local cJson     := ""
-	Local cNumOrc   := ""
-	Local cErros    := ""
-	Local cCgcEmp	:= self:cgc //"03662136000236"
-	Local nX        := 0
-	Local cOperad 	:= getnewPar("PI_FFOPER","000006") // OPERADOR FRONT FLOW
-	Local cCodVend	:= ''
-
-	cBody := ::GetContent()
-	::SetContentType('application/json;charset=UTF-8')
-	
-	//--Verifica se recebeu parametros
-	If cBody <> Nil
-		FWJsonDeserialize(cBody, @oParseJSON)
-	Else
-		SetRestFault(403, "Parametros vazios.")
-		lRet := .F.
-	EndIf
-
-	//--Verifica se todos os parametros estao preenchidos
-	If Empty(oParseJSON:CODIGOTRANSP) .OR. Empty(oParseJSON:CODIGOCLIENTE) .OR. Empty(oParseJSON:CODIGOCOND) .OR. Empty(oParseJSON:produtos) .OR. EMPTY(oParseJSON:CODIGOTAB)
-		SetRestFault(403, "Parametro obrigatorio vazio.")
-		lRet := .F.
-	Else
-		For nX:= 1 to Len(oParseJSON:produtos)
-			If Empty(oParseJSON:produtos[nX]:CODIGOPROD) .OR. Empty(oParseJSON:produtos[nX]:QUANTIDADEPROD) .OR. Empty(oParseJSON:produtos[nX]:VALORPROD)
-				SetRestFault(403, "Parametro obrigatorio vazio nos produtos.")
-				lRet := .F.
-			EndIf
-		Next nX
-	EndIf
-
-
-	//--Realiza cadastro do orcamento e verifica criacao
-	If lRet
-		
-		lRet:= U_fCadOrcamento(@oResponse, @oParseJSON, @cErros, @cCgcEmp,cOperad, @cNumOrc, cCodVend)
-		If !lRet
-			SetRestFault(403, StrTran( cErros, CHR(13)+CHR(10), " " ))
-		EndIf
-	EndIf
-
-
-	//--Verifica se foi criado e retorna dados
-	If lRet
-		//cDoc := fBusCop(oParseJSON:CODIGOCLIENTE,oParseJSON:LOJACLIENTE,cOperad)
-		If !Empty(cNumOrc)
-			cJson += '"'+Alltrim(cNumOrc)+'"'
-		Else
-			SetRestFault(403, "Nao foi possivel encontrar os dados do cadastro.")
-			lRet := .F.
-		EndIf
-	EndIf
-	//--Retorno ao json
-	::SetResponse(cJson)
-
-	//RpcClearEnv()
-
-Return(lRet)*/
-//--------------------------------------------------------------------------------------
-/*/
-{Protheus.doc} fCadOrcamento
-Funcao para realizar o cadastro do Orcamento
-@author		.iNi Sistemas
-@since     	01/04/2022
-@version  	P.12
-@param 		oResponse 	- Objeto Json para armazenar
-@param 		oParseJSON 	- Dados recebidos por meio de Json
-@param 		cDoc 		- Codigo do cliente
-@param 		cErros 		- Erros caso existam
-@return    	Nenhum
-@obs        Nenhum
-Alterações Realizadas desde a Estruturação Inicial
-------------+-----------------+---------------------------------------------------------
-Data       	|Desenvolvedor    |Motivo
-------------+-----------------+---------------------------------------------------------
-/*/
-//---------------------------------------------------------------------------------------
-/*User Function fCadOrcamento(oResponse, oParseJSON, cErros, cCgcEmp,cOperad, cNumOrc, cCodVend)
-
-	//Local aLog 		:= {}
-	Local aCabec 	:= {}
-	Local aItens 	:= {}
-	Local aLinha 	:= {}
-	//Local nY 		:= 0
-	Local nX 		:= 0
-	Local lRet 		:= .T.	
-	Local aFiliais  := FWLoadSM0()
-	//Local cFilAux := cFilAnt
-	Local cVend 	:= getnewPar("PI_FFVEND","0036") // vendedor FRONT FLOW
-	Local cOper 	:= getnewPar("PI_FFOP","2") // OPER FRONT FLOW
-	Local cTMK 		:= getnewPar("PI_FFTMK","2") // TMK FRONT FLOW
-	//Local cTab 		:= getnewPar("PI_FFTAB","001")
-	Local cTes 		:= getnewPar("PI_FFTES","501")
-	Local cOpTGV 	:= getnewPar("PI_FFOTGV","01")
-	Local nVlrTot	:= 0
-	Local aAreaOld	:= {SA3->(GetArea())}
-	Local cCodEmp	:= ''
-	Local cFili		:= ''
-	Local cFilAux	:= cFilAnt
-	Local cEmpAux	:= cEmpAnt
-	Local cCodClie	:= ''
-	Local cCodLoja	:= ''	
-
-	//Private lMsErroAuto 	:= .F.
-	//Private lAutoErrNoFile:= .T.
-	//Private lMSHelpAuto 	:= .T.
-
-	SA3->(dbSetOrder(1))
-	//--Verifica se usuario é um vendedor
-	If SA3->(DbSeek(xFilial("SA3") + AvKey(cCodVend,'A3_COD')))
-		__CUSERID:= SA3->A3_CODUSR
-		//--Busca operador
-		cOperad:= TKOPERADOR()
-	EndIf
-
-	//--Identifica filial do orçamento
-	If !Empty(aFiliais)
-		For nX:= 1 to Len(aFiliais)
-			If aFiliais[nX][18] == cCgcEmp
-				cFili	:= aFiliais[nX][2]
-				cCodEmp := aFiliais[nX][3]
-			EndIf
-		Next nX
-	EndIf
-	
-	If !Empty(cFili) .And. !Empty(cCodEmp)
-		cFilAnt := cFili
-		cFilEmp	:= cCodEmp
-		SM0->(dbSetOrder(1))
-		SM0->(DbSeek(cCodEmp+cFili))
-	EndIf
-
-	aCabec   := {}
-	aItens   := {}
-	aLinha   := {}
-	
-	//--Cliente
-	cCodClie:= Left(oParseJSON:CODIGOCLIENTE,6)
-	//--Loja
-	cCodLoja:= Right(oParseJSON:CODIGOCLIENTE,4)
-
-	SA1->(DbSetOrder(1))
-	SA1->(DbSeek(xFilial("SA1")+cCodClie+cCodLoja))
-
-	If SA1->A1_PESSOA == 'J' .And. AllTrim(SA1->A1_INSCR) <> 'ISENTO'
-		cFilAnt:="0501" //MATRIZ
-	Else
-		cFilAnt:="0502" //FILIAL
-	EndIf
-
-	cNumOrc:= GETSX8NUM('SUA')
-
-	AADD(aCabec,{"UA_FILIAL"    ,cFilAnt          			,Nil})
-	AADD(aCabec,{"UA_NUM"    	,cNumOrc          			,Nil})
-	AADD(aCabec,{"UA_CLIENTE"   ,cCodClie   				,Nil})
-	AADD(aCabec,{"UA_LOJA"      ,cCodLoja				    ,Nil})
-	AADD(aCabec,{"UA_OPERADO"   ,cOperad     				,Nil})  //Codigo do Operador
-	AADD(aCabec,{"UA_OPER"      ,cOper           			,Nil}) 
-	//--Vendedor
-	If !Empty(cCodVend)
-		AADD(aCabec,{"UA_VEND"      ,cCodVend				,Nil}) 
-	Else
-		AADD(aCabec,{"UA_VEND"      ,cVend					,Nil}) 
-	EndIf	
-	AADD(aCabec,{"UA_TMK"       ,cTMK          				,Nil})  //1-Ativo 2-Receptivo
-	AADD(aCabec,{"UA_CONDPG"    ,oParseJSON:CODIGOCOND      ,Nil})  //Condicao de Pagamento
-	AADD(aCabec,{"UA_TABELA"    ,oParseJSON:CODIGOTAB		,Nil}) 
-	AADD(aCabec,{"UA_TRANSP"    ,oParseJSON:CODIGOTRANSP    ,Nil})  //Transportadora
-	AADD(aCabec,{"UA_EMISSAO"   ,DDATABASE   				,Nil})  //Transportadora	
-
-	//--Grava Dados na tabela SUA
-	GRecLock(aCabec,.T.,"SUA")
-
-	//--Adiciona itens do orçamento.
-	For nX := 1 To Len(oParseJSON:produtos)
-		cItem 	:= StrZero(nX,2)
-		aLinha 	:= {}
-		aadd(aLinha,{"UB_FILIAL"    ,cFilAnt 									,Nil})
-		aadd(aLinha,{"UB_ITEM"      ,cItem 										,Nil})
-		aadd(aLinha,{"UB_NUM"	    ,cNumOrc 									,Nil})		
-		aadd(aLinha,{"UB_PRODUTO"   ,oParseJSON:produtos[nX]:CODIGOPROD   		,Nil})
-		aadd(aLinha,{"UB_QUANT"     ,VAL(oParseJSON:produtos[nX]:QUANTIDADEPROD),Nil})
-		aadd(aLinha,{"UB_VRUNIT"    ,VAL(oParseJSON:produtos[nX]:VALORPROD)     ,Nil})
-		nVlrTot:= VAL(oParseJSON:produtos[nX]:QUANTIDADEPROD) * VAL(oParseJSON:produtos[nX]:VALORPROD)
-		aadd(aLinha,{"UB_VLRITEM"   ,nVlrTot       								,Nil})
-		aadd(aLinha,{"UB_TES"       ,cTes       								,Nil})
-		aadd(aLinha,{"UB_ZOPTGV"    ,cOpTGV    									,Nil})
-		aadd(aLinha,{"UB_DTENTRE"   ,DDATABASE 									,Nil})
-				
-		GRecLock(aLinha,.T.,"SUB")
-		//aadd(aItens,aLinha)
-	Next nX
-	//TMKA271(aCabec,aItens,3,"2")
-	CONFIRMSX8()
-	//--Retorna filial	
-	cFilAnt:= cFilAux
-	//--Retorna empresa
-	cEmpAnt:= cEmpAux
-	//--Restuara area
-	Aeval(aAreaOld,{|x| RestArea(x)})
-	
-Return(lRet)*/
-
-
-//-----------------------------------------------------------------------------
-/*/{Protheus.doc} GET
-Metodo de retorno de todos os clientes
-          
-@author 	.iNi Sistemas
-@since 		01/04/2022
-@version 	P12
-@obs  		
-Projeto 	Portal do Cliente
-Alteracoes Realizadas desde a Estruturacao Inicial 
-Data       Programador     Motivo 
-/*/ 
-//----------------------------------------------------------------------------
-/*WSMETHOD GET WSRECEIVE cgc, cgcUser, codigoCliente WSSERVICE listVendas
-
-	Local cNextAlias:= GetNextAlias()
-	Local cQuery 	:= ""
-	Local lRet 		:= .T.
-	Local cCodVend	:= ''
-	Local cFilAux	:= ''
-	Local cCodNum	:= ''
-	Private oJson 	:= JsonObject():New()
-	Private oJsonPrd:= JsonObject():New()
-	
-	//--Os dois campos vazio, voltar null
-	If EMPTY(self:cgc) .And. EMPTY(self:codigoCliente)
-		oJson['status'] 		:= "204"
-		oJson['quantidade'] 	:= "0"
-		oJson['conteudo'] 		:= {}
-		::SetResponse(oJson:toJSON())
-		Return(.T.)
-	EndIf	
-
-	SA3->(dbSetOrder(3))
-	//--Verifica se usuario é um vendedor
-	If SA3->(DbSeek(xFilial("SA3") + AvKey(self:cgcUser,'A3_CGC')))
-		cCodVend:= SA3->A3_COD
-		cTipVend:= SA3->A3_TIPO
-	EndIf
-	
-	::SetContentType("application/json;charset=UTF-8")
-	//Query dos dados
-	cQuery:= Chr(13)+Chr(10)+" SELECT TOP 5 UA_FILIAL, UA_NUM, UA_EMISSAO, UA_CLIENTE, UA_LOJA, A1_NOME, A1_CGC, A1_END, "
-	cQuery+= Chr(13)+Chr(10)+" A1_BAIRRO, A1_MUN, A1_EST, UA_CONDPG, A1_COD_MUN, E4_DESCRI, UA_TRANSP, A4_NOME, UA_TABELA "
-	cQuery+= Chr(13)+Chr(10)+" A4_NOME, E4_DESCRI, DA0_DESCRI, UA.R_E_C_N_O_ AS REC "
-	cQuery+= Chr(13)+Chr(10)+" FROM "+RetSqlName('SUA')+" UA WITH (NOLOCK) "
-	cQuery+= Chr(13)+Chr(10)+" INNER JOIN "+RetSqlName('SA1')+" A1 WITH (NOLOCK) ON (A1.D_E_L_E_T_ = '' AND A1_COD = UA_CLIENTE AND A1_LOJA = UA_LOJA ) "
-	cQuery+= Chr(13)+Chr(10)+" INNER JOIN "+RetSqlName('SE4')+" E4 WITH (NOLOCK) ON (E4.D_E_L_E_T_ = '' AND E4_FILIAL = '"+xFilial('SE4')+"' AND UA_CONDPG = E4_CODIGO ) "
-	cQuery+= Chr(13)+Chr(10)+" INNER JOIN "+RetSqlName('SA4')+" A4 WITH (NOLOCK) ON (A4.D_E_L_E_T_ = '' AND A4_FILIAL = '"+xFilial('SA4')+"' AND UA_TRANSP = A4_COD ) "
-	cQuery+= Chr(13)+Chr(10)+" INNER JOIN "+RetSqlName('DA0')+" A0 WITH (NOLOCK) ON (A0.D_E_L_E_T_ = '' AND DA0_FILIAL = '"+xFilial('DA0')+"' AND DA0_CODTAB = UA_TABELA ) "
-	cQuery+= Chr(13)+Chr(10)+" WHERE UA.D_E_L_E_T_ = '' "
-	//--Busca pelo codigo do cliente
-	If !Empty(self:codigoCliente)
-		cQuery+= " AND UA_CLIENTE LIKE '"+self:codigoCliente+"' "
-	EndIf
-	
-	cQuery+= Chr(13)+Chr(10)+" ORDER BY UA.R_E_C_N_O_ DESC "
-		
-	
-	dbUseArea(.T.,"TOPCONN",TCGenQry(,,cQuery),cNextAlias,.F.,.T.)
-
-	(cNextAlias)->(dbGoTop())
-	If (cNextAlias)->(!Eof())
-		oJson['conteudo'] 		:= {}
-		oJson['quantidade'] 	:= Alltrim(STR(10))
-		oJson['status'] 		:= "200"	
-
-		Do While (cNextAlias)->(!Eof())
-			oJsonCliente 						:= JsonObject():New()
-			oJsonCliente['id'] 					:= Alltrim(STR((cNextAlias)->REC))
-			oJsonCliente['codigoPedido'] 		:= (cNextAlias)->UA_NUM
-			oJsonCliente['codigoConsumidor']	:= AllTrim((cNextAlias)->UA_CLIENTE+(cNextAlias)->UA_LOJA)
-			oJsonCliente['nomeConsumidor'] 		:= AllTrim((cNextAlias)->A1_NOME)
-			oJsonCliente['data'] 				:= (cNextAlias)->UA_EMISSAO
-			oJsonCliente['cgcConsumidor'] 		:= (cNextAlias)->A1_CGC
-			oJsonCliente['enderecoConsumidor'] 	:= Upper(zLimpaEsp(AllTrim((cNextAlias)->A1_END)))
-			oJsonCliente['bairroConsumidor'] 	:= Alltrim(Upper(zLimpaEsp((cNextAlias)->A1_BAIRRO)))
-			oJsonCliente['codigoMunicipio'] 	:= AllTrim((cNextAlias)->A1_COD_MUN)
-			oJsonCliente['municipioConsumidor'] := AllTrim((cNextAlias)->A1_MUN)
-			oJsonCliente['estadoConsumidor'] 	:= AllTrim((cNextAlias)->A1_EST)
-			oJsonCliente['codigoCondicao'] 		:= AllTrim((cNextAlias)->UA_CONDPG)
-			oJsonCliente['descricaoCondicao'] 	:= AllTrim((cNextAlias)->E4_DESCRI)
-			oJsonCliente['formaCondicao'] 		:= ''
-			oJsonCliente['codigoTransportadora']:= AllTrim((cNextAlias)->UA_TRANSP)
-			oJsonCliente['nomeTransportadora'] 	:= AllTrim((cNextAlias)->A4_NOME)
-			oJsonCliente['codigoTab'] 			:= AllTrim((cNextAlias)->UA_CONDPG)
-			oJsonCliente['descricaoTab'] 		:= AllTrim((cNextAlias)->DA0_DESCRI)
-			oJsonCliente['produtos'] 			:= {}
-
-			//oJsonPrd['produtos'] := {}
-			cFilAux:= (cNextAlias)->UA_FILIAL
-			cCodNum:= (cNextAlias)->UA_NUM
-			SUB->(DbSetOrder(01))
-			SB1->(DbSetOrder(01))
-			SUB->(DbSeek(cFilAux+cCodNum))
-			Do While SUB->(!Eof()) .And. cFilAux == SUB->UB_FILIAL .And. cCodNum == SUB->UB_NUM
-				
-				SB1->(DbSeek(xFilial('SB1')+Avkey(SUB->UB_PRODUTO,'B1_COD')))
-				oJsonProdutos 						:= JsonObject():New()
-				oJsonProdutos['id'] 				:= CValToChar(SB1->(Recno()))
-				oJsonProdutos['codigo'] 			:= AllTrim(SB1->B1_COD)
-				oJsonProdutos['descricao'] 			:= AllTrim(SB1->B1_DESC)
-				oJsonProdutos['tipo'] 				:= AllTrim(SB1->B1_TIPO)
-				oJsonProdutos['unidadeMedida'] 		:= AllTrim(SB1->B1_UM)
-				oJsonProdutos['armazem'] 			:= ''
-				oJsonProdutos['valor'] 				:= CValToChar(SUB->UB_VRUNIT)
-				oJsonProdutos['quantidade'] 		:= CValToChar(SUB->UB_QUANT)
-				oJsonProdutos['valorVenda'] 		:= CValToChar(SUB->UB_VRUNIT)
-				oJsonProdutos['valorFinal'] 		:= CValToChar(SUB->UB_QUANT * SUB->UB_VRUNIT)
-								
-				Aadd(oJsonCliente['produtos'],oJsonProdutos)
-								
-			SUB->(DbSkip())
-			cCodNum:= SUB->UB_NUM
-			EndDo			
-			//--Produtos
-			aadd(oJson['conteudo'],oJsonCliente)
-			//--Add Array com os dados			
-			(cNextAlias)->(dbSkip())
-		EndDo
-	Else
-		oJson['status'] 		:= "204"
-		oJson['quantidade'] 	:= "0"
-		oJson['conteudo'] 		:= {}
-	EndIf
-	//--Fecha tabela temporaria
-	(cNextAlias)->(dbCloseArea())
-	//--Resposta ao Json
-	::SetResponse(oJson:toJSON())
-
-Return(lRet)
-
-
-//--Função de reclock.
-Static Function GRecLock(aVetor,lModo,cAlias)
-
-	Local aAreaAll	:= {(cAlias)->(GetArea())}
-	Local xI		:= 0
-
-	dbSelectArea(cAlias)
-	If RecLock(cAlias,lModo)
-		For xI:=1 To Len(aVetor)
-			&(cAlias + "->" + aVetor[xI][1]) := aVetor[xI][2]
-		Next xI
-		MsUnlock()
-	EndIf
-	//--Restaura Area
-	AEval(aAreaAll,{|x|RestArea(x)})
-
-Return( Nil )
-
-Static Function zLimpaEsp(cCampo)
-
-    Local cConteudo   := cCampo
-    Local nTamOrig    := Len(cConteudo)
-    Default lEndereco := .F.
-     
-    //Retirando caracteres
-    cConteudo := StrTran(cConteudo, "'", "")
-    cConteudo := StrTran(cConteudo, "#", "")
-    cConteudo := StrTran(cConteudo, "%", "")
-    cConteudo := StrTran(cConteudo, "*", "")
-    cConteudo := StrTran(cConteudo, "&", "E")
-    cConteudo := StrTran(cConteudo, ">", "")
-    cConteudo := StrTran(cConteudo, "<", "")
-    cConteudo := StrTran(cConteudo, "!", "")
-    cConteudo := StrTran(cConteudo, "@", "")
-    cConteudo := StrTran(cConteudo, "$", "")
-    cConteudo := StrTran(cConteudo, "(", "")
-    cConteudo := StrTran(cConteudo, ")", "")
-    cConteudo := StrTran(cConteudo, "_", "")
-    cConteudo := StrTran(cConteudo, "=", "")
-    cConteudo := StrTran(cConteudo, "+", "")
-    cConteudo := StrTran(cConteudo, "{", "")
-    cConteudo := StrTran(cConteudo, "}", "")
-    cConteudo := StrTran(cConteudo, "[", "")
-    cConteudo := StrTran(cConteudo, "]", "")
-    cConteudo := StrTran(cConteudo, "/", "")
-    cConteudo := StrTran(cConteudo, "?", "")
-    cConteudo := StrTran(cConteudo, ".", "")
-    cConteudo := StrTran(cConteudo, "\", "")
-    cConteudo := StrTran(cConteudo, "|", "")
-    cConteudo := StrTran(cConteudo, ":", "")
-    cConteudo := StrTran(cConteudo, ";", "")
-    cConteudo := StrTran(cConteudo, '"', '')
-    cConteudo := StrTran(cConteudo, '°', '')	
-	cConteudo := StrTran(cConteudo, "º", "")
-    cConteudo := StrTran(cConteudo, 'ª', '')
-     
-    //Se não for endereço, retira também o - e a ,
-    If !lEndereco
-        cConteudo := StrTran(cConteudo, ",", "")
-        cConteudo := StrTran(cConteudo, "-", "")
-    EndIf
-     
-    //Adicionando os espaços a direita
-    cConteudo := Alltrim(cConteudo)
-    cConteudo += Space(nTamOrig - Len(cConteudo))
-	cConteudo := FwNoAccent(cConteudo)
-
-Return(cConteudo)*/
-
-
-WSMETHOD POST WSRECEIVE c_fil WSSERVICE cadastraOrcamento
+WSMETHOD POST WSRECEIVE c_fil WSSERVICE integraOrcamento
 //User Function fTestCot()
 
 	Local aArea     := {}
@@ -502,9 +89,14 @@ WSMETHOD POST WSRECEIVE c_fil WSSERVICE cadastraOrcamento
     Private lMsErroAuto := .F.
 	Private aTELA[0][0],aGETS[0]
 
-	RpcSetEnv("01","010001")
+	//RpcSetEnv("01","010001")
 
-	cBody := '{ '
+	cFilAnt := self:c_fil
+	cEmpAnt	:= substr(self:c_fil,1,2)
+	SM0->(dbSetOrder(1))
+	SM0->(DbSeek(cEmpAnt+cFilAnt))
+
+	/*cBody := '{ '
 	cBody += '"ZC_CODIGO" : "002345051",'
 	cBody += '"ZC_CLIENTE" : "000007",'
 	cBody += '"ZC_LOJACLI" : "01",'
@@ -534,9 +126,12 @@ WSMETHOD POST WSRECEIVE c_fil WSSERVICE cadastraOrcamento
 	cBody += '		"ZD_CUSTUSU": "120.00"'
 	cBody += '    }'
 	cBody += ']'
-	cBody += '}'
+	cBody += '}'*/
 
 	aArea     := FWGetArea()
+
+	cBody := ::GetContent()
+	::SetContentType('application/json;charset=UTF-8')
 
 	cRet := oJson:FromJson(cBody)
 	
@@ -544,61 +139,74 @@ WSMETHOD POST WSRECEIVE c_fil WSSERVICE cadastraOrcamento
 		SetRestFault(403, "Falha ao transformar texto em objeto json. Erro: " + cRet)
 		lRet := .F.
 	endif
+	If lRet 
+		If Empty(self:c_fil)
+			SetRestFault(403, "Parametro obrigatorio vazio.")
+			lRet := .F.
+		EndIf
+	EndIf
 
-	//--Monta Array com todos os campos da SZC (CABEÇALHO)
-	aFields := FWSX3Util():GetAllFields( cTabela , .F. ) //-- Retornará todos os campos presentes na SX3 de contexto real do alias.
-	For nX := 1 to Len(aFields)
-   		If X3Uso(GetSx3Cache(aFields[nX],"X3_USADO"))
+	If lRet 
+		//--Monta Array com todos os campos da SZC (CABEÇALHO)
+		aFields := FWSX3Util():GetAllFields( cTabela , .F. ) //-- Retornará todos os campos presentes na SX3 de contexto real do alias.
+		For nX := 1 to Len(aFields)
+			If X3Uso(GetSx3Cache(aFields[nX],"X3_USADO"))
 
-			//IF AllTrim(aFields[nX]) != "ZC_CODIGO"
-			AADD(aCPOS,AllTrim(aFields[nX]))
-			//EndIf
+				//IF AllTrim(aFields[nX]) != "ZC_CODIGO"
+				AADD(aCPOS,AllTrim(aFields[nX]))
+				//EndIf
 
-			//Adiciona os campos para o ExecAuto de acordo com json passado.
-			IF VALTYPE(oJson[aFields[nX]]) != "U"
-				If GetSx3Cache(aFields[nX],"X3_TIPO") == "D"
-					aAdd(aCabec, {aFields[nX], ctod(oJson[aFields[nX]]), Nil})
-				Else
-					aAdd(aCabec, {aFields[nX], oJson[aFields[nX]], Nil})
-					//Se for passado o campo código é alteração.
-					If AllTrim(GetSx3Cache(aFields[nX],"X3_CAMPO")) == "ZC_CODIGO"
-						lAlt := .T.
+				//Adiciona os campos para o ExecAuto de acordo com json passado.
+				IF VALTYPE(oJson[aFields[nX]]) != "U"
+					If GetSx3Cache(aFields[nX],"X3_TIPO") == "D"
+						aAdd(aCabec, {aFields[nX], ctod(oJson[aFields[nX]]), Nil})
+					Else
+						aAdd(aCabec, {aFields[nX], oJson[aFields[nX]], Nil})
+						//Se for passado o campo código é alteração.
+						If AllTrim(GetSx3Cache(aFields[nX],"X3_CAMPO")) == "ZC_CODIGO"
+							lAlt := .T.
+						EndIf
 					EndIf
 				EndIf
+
 			EndIf
+		Next nX
+		aAdd(aCabec, {"ZC_STATUS", "I", Nil})
 
-		EndIf
-	Next nX
-	aAdd(aCabec, {"ZC_STATUS", "I", Nil})
-
-	//--Monta Array com todos os campos da SZD (ITENS)
-	aFields := FWSX3Util():GetAllFields( cTabIt , .F. ) //-- Retornará todos os campos presentes na SX3 de contexto real do alias.
-	For nX := 1 to Len(oJson['itens'])
-		For nY := 1 to Len(aFields)
-			IF VALTYPE(oJson['itens'][nX][aFields[nY]]) != "U"
-				If GetSx3Cache(aFields[nY],"X3_TIPO") == "D"
-					aAdd(aItAux, {aFields[nY], ctod(oJson['itens'][nX][aFields[nY]]), Nil})
-				Else
-					aAdd(aItAux, {aFields[nY], oJson['itens'][nX][aFields[nY]], Nil})
+		//--Monta Array com todos os campos da SZD (ITENS)
+		aFields := FWSX3Util():GetAllFields( cTabIt , .F. ) //-- Retornará todos os campos presentes na SX3 de contexto real do alias.
+		For nX := 1 to Len(oJson['itens'])
+			For nY := 1 to Len(aFields)
+				IF VALTYPE(oJson['itens'][nX][aFields[nY]]) != "U"
+					If GetSx3Cache(aFields[nY],"X3_TIPO") == "D"
+						aAdd(aItAux, {aFields[nY], ctod(oJson['itens'][nX][aFields[nY]]), Nil})
+					Else
+						aAdd(aItAux, {aFields[nY], oJson['itens'][nX][aFields[nY]], Nil})
+					EndIf
 				EndIf
-			EndIf
-		Next nY
-		aadd(aItens, aItAux)
-		aItAux := {}
-	Next nX
+			Next nY
+			aadd(aItens, aItAux)
+			aItAux := {}
+		Next nX
 
-	//Chama Execauto da cotação de vendas. Par1=Cabeçalho; Par2=Itens; par3=Campos da tabela para validar; par4=Opçoes: 3-inclusão; 4-Alteração
-	aRet := U_F_ExCotV(aCabec,aItens,aCPOS,iif(lAlt,4,3))
+		//Chama Execauto da cotação de vendas. Par1=Cabeçalho; Par2=Itens; par3=Campos da tabela para validar; par4=Opçoes: 3-inclusão; 4-Alteração
+		aRet := U_F_ExCotV(aCabec,aItens,aCPOS,iif(lAlt,4,3))
 
-	If aRet[1]
-		//--Retorno Erro
-		SetRestFault(403, StrTran( aRet[2], CHR(13)+CHR(10), " " ))
-		lRet := .F.
-	Else
-		//--Retorno ao json
-		::SetResponse(aRet[3])
-		lRet := .T.
+		If aRet[1]
+			//--Retorno Erro
+			SetRestFault(403, StrTran( aRet[2], CHR(13)+CHR(10), " " ))
+			lRet := .F.
+		Else
+			//--Retorno ao json
+			::SetResponse(aRet[3])
+			lRet := .T.
+		EndIf
+
 	EndIf
+
+    FWRestArea(aArea)
+
+	//RpcClearEnv()
 
 Return(lRet)
 
@@ -764,11 +372,6 @@ User Function F_ExCotV(aCabec,aItens,aCPOS,nOpc)
 	Else
 		lErro := .T.		
 	EndIf
-
-
-    FWRestArea(aArea)
-
-	RpcClearEnv()
 
 Return({lErro,cMsgErro,oJson1})
 
@@ -1020,7 +623,6 @@ Private cStatus := "I"
 	EndIf
 
 Return({lRet,cMsgErro})
-
 
 
 
