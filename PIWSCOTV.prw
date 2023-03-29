@@ -30,7 +30,7 @@ Return()
 
 //-----------------------------------------------------------------------------------------------
 /*/
-{Protheus.doc} integraCotacao
+{Protheus.doc} incluiCotacao
 Web Service Rest 
 @author		.iNi Sistemas
 @since     	22/03/2023	
@@ -44,17 +44,67 @@ Data       	|Desenvolvedor    |Motivo
 ------------+-----------------+--------------------------------------------------------------
 /*/
 //-----------------------------------------------------------------------------------------------
-WSRESTFUL integraCotacao DESCRIPTION "Serviço REST - Cotação de vendas" FORMAT "application/json;charset=UTF-8,text/hml"
+WSRESTFUL incluiCotacao DESCRIPTION "Serviço REST - Cotação de vendas" FORMAT "application/json;charset=UTF-8,text/hml"
 		
 	WSDATA c_fil 		AS STRING OPTIONAL
-	WSMETHOD POST DESCRIPTION "Recebe dados e cadastra/altera Cotação de Vendas" WSSYNTAX "/integraCotacao?c_fil={param}" PATH "integraCotacao"
+	WSMETHOD POST DESCRIPTION "Recebe dados e cadastra/altera Cotação de Vendas" WSSYNTAX "/incluiCotacao?c_fil={param}" PATH "incluiCotacao"
 
 END WSRESTFUL
 
 
 //-----------------------------------------------------------------------------------------------
 /*/
-{Protheus.doc} POST - integraCotacao
+{Protheus.doc} alteraCotacao
+Web Service Rest 
+@author		.iNi Sistemas
+@since     	22/03/2023	
+@version  	P.12
+@param 		c_fil - Filial a ser incluido ou alterada a cotação de vendas
+@return    	Nenhum
+@obs        Serviço REST para ambiente WEB
+Alterações Realizadas desde a Estruturação Inicial
+------------+-----------------+--------------------------------------------------------------
+Data       	|Desenvolvedor    |Motivo
+------------+-----------------+--------------------------------------------------------------
+/*/
+//-----------------------------------------------------------------------------------------------
+WSRESTFUL alteraCotacao DESCRIPTION "Serviço REST - Cotação de vendas" FORMAT "application/json;charset=UTF-8,text/hml"
+		
+	WSDATA c_fil 		AS STRING OPTIONAL
+	WSDATA cCotacao 	AS STRING OPTIONAL
+	WSMETHOD POST DESCRIPTION "Recebe dados e cadastra/altera Cotação de Vendas" WSSYNTAX "/alteraCotacao?c_fil={param}" PATH "alteraCotacao"
+
+END WSRESTFUL
+
+
+//-----------------------------------------------------------------------------------------------
+/*/
+{Protheus.doc} excluiCotacao
+Web Service Rest 
+@author		.iNi Sistemas
+@since     	22/03/2023	
+@version  	P.12
+@param 		c_fil - Filial a ser incluido ou alterada a cotação de vendas
+@return    	Nenhum
+@obs        Serviço REST para ambiente WEB
+Alterações Realizadas desde a Estruturação Inicial
+------------+-----------------+--------------------------------------------------------------
+Data       	|Desenvolvedor    |Motivo
+------------+-----------------+--------------------------------------------------------------
+/*/
+//-----------------------------------------------------------------------------------------------
+WSRESTFUL excluiCotacao DESCRIPTION "Serviço REST - Deleta Cotação de vendas" FORMAT "application/json;charset=UTF-8,text/hml"
+		
+	WSDATA c_fil 		AS STRING OPTIONAL
+	WSDATA cCotacao 	AS STRING OPTIONAL
+	WSMETHOD DELETE DESCRIPTION "Recebe dados e deleta Cotação de Vendas" WSSYNTAX "/excluiCotacao?c_fil={param},cCotacao={param}" PATH "excluiCotacao"
+
+END WSRESTFUL
+
+
+//-----------------------------------------------------------------------------------------------
+/*/
+{Protheus.doc} POST - incluiCotacao
 Metodo para receber dados e criar/alterar Cotação de Vendas
 @author		.iNi Sistemas
 @since     	27/03/2023
@@ -68,8 +118,8 @@ Data       	|Desenvolvedor    |Motivo
 ------------+-----------------+--------------------------------------------------------------
 /*/
 //----------------------------------------------------------------------------------------------
-//WSMETHOD POST WSRECEIVE c_fil WSSERVICE integraCotacao
-User Function fTestCot()
+//WSMETHOD POST WSRECEIVE c_fil WSSERVICE incluiCotacao
+User Function fIncCot()
 
 	Local aArea     := {}
     Local cTabela   := "SZC"
@@ -84,10 +134,7 @@ User Function fTestCot()
 	Local oJson := JsonObject():New()
 	Local cRet := ""
 	Local lRet := .T.
-	Local lAlt := .F.
 	Local aRet := {}
-    Private lMsErroAuto := .F.
-	Private aTELA[0][0],aGETS[0]
 
 	RpcSetEnv("01","010001")
 
@@ -97,7 +144,7 @@ User Function fTestCot()
 	SM0->(DbSeek(cEmpAnt+cFilAnt))*/
 
 	cBody := '{ '
-	cBody += '"ZC_CODIGO" : "000000052",'
+	//cBody += '"ZC_CODIGO" : "000000052",'
 	cBody += '"ZC_CLIENTE" : "000007",'
 	cBody += '"ZC_LOJACLI" : "01",'
 	cBody += '"ZC_TIPFRET" : "C",'
@@ -143,7 +190,7 @@ User Function fTestCot()
 	endif
 	/*If lRet 
 		If Empty(self:c_fil)
-			SetRestFault(403, "Parametro obrigatorio vazio.")
+			SetRestFault(403, "Parametro obrigatorio vazio. (filial)")
 			lRet := .F.
 		EndIf
 	EndIf*/
@@ -164,9 +211,180 @@ User Function fTestCot()
 						aAdd(aCabec, {aFields[nX], ctod(oJson[aFields[nX]]), Nil})
 					Else
 						aAdd(aCabec, {aFields[nX], oJson[aFields[nX]], Nil})
-						//Se for passado o campo código é alteração.
-						If AllTrim(GetSx3Cache(aFields[nX],"X3_CAMPO")) == "ZC_CODIGO"
-							lAlt := .T.
+						//Não é permitido informar o campo código na inclusão.
+						//If AllTrim(GetSx3Cache(aFields[nX],"X3_CAMPO")) == "ZC_CODIGO"
+						//	lRet := .F.
+						//EndIf
+					EndIf
+				EndIf
+
+			EndIf
+		Next nX
+		aAdd(aCabec, {"ZC_STATUS", "I", Nil})
+
+		//--Monta Array com todos os campos da SZD (ITENS)
+		aFields := FWSX3Util():GetAllFields( cTabIt , .F. ) //-- Retornará todos os campos presentes na SX3 de contexto real do alias.
+		For nX := 1 to Len(oJson['itens'])
+			For nY := 1 to Len(aFields)
+				IF VALTYPE(oJson['itens'][nX][aFields[nY]]) != "U"
+					If GetSx3Cache(aFields[nY],"X3_TIPO") == "D"
+						aAdd(aItAux, {aFields[nY], ctod(oJson['itens'][nX][aFields[nY]]), Nil})
+					Else
+						aAdd(aItAux, {aFields[nY], oJson['itens'][nX][aFields[nY]], Nil})
+					EndIf
+				EndIf
+			Next nY
+			//--Inclui campo de deleção de item para quando na alteração se desejar deletar um item.
+			If ValType(oJson['itens'][nX]["D_E_L_E_T_"]) != "U"
+				aAdd(aItAux, {"D_E_L_E_T_", oJson['itens'][nX]["D_E_L_E_T_"], Nil})
+			EndIf 
+			aadd(aItens, aItAux)
+			aItAux := {}
+		Next nX
+
+		//Chama Execauto da cotação de vendas. Par1=Cabeçalho; Par2=Itens; par3=Campos da tabela para validar; par4=Opçoes: 3-inclusão; 4-Alteração
+		aRet := U_F_ExeCotV(aCabec,aItens,aCPOS,3)
+
+		If aRet[1]
+			//--Retorno Erro
+			//SetRestFault(403, StrTran( aRet[2], CHR(13)+CHR(10), " " ))
+			lRet := .F.
+		Else
+			//--Retorno ao json
+			//::SetResponse(aRet[3])
+			lRet := .T.
+		EndIf
+
+	EndIf
+
+    FWRestArea(aArea)
+
+	RpcClearEnv()
+
+Return(lRet)
+
+
+//-----------------------------------------------------------------------------------------------
+/*/
+{Protheus.doc} POST - alteraCotacao
+Metodo para receber dados e criar/alterar Cotação de Vendas
+@author		.iNi Sistemas
+@since     	27/03/2023
+@version  	P.12
+@param 		c_fil - Filial de alteração da cotação de vendas.
+@param 		cCotacao - Código da cotação a ser alterada.
+@return    	lRet - Retorna sucesso ou erro de execução.
+@obs        Serviço REST para ambiente WEB
+Alterações Realizadas desde a Estruturação Inicial
+------------+-----------------+--------------------------------------------------------------
+Data       	|Desenvolvedor    |Motivo
+------------+-----------------+--------------------------------------------------------------
+/*/
+//----------------------------------------------------------------------------------------------
+//WSMETHOD POST WSRECEIVE c_fil, cCotacao WSSERVICE alteraCotacao
+User Function fAltCot(c_fil,cCotacao)
+
+	Local aArea     := {}
+    Local cTabela   := "SZC"
+	Local cTabIt   := "SZD"
+    Local aCabec    := {}
+	Local aItens    := {}
+	Local aItAux := {}
+	Local aFields := {}
+	Local aCPOS := {}
+	Local nX := 0
+	Local nY := 0
+	Local oJson := JsonObject():New()
+	Local cRet := ""
+	Local lRet := .T.
+	Local aRet := {}
+
+	Default c_fil    := "010001"
+	Default cCotacao := "000000052"
+
+	RpcSetEnv("01","010001")
+
+	/*cFilAnt := self:c_fil
+	cEmpAnt	:= substr(self:c_fil,1,2)
+	SM0->(dbSetOrder(1))
+	SM0->(DbSeek(cEmpAnt+cFilAnt))*/
+
+	cBody := '{ '
+	//cBody += '"ZC_CODIGO" : "000000052",'
+	cBody += '"ZC_CLIENTE" : "000007",'
+	cBody += '"ZC_LOJACLI" : "01",'
+	cBody += '"ZC_TIPFRET" : "C",'
+	cBody += '"ZC_DTVALID" : "'+dtoc(DDATABASE+20)+'",'
+	cBody += '"ZC_DTINIFO" : "'+dtoc(DDATABASE)+'",'
+	cBody += '"ZC_DTFIMFO" : "'+dtoc(DDATABASE+2)+'",'	
+	cBody += '"ZC_CONDPAG" : "002",'
+	cBody += '"ZC_MOEDA" : "1",'
+	cBody += '"ZC_VEND1" : "000557",'		
+	cBody += '"ZC_VEND2" : "000557",'	
+	cBody += '"itens" : ['
+	cBody += '	{'
+	//cBody += '		"ZD_PRODUTO": "",'
+	cBody += '		"ZD_PREPROD": "15779",'
+	cBody += '		"ZD_UMPAD": "KG",'
+	cBody += '		"ZD_QUANT1": "8",'
+	//cBody += '		"ZD_QUANT2": "200",'
+	cBody += '		"ZD_CUSTUSU": "65"'
+	//cBody += '		"D_E_L_E_T_": "*"'
+	cBody += '	},'
+	cBody += '	{'
+	cBody += '		"ZD_PRODUTO": "",'
+	cBody += '		"ZD_PREPROD": "115000",'
+	cBody += '		"ZD_UMPAD": "KG",'
+	cBody += '		"ZD_QUANT1": "0",'
+	cBody += '		"ZD_QUANT2": "125.00",'
+	cBody += '		"ZD_CUSTUSU": "120.00"'
+	//cBody += '		"D_E_L_E_T_": "*"'
+	cBody += '    }'
+	cBody += ']'
+	cBody += '}'
+
+	aArea     := FWGetArea()
+
+	//cBody := ::GetContent()
+	//::SetContentType('application/json;charset=UTF-8')
+
+	cRet := oJson:FromJson(cBody)
+	
+	If ValType(cRet) == "C"
+		SetRestFault(403, "Falha ao transformar texto em objeto json. Erro: " + cRet)
+		lRet := .F.
+	endif
+	/*If lRet 
+		If Empty(self:c_fil)
+			SetRestFault(403, "Parametro obrigatorio vazio. (Filial)")
+			lRet := .F.
+		EndIf
+
+		If Empty(self:cCotacao)
+			SetRestFault(403, "Parametro obrigatorio vazio. (Numero da cotação)")
+			lRet := .F.
+		EndIf
+	EndIf*/
+
+	If lRet 
+		//--Monta Array com todos os campos da SZC (CABEÇALHO)
+		aAdd(aCabec, {"ZC_CODIGO", cCotacao, Nil}) //Campo código é passado de acordo com parâmetro enviado.
+		aFields := FWSX3Util():GetAllFields( cTabela , .F. ) //-- Retornará todos os campos presentes na SX3 de contexto real do alias.
+		For nX := 1 to Len(aFields)
+			If X3Uso(GetSx3Cache(aFields[nX],"X3_USADO"))
+
+				//IF AllTrim(aFields[nX]) != "ZC_CODIGO"
+				AADD(aCPOS,AllTrim(aFields[nX]))
+				//EndIf
+
+				//Adiciona os campos para o ExecAuto de acordo com json passado.
+				IF VALTYPE(oJson[aFields[nX]]) != "U"
+					If GetSx3Cache(aFields[nX],"X3_TIPO") == "D"
+						aAdd(aCabec, {aFields[nX], ctod(oJson[aFields[nX]]), Nil})
+					Else						
+						//Desconsidera o campo código na alteração pois é enviado nos parâmetros e ja foi incluído no cabeçalho.
+						If AllTrim(GetSx3Cache(aFields[nX],"X3_CAMPO")) != "ZC_CODIGO"
+							aAdd(aCabec, {aFields[nX], oJson[aFields[nX]], Nil})
 						EndIf
 					EndIf
 				EndIf
@@ -196,7 +414,7 @@ User Function fTestCot()
 		Next nX
 
 		//Chama Execauto da cotação de vendas. Par1=Cabeçalho; Par2=Itens; par3=Campos da tabela para validar; par4=Opçoes: 3-inclusão; 4-Alteração
-		aRet := U_F_ExCotV(aCabec,aItens,aCPOS,iif(lAlt,4,3))
+		aRet := U_F_ExeCotV(aCabec,aItens,aCPOS,4)
 
 		If aRet[1]
 			//--Retorno Erro
@@ -213,6 +431,53 @@ User Function fTestCot()
     FWRestArea(aArea)
 
 	RpcClearEnv()
+
+Return(lRet)
+
+
+//-----------------------------------------------------------------------------------------------
+/*/
+{Protheus.doc} POST - excluiCotacao
+Metodo para receber dados e criar/alterar Cotação de Vendas
+@author		.iNi Sistemas
+@since     	27/03/2023
+@version  	P.12
+@param 		c_fil - Filial de alteração da cotação de vendas.
+@param 		cCotacao - Código da cotação a ser alterada.
+@return    	lRet - Retorna sucesso ou erro de execução.
+@obs        Serviço REST para ambiente WEB
+Alterações Realizadas desde a Estruturação Inicial
+------------+-----------------+--------------------------------------------------------------
+Data       	|Desenvolvedor    |Motivo
+------------+-----------------+--------------------------------------------------------------
+/*/
+//----------------------------------------------------------------------------------------------
+//WSMETHOD POST WSRECEIVE c_fil, cCotacao WSSERVICE alteraCotacao
+User Function fExcCot(c_fil,cCotacao)
+
+Local aCabec    := {}
+Default c_fil := "010001"
+Default cCotacao := "000000052"
+
+RpcSetEnv("01","010001")
+
+aAdd(aCabec, {"ZC_CODIGO", cCotacao, Nil})
+
+//Chama Execauto da cotação de vendas. Par1=Cabeçalho; Par2=Itens; par3=Campos da tabela para validar; par4=Opçoes: 3-inclusão; 4-Alteração
+aRet := U_F_ExeCotV(aCabec,{},{},5)
+
+If aRet[1]
+	//--Retorno Erro
+	//SetRestFault(403, StrTran( aRet[2], CHR(13)+CHR(10), " " ))
+	lRet := .F.
+Else
+	//--Retorno ao json
+	//::SetResponse(aRet[3])
+	lRet := .T.
+EndIf
+
+
+RpcClearEnv()
 
 Return(lRet)
 
@@ -237,8 +502,7 @@ Data       	|Desenvolvedor    |Motivo
 ------------+-----------------+--------------------------------------------------------------
 /*/
 //----------------------------------------------------------------------------------------------
-User Function F_ExCotV(aCabec,aItens,aCPOS,nOpc)
-
+User Function F_ExeCotV(aCabec,aItens,aCPOS,nOpc)
     Local cTabela   := "SZC"
 	Local nXz 		:= 0
 	Local nXi 		:= 0
@@ -253,20 +517,48 @@ User Function F_ExCotV(aCabec,aItens,aCPOS,nOpc)
 	Local lRet 		:= .T.
 	Local lErro 	:= .F.
 	Local nPDelIt 	:= 0
+	Local cStaBlAlt := 'I,P,A,S'	// Status bloqueio de alteração de cotação
 	Private oJson1 	:= JsonObject():New()
 	Private oJsonCot:= JsonObject():New()
 	Private oJsonPrd:= JsonObject():New()
+	Private lMsErroAuto := .F.
+	Private aTELA[0][0],aGETS[0]
 
     //--Inicializa a transação
     Begin Transaction
 
-		//--Validação da alteração, O da função EnchAuto retorna um erro que não indica o motivo correto.
-		If nOpc == 4
+		//--Validação da alteração/exclusão, A da função EnchAuto retorna um erro que não indica o motivo correto.
+		If nOpc == 4 .OR. nOpc == 5
+
 			SZC->(dbSetOrder(1))
 			If !SZC->(dbSeek(xFilial("SZC")+ACABEC[aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZC_CODIGO" })][2]))
+				
 				cMsgErro += "Cotação não encontrada! Filial: "+AllTrim(xFilial("SZC"))+" Cotação: "+Alltrim(ACABEC[aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZC_CODIGO" })][2])
 				lRet := .F.
+
+			Else
+
+				//--Validação de alteração do registro.
+				If nOpc == 4 .And. !(SZC->ZC_STATUS $ cStaBlAlt)
+					cMsgErro += "Não é permitida a alteração da cotação para o status atual."
+					lRet := .F.
+				EndIf
+
+				//--Validação de exclusão do registro.
+				If nOpc == 5 .And. !(SZC->ZC_STATUS == 'I') .And. !(SZC->ZC_STATUS == 'B')
+					cMsgErro += "Não é permitida a exclusão da cotação para o status atual."
+					lRet := .F.
+				EndIf
+
 			EndIf
+
+		Else
+			
+			If aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZC_CODIGO" }) > 0
+				cMsgErro += "Não é permitido informar o código da cotação na operação de inclusão."
+				lRet := .F.
+			EndIf
+
 		EndIf
 
 		If lRet
@@ -274,7 +566,7 @@ User Function F_ExCotV(aCabec,aItens,aCPOS,nOpc)
 			//Joga a tabela para a memória (M->)
 			RegToMemory(;
 				cTabela,; // cAlias - Alias da Tabela
-				iif(nOpc==4,.F.,.T.),;     // lInc   - Define se é uma operação de inclusão ou atualização
+				iif(nOpc==4 .or. nOpc==5,.F.,.T.),;     // lInc   - Define se é uma operação de inclusão ou atualização
 				.F.;      // lDic   - Define se irá inicilizar os campos conforme o dicionário
 			)
 			
@@ -288,63 +580,93 @@ User Function F_ExCotV(aCabec,aItens,aCPOS,nOpc)
 				aCPOS;
 			)
 
-				//--Validação dos itens.
-				aRet :=  FValidIt(aItens,@aDadAux,nOpc)
+				If nOpc != 5
+					//--Validação dos itens.
+					aRet :=  FValidIt(aItens,@aDadAux,nOpc)
+				Else
+					aRet := {.T.,""} //--Permite exclusão pois já passou pela validação de exclusão.
+				EndIf
+
 				If aRet[1]
 
-					//--Aciona a efetivação da gravação do cabeçalho.
-					nRetorno := AxIncluiAuto(;
-						cTabela,;   // cAlias     - Alias da Tabela
-						,;          // cTudoOk    - Operação do TudoOk (se usado no EnchAuto não precisa usar aqui)
-						cTransact,; // cTransact  - Operação acionada após a gravação mas dentro da transação
-						nOpc,;          // nOpcaoAuto - Operação do Menu (3=inclusão, 4=alteração, 5=exclusão)
-						SZC->(recno());
-					)
+					If nOpc != 5
 
-					//--Aciona a efetivação da gravação dos itens.						
-					dbSelectArea("SZD")
-					nFilial := aScan(dbStruct(), {|x| "_FILIAL" $ x[1]})	//-- Procura no array a filial
-					nPDelIt := aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("DELETE")}) //--Verifica se é exclusão de item.
+						//--Aciona a efetivação da gravação do cabeçalho.
+						nRetorno := AxIncluiAuto(;
+							cTabela,;   // cAlias     - Alias da Tabela
+							,;          // cTudoOk    - Operação do TudoOk (se usado no EnchAuto não precisa usar aqui)
+							cTransact,; // cTransact  - Operação acionada após a gravação mas dentro da transação
+							nOpc,;          // nOpcaoAuto - Operação do Menu (3=inclusão, 4=alteração, 5=exclusão)
+							SZC->(recno());
+						)					
 
-					For nXi := 1 to Len(aDadAux)                  			//-- FOR de 1 ateh a quantidade do numero do aDadAux
+						//--Aciona a efetivação da gravação dos itens.						
+						dbSelectArea("SZD")
+						nFilial := aScan(dbStruct(), {|x| "_FILIAL" $ x[1]})	//-- Procura no array a filial
+						nPDelIt := aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("DELETE")}) //--Verifica se é exclusão de item.
 
-						nPosIte := aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_ITEM")})
+						For nXi := 1 to Len(aDadAux)                  			//-- FOR de 1 ateh a quantidade do numero do aDadAux
 
-						SZD->(dbSetOrder(1))
-						SZD->(dbGoTop())
-						lAchou := SZD->(dbSeek(xFilial("SZD")+M->ZC_CODIGO+aDadAux[nXi][nPosIte][2]))						
+							nPosIte := aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_ITEM")})
 
-						If aDadAux[nXi][nPDelIt][2] 	//-- Se for registro deletado
-							If lAchou					//-- Se achar o registro tem que deletar!!!
-								RecLock("SZD",.F.)      //-- Trava a tabela
-								dbDelete()
-								SZD->(MsUnlock())
+							SZD->(dbSetOrder(1))
+							SZD->(dbGoTop())
+							lAchou := SZD->(dbSeek(xFilial("SZD")+M->ZC_CODIGO+aDadAux[nXi][nPosIte][2]))						
+
+							If aDadAux[nXi][nPDelIt][2] 	//-- Se for registro deletado
+								If lAchou					//-- Se achar o registro tem que deletar!!!
+									RecLock("SZD",.F.)      //-- Trava a tabela
+									dbDelete()
+									SZD->(MsUnlock())
+								EndIf
+								Loop         									//-- Loop da condicao For
 							EndIf
-							Loop         									//-- Loop da condicao For
-						EndIf
 
-						//-- Se achou o registro altera os dados se não inclui.
-						If lAchou
-							RecLock("SZD",.F.)
-						Else
-							RecLock("SZD",.T.)
-						EndIf
+							//-- Se achou o registro altera os dados se não inclui.
+							If lAchou
+								RecLock("SZD",.F.)
+							Else
+								RecLock("SZD",.T.)
+							EndIf
 
-						//--Grava os campos da SZD
-						For nXz := 1 to Len(aDadAux[nXi])
-							If (nFieldPos := FieldPos(aDadAux[nXi][nXz][1])) > 0
-								FieldPut(nFieldPos, aDadAux[nXi][nXz][2])
+							//--Grava os campos da SZD
+							For nXz := 1 to Len(aDadAux[nXi])
+								If (nFieldPos := FieldPos(aDadAux[nXi][nXz][1])) > 0
+									FieldPut(nFieldPos, aDadAux[nXi][nXz][2])
+								Endif
+							Next nXz
+
+							//--Grava o conteudo da filial
+							If nFilial > 0
+								FieldPut(nFilial, xFilial("SZD"))
 							Endif
-						Next nXz
 
-						//--Grava o conteudo da filial
-						If nFilial > 0
-							FieldPut(nFilial, xFilial("SZD"))
-						Endif
+							SZD->(MsUnlock())
 
-						SZD->(MsUnlock())
+						Next nXi
+					Else
 
-					Next nXi
+						//--Realiza exclusão da cotação.
+						SZC->(dbSetOrder(1))
+						If SZC->(dbSeek(xFilial("SZC")+M->ZC_CODIGO))	
+
+							RecLock("SZC",.F.)
+								SZC->(dbDelete())
+							SZC->(MsUnlock())
+
+							SZD->(dbSetOrder(1))
+							If SZD->(dbSeek(xFilial("SZD")+M->ZC_CODIGO))	
+								While SZD->ZD_FILIAL == xFilial("SZD") .And. SZD->ZD_COTACAO == M->ZC_CODIGO
+									RecLock("SZD",.F.)
+										SZD->(dbDelete())
+									SZD->(MsUnlock())
+									SZD->(dbSkip())
+								EndDo
+							EndIf
+						
+						EndIf
+
+					EndIf
 				Else
 					lRet := .F.
 					cMsgErro := aRet[2]
@@ -359,44 +681,49 @@ User Function F_ExCotV(aCabec,aItens,aCPOS,nOpc)
     End Transaction  
 
 	If lRet
-		SZC->(dbSetOrder(1))
-		If SZC->(dbSeek(xFilial("SZC")+ACABEC[aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZC_CODIGO" })][2]))
+		If nOpc != 5
+			SZC->(dbSetOrder(1))
+			If SZC->(dbSeek(xFilial("SZC")+ACABEC[aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZC_CODIGO" })][2]))
 
-			oJson1['status'] 		:= "200"
-			oJson1['mensagem'] 		:= "Sucesso!"	
-			oJson1['conteudo'] 		:= {}			
-			
-			oJsonCot['ZC_FILIAL'] 	= SZC->ZC_FILIAL
-			oJsonCot['ZC_CODIGO'] 	:= SZC->ZC_CODIGO
-			oJsonCot['ZC_CLIENTE'] 	:= SZC->ZC_CLIENTE
-			oJsonCot['ZC_LOJACLI'] 	:= SZC->ZC_LOJACLI
-			oJsonCot['ZC_TIPFRET'] 	:= SZC->ZC_TIPFRET
-			oJsonCot['ZC_DTVALID'] 	:= SZC->ZC_DTVALID
-			oJsonCot['ZC_DTINIFO'] 	:= SZC->ZC_DTINIFO
-			oJsonCot['ZC_DTFIMFO'] 	:= SZC->ZC_DTFIMFO
-			oJsonCot['ZC_CONDPAG'] 	:= SZC->ZC_CONDPAG
-			oJsonCot['ZC_VEND1'] 	:= SZC->ZC_VEND1
-			oJsonCot['ZC_VEND2'] 	:= SZC->ZC_VEND2
-			oJsonCot['itens'] 		:= {}		
+				oJson1['status'] 		:= "200"
+				oJson1['mensagem'] 		:= "Sucesso!"	
+				oJson1['conteudo'] 		:= {}			
+				
+				oJsonCot['ZC_FILIAL'] 	= SZC->ZC_FILIAL
+				oJsonCot['ZC_CODIGO'] 	:= SZC->ZC_CODIGO
+				oJsonCot['ZC_CLIENTE'] 	:= SZC->ZC_CLIENTE
+				oJsonCot['ZC_LOJACLI'] 	:= SZC->ZC_LOJACLI
+				oJsonCot['ZC_TIPFRET'] 	:= SZC->ZC_TIPFRET
+				oJsonCot['ZC_DTVALID'] 	:= SZC->ZC_DTVALID
+				oJsonCot['ZC_DTINIFO'] 	:= SZC->ZC_DTINIFO
+				oJsonCot['ZC_DTFIMFO'] 	:= SZC->ZC_DTFIMFO
+				oJsonCot['ZC_CONDPAG'] 	:= SZC->ZC_CONDPAG
+				oJsonCot['ZC_VEND1'] 	:= SZC->ZC_VEND1
+				oJsonCot['ZC_VEND2'] 	:= SZC->ZC_VEND2
+				oJsonCot['itens'] 		:= {}		
 
-			SZD->(dbSetOrder(1))
-			If SZD->(dbSeek(xFilial("SZD")+SZC->ZC_CODIGO))
+				SZD->(dbSetOrder(1))
+				If SZD->(dbSeek(xFilial("SZD")+SZC->ZC_CODIGO))
 
-				While !SZD->(Eof()) .and. SZD->ZD_FILIAL = SZC->ZC_FILIAL .and. SZD->ZD_COTACAO == SZC->ZC_CODIGO
+					While !SZD->(Eof()) .and. SZD->ZD_FILIAL = SZC->ZC_FILIAL .and. SZD->ZD_COTACAO == SZC->ZC_CODIGO
 
-					oJsonPrd := JsonObject():New()
-					oJsonPrd['ZD_ITEM'] 	:= SZD->ZD_ITEM
-					oJsonPrd['ZD_PRODUTO'] 	:= SZD->ZD_PRODUTO
-					oJsonPrd['ZD_PV1RUSU'] 	:= SZD->ZD_PV1RUSU
+						oJsonPrd := JsonObject():New()
+						oJsonPrd['ZD_ITEM'] 	:= SZD->ZD_ITEM
+						oJsonPrd['ZD_PRODUTO'] 	:= SZD->ZD_PRODUTO
+						oJsonPrd['ZD_PV1RUSU'] 	:= SZD->ZD_PV1RUSU
 
-					Aadd(oJsonCot['itens'],oJsonPrd)
+						Aadd(oJsonCot['itens'],oJsonPrd)
 
-					SZD->(dbSkip())
-				EndDo
+						SZD->(dbSkip())
+					EndDo
+				EndIf
+
+				Aadd(oJson1['conteudo'],oJsonCot)
+
 			EndIf
-
-			Aadd(oJson1['conteudo'],oJsonCot)
-
+		Else
+			oJson1['status'] 		:= "200"
+			oJson1['mensagem'] 		:= "Sucesso na exclusão da cotação!"	
 		EndIf
 	Else
 		lErro := .T.		
