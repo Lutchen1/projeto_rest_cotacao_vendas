@@ -32,6 +32,7 @@ Cadastro de Cotação de Vendas
 @history 25/02/2022, Dayvid Nogueira, Alteração para deixar a unidade padrão do produto como KG, conforme chamado 2022022307000248.
 @history 15/03/2022, Dayvid Nogueira, Correção para buscar o custo do produto Defaut de acordo com a unidade de medida em KG, para acompanhar a correção solicitada no chamado 2022022307000248. 
 @history  03/05/2022, Wemerson Souza, Inclusão de validações ao incluir novo produto na cotação de venda.
+@history  09/02/2023, Lutchen Oliveira, Ajuste coordenadas botões da tela de cotação de vendas.
 /*/
 //-------------------------------------------------------------------
 User Function PIFATC12()
@@ -47,20 +48,20 @@ User Function PIFATC12()
 
 	dbSelectArea("SZC")
 	aRotina := {{"Pesquisar"	,"AxPesqui"	 ,0,1},;
-		{"Visualizar"	,"U_PIFAT12A",0,2},;
-		{"Incluir"		,"U_PIFAT12A",0,3},;
-		{"Alterar"		,"U_PIFAT12A",0,4},;
-		{"Excluir"		,"U_PIFAT12A",0,5},;
-		{"Legenda"		,"U_PIFAT12A",0,6},;
-		{"Copiar "		,"U_PIFAT12A",0,7},;
-		{"Ger. Proposta","U_PIFAT12A",0,8}}
+				{"Visualizar"	,"U_PIFAT12A",0,2},;
+				{"Incluir"		,"U_PIFAT12A",0,3},;
+				{"Alterar"		,"U_PIFAT12A",0,4},;
+				{"Excluir"		,"U_PIFAT12A",0,5},;
+				{"Legenda"		,"U_PIFAT12A",0,6},;
+				{"Copiar "		,"U_PIFAT12A",0,7},;
+				{"Ger. Proposta","U_PIFAT12A",0,8}}
 	aCores := {{"((SZC->ZC_STATUS = 'P' .OR. SZC->ZC_STATUS = 'I' .OR. SZC->ZC_STATUS = 'A') .AND. SZC->ZC_DTVALID < DDATABASE)","BR_PRETO"},;
-		{"(SZC->ZC_STATUS = 'I')","BR_VERDE"	  },;
-		{"(SZC->ZC_STATUS = 'P')","BR_AMARELO" },;
-		{"(SZC->ZC_STATUS = 'A')","BR_AZUL"	  },;
-		{"(SZC->ZC_STATUS = 'S')","BR_LARANJA" },;
-		{"(SZC->ZC_STATUS = 'E')","BR_VERMELHO"},;
-		{"(SZC->ZC_STATUS = 'B')","BR_MARROM"}}		// AS - Aleluia
+			   {"(SZC->ZC_STATUS = 'I')","BR_VERDE"	  },;
+			   {"(SZC->ZC_STATUS = 'P')","BR_AMARELO" },;
+			   {"(SZC->ZC_STATUS = 'A')","BR_AZUL"	  },;
+		       {"(SZC->ZC_STATUS = 'S')","BR_LARANJA" },;
+			   {"(SZC->ZC_STATUS = 'E')","BR_VERMELHO"},;
+			   {"(SZC->ZC_STATUS = 'B')","BR_MARROM"}}		// AS - Aleluia
 
 	//fMntFil() //-- Monta Filtro
 
@@ -159,86 +160,86 @@ Rotinas Add do Cadastro de Cotação de Vendas
 //-------------------------------------------------------------------
 User Function PIFAT12A(cAlias,nRecno,nOpc)
 
-	Local lContinua := .T.
-	Local cStsIte := "Todos"
-	Local cCntMa1 := Space(150)
-	Local cCntMa2 := Space(150)
-	Local cNomCm1 := Space(150)
-	Local cNomCm2 := Space(150)
-	Local cStaBlAlt := 'I,P,A,S'	// Status bloqueio de alteração de cotação
-	Private INCLUI	 	:= (nOpc == 3)
-	Private ALTERA	 	:= (nOpc == 4)
-	Private EXCLUI      := (nOpc == 5)
+Local lContinua := .T.
+Local cStsIte := "Todos"
+Local cCntMa1 := Space(150)
+Local cCntMa2 := Space(150)
+Local cNomCm1 := Space(150)
+Local cNomCm2 := Space(150)
+Local cStaBlAlt := 'I,P,A,S'	// Status bloqueio de alteração de cotação
+Private INCLUI	 	:= (nOpc == 3)
+Private ALTERA	 	:= (nOpc == 4)
+Private EXCLUI      := (nOpc == 5)
 // ->> Bloqueia alteração de cotação com bloqueio de margem e desconto
-	if SuperGetMv("AS_BLALTCT", .F., "N") == "N"
-		cStaBlAlt := 'I,P,A,S,B'
-	else
-		cStaBlAlt := 'I,P,A,S'
-	endif
+if SuperGetMv("AS_BLALTCT", .F., "N") == "N"
+	cStaBlAlt := 'I,P,A,S,B'
+else
+	cStaBlAlt := 'I,P,A,S'
+endif
 // <<- Bloqueia alteração de cotação com bloqueio de margem e desconto
 
 // If nOpc == 4 .And. !(SZC->ZC_STATUS $ 'I,P,A,S')
-	If nOpc == 4 .And. !(SZC->ZC_STATUS $ cStaBlAlt)
-		Alert("Não é permitida a alteração da cotação para o status atual.")
-		lContinua := .F.
-	EndIf
+If nOpc == 4 .And. !(SZC->ZC_STATUS $ cStaBlAlt)
+	Alert("Não é permitida a alteração da cotação para o status atual.")
+	lContinua := .F.
+EndIf
 
-	If nOpc == 5 .And. !(SZC->ZC_STATUS == 'I') .And. !(SZC->ZC_STATUS == 'B')
-		Alert("Não é permitida a exclusão da cotação para o status atual.")
-		lContinua := .F.
-	EndIf
+If nOpc == 5 .And. !(SZC->ZC_STATUS == 'I') .And. !(SZC->ZC_STATUS == 'B')
+	Alert("Não é permitida a exclusão da cotação para o status atual.")
+	lContinua := .F.
+EndIf
 
-	If nOpc == 8 .And. !(SZC->ZC_STATUS $ 'I,P,A')
-		Alert("Não é permitida emissão de proposta para o status atual.")
-		lContinua := .F.
-	EndIf
+If nOpc == 8 .And. !(SZC->ZC_STATUS $ 'I,P,A')
+	Alert("Não é permitida emissão de proposta para o status atual.")
+	lContinua := .F.
+EndIf
 
-	If lContinua
-		If nOpc == 6 //-- Legenda
-			BrwLegenda(cCadastro,"Legenda", {	{"BR_VERDE"		,OemToAnsi("INCLUIDA")},;
-				{"BR_AMARELO"	,OemToAnsi("PROPOSTA ENVIADA")},;
-				{"BR_PRETO"		,OemToAnsi("VENCIDA")},;
-				{"BR_AZUL"		,OemToAnsi("ATENDIDA PARCIALMENTE")},;
-				{"BR_LARANJA"	,OemToAnsi("SALDO PENDENTE")},;
-				{"BR_VERMELHO"		,OemToAnsi("ENCERRADA")},;
-				{"BR_MARROM"		,OemToAnsi("BLOQUEADA")}})	// AS - Aleluia
-		ElseIf nOpc == 8 //-- Enviar Proposta
-			nRetImp := FsTelPro(@cStsIte,@cCntMa1,@cCntMa2,@cNomCm1,@cNomCm2)
-			If nRetImp <> 0
-				If nRetImp == 3
-					MsgRun("Gerando Proposta...","Aguarde...",{|| U_PIFATR02(cStsIte,cCntMa1,cCntMa2,cNomCm1,cNomCm2,nRetImp)})
-				Else
-					//-- Emissão de Relatório
-					MsgRun("Gerando Proposta...","Aguarde...",{|| U_PIFATR01(cStsIte,cCntMa1,cCntMa2,cNomCm1,cNomCm2,nRetImp)})
-				EndIf
-
-				Reclock("SZC",.F.)
-				SZC->ZC_STATUS := "P"
-				SZC->(MsUnLock())
-
-				//--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|
-				//->23/04/2020 - Wemerson Souza - Atualização de status do Processo de Cotação de Venda									 |
-				//--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|
-				FsGrvProc(2)
-				//--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|
-				//<-23/04/2020 - Wemerson Souza - Atualização de status do Processo de Cotação de Venda									 |
-				//--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|
-			EndIf
-		Else
-
-			If nOpc == 7 //-- Se for cópia altera para inclusão.
-				lCopia := .T.
-				nOpc := 3
+If lContinua
+	If nOpc == 6 //-- Legenda
+		BrwLegenda(cCadastro,"Legenda", {	{"BR_VERDE"		,OemToAnsi("INCLUIDA")},;
+			{"BR_AMARELO"	,OemToAnsi("PROPOSTA ENVIADA")},;
+			{"BR_PRETO"		,OemToAnsi("VENCIDA")},;
+			{"BR_AZUL"		,OemToAnsi("ATENDIDA PARCIALMENTE")},;
+			{"BR_LARANJA"	,OemToAnsi("SALDO PENDENTE")},;
+			{"BR_VERMELHO"		,OemToAnsi("ENCERRADA")},;
+			{"BR_MARROM"		,OemToAnsi("BLOQUEADA")}})	// AS - Aleluia
+	ElseIf nOpc == 8 //-- Enviar Proposta
+		nRetImp := FsTelPro(@cStsIte,@cCntMa1,@cCntMa2,@cNomCm1,@cNomCm2)
+		If nRetImp <> 0
+			If nRetImp == 3
+				MsgRun("Gerando Proposta...","Aguarde...",{|| U_PIFATR02(cStsIte,cCntMa1,cCntMa2,cNomCm1,cNomCm2,nRetImp)})
+			Else
+				//-- Emissão de Relatório
+				MsgRun("Gerando Proposta...","Aguarde...",{|| U_PIFATR01(cStsIte,cCntMa1,cCntMa2,cNomCm1,cNomCm2,nRetImp)})
 			EndIf
 
-			FsTelCot(cAlias,nRecno,nOpc) //-- Chama tela de manutenção da cotação
+			Reclock("SZC",.F.)
+			SZC->ZC_STATUS := "P"
+			SZC->(MsUnLock())
 
-			If lCopia
-				nOpc := 7
-				lCopia := .F.
-			EndIf
+			//--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|
+			//->23/04/2020 - Wemerson Souza - Atualização de status do Processo de Cotação de Venda									 |
+			//--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|
+			FsGrvProc(2)
+			//--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|
+			//<-23/04/2020 - Wemerson Souza - Atualização de status do Processo de Cotação de Venda									 |
+			//--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|
+		EndIf
+	Else
+
+		If nOpc == 7 //-- Se for cópia altera para inclusão.
+			lCopia := .T.
+			nOpc := 3
+		EndIf
+
+		FsTelCot(cAlias,nRecno,nOpc) //-- Chama tela de manutenção da cotação
+
+		If lCopia
+			nOpc := 7
+			lCopia := .F.
 		EndIf
 	EndIf
+EndIf
 
 Return()
 
@@ -253,370 +254,389 @@ Tela de Manutenção de Cotação de Venda
 
 @history 17/04/2020, Wemerson Souza, Inclusão de Processo de Cotação de Venda. Quando incluir pré-produto será necessário informar o número do processo que será vinculado ao item.
 @history 27/09/2022, .iNi Wemerson, Inclusão de variável lDesUsuCst para determinar se edição dos campos custo do usuário seraõ desabilitados
+@history 09/02/2023, Lutchen Oliveira, Ajuste coordenadas botões da tela de cotação de vendas.
 /*/
 //-------------------------------------------------------------------
 Static Function FsTelCot(cAlias,nRecno,nOpc)
 
 //-- Variáveis Locais
 //-- String
-	Local 	cCadastro	:= "Cotação de Vendas"
-	Local	cSubMen		:= ""
+Local 	cCadastro	:= "Cotação de Vendas"
+Local	cSubMen		:= ""
 //-- Array
-	Local 	aSize 		:= {}
-	Local 	aFldEnch 	:= {}
-	Local   aButEnc		:= {}
+Local 	aSize 		:= {}
+Local 	aFldEnch 	:= {}
+Local   aButEnc		:= {}
+Local  	aStru			:= {}
 //-- Numérico
-	Local 	nTop       	:= oMainWnd:nTop+35
-	Local 	nLeft      	:= oMainWnd:nLeft+10
-	Local 	nBottom    	:= oMainWnd:nBottom-12
-	Local 	nRight     	:= oMainWnd:nRight-10
-	Local 	nOpca
-	Local   nXi         := 0
+Local 	nTop       	:= oMainWnd:nTop+35
+Local 	nLeft      	:= oMainWnd:nLeft+10
+Local 	nBottom    	:= oMainWnd:nBottom-12
+Local 	nRight     	:= oMainWnd:nRight-10
+Local 	nOpca
+Local   nXi         := 0
 //-- Objeto
-	Local	oFont11		:= TFont():New( "MS Sans Serif",0,-11,,.F.,0,,700,.F.,.F.,,,,,, )
-	Local	oFont11N	:= TFont():New( "MS Sans Serif",0,-11,,.T.,0,,700,.F.,.F.,,,,,, )
-	Local 	oFont13 	:= TFont():New( "MS Sans Serif",0,-13,,.F.,0,,400,.F.,.F.,,,,,, )
-	Local 	oFont13N	:= TFont():New( "MS Sans Serif",0,-13,,.T.,0,,700,.F.,.F.,,,,,, )
-	Local 	oFont17N	:= TFont():New( "MS Sans Serif",0,-18,,.T.,0,,700,.F.,.F.,,,,,, )
-	Local 	oFont19N	:= TFont():New( "MS Sans Serif",0,-19,,.T.,0,,700,.F.,.F.,,,,,, )
-	Local 	oFont22N	:= TFont():New( "MS Sans Serif",0,-22,,.T.,0,,700,.F.,.F.,,,,,, )
-	Local 	oFont24N	:= TFont():New( "MS Sans Serif",0,-24,,.T.,0,,700,.F.,.F.,,,,,, )
+Local	oFont11		:= TFont():New( "MS Sans Serif",0,-11,,.F.,0,,700,.F.,.F.,,,,,, )
+Local	oFont11N	:= TFont():New( "MS Sans Serif",0,-11,,.T.,0,,700,.F.,.F.,,,,,, )
+Local 	oFont13 	:= TFont():New( "MS Sans Serif",0,-13,,.F.,0,,400,.F.,.F.,,,,,, )
+Local 	oFont13N	:= TFont():New( "MS Sans Serif",0,-13,,.T.,0,,700,.F.,.F.,,,,,, )
+Local 	oFont17N	:= TFont():New( "MS Sans Serif",0,-18,,.T.,0,,700,.F.,.F.,,,,,, )
+Local 	oFont19N	:= TFont():New( "MS Sans Serif",0,-19,,.T.,0,,700,.F.,.F.,,,,,, )
+Local 	oFont22N	:= TFont():New( "MS Sans Serif",0,-22,,.T.,0,,700,.F.,.F.,,,,,, )
+Local 	oFont24N	:= TFont():New( "MS Sans Serif",0,-24,,.T.,0,,700,.F.,.F.,,,,,, )
+
+Local cCSS := "QPushButton { background-color: #6699FF }"
 
 //-- Variáveis Private
 //-- String
-	Private	cTotRea := "Total R$: "
-	Private	cTotDol := "Total US$: "
-	Private cCodPrd := CriaVar("ZD_PRODUTO")
-	Private cPrePrd := CriaVar("ZD_PREPROD")
-	Private cDscPrd := CriaVar("B1_DESC")
-	Private cQtdUM1 := " "
-	Private cQtdUM2 := " "
-	Private cUMPad	:= ""
-	Private cIteAtu := ""
-	Private cMotivo := CriaVar("ZD_MOTIVO")
-	Private cObserv := CriaVar("ZD_OBSERV")
-	Private cCodCon	:= CriaVar("ZD_CODCON")
-	Private cStatus := ""
+Private	cTotRea := "Total R$: "
+Private	cTotDol := "Total US$: "
+Private cCodPrd := CriaVar("ZD_PRODUTO")
+Private cPrePrd := CriaVar("ZD_PREPROD")
+Private cDscPrd := CriaVar("B1_DESC")
+Private cQtdUM1 := " "
+Private cQtdUM2 := " "
+Private cUMPad	:= ""
+Private cIteAtu := ""
+Private cMotivo := CriaVar("ZD_MOTIVO")
+Private cObserv := CriaVar("ZD_OBSERV")
+Private cCodCon	:= CriaVar("ZD_CODCON")
+Private cStatus := ""
 //-- Objeto
-	Private	oDlg
-	Private	oDlg01
-	Private	oDlg02
-	Private	oDlg03
-	Private	oPan01
-	Private	oPan02
-	Private	oPan03
-	Private oDlgMnt
-	Private oBrowse1
-	Private	oLayer 		:= Nil
-	Private oSVerde  	:= LoadBitmap(GetResources(),"BR_VERDE")
-	Private oSVerme   	:= LoadBitmap(GetResources(),"BR_VERMELHO")
-	Private oSLaran   	:= LoadBitmap(GetResources(),"BR_LARANJA")
-	Private oSAmare   	:= LoadBitmap(GetResources(),"BR_AMARELO")
-	Private oSMarro   	:= LoadBitmap(GetResources(),"BR_MARROM")
-	Private oSPreto   	:= LoadBitmap(GetResources(),"BR_PRETO")
-	Private oSPink   	:= LoadBitmap(GetResources(),"BR_PINK")
-	Private oSEclui		:= LoadBitmap(GetResources(),"XCLOSE")
+Private	oDlg
+Private	oDlg01
+Private	oDlg02
+Private	oDlg03
+Private	oPan01
+Private	oPan02
+Private	oPan03
+Private oDlgMnt
+Private oBrowse1
+Private	oLayer 		:= Nil
+Private oSVerde  	:= LoadBitmap(GetResources(),"BR_VERDE")
+Private oSVerme   	:= LoadBitmap(GetResources(),"BR_VERMELHO")
+Private oSLaran   	:= LoadBitmap(GetResources(),"BR_LARANJA")
+Private oSAmare   	:= LoadBitmap(GetResources(),"BR_AMARELO")
+Private oSMarro   	:= LoadBitmap(GetResources(),"BR_MARROM")
+Private oSPreto   	:= LoadBitmap(GetResources(),"BR_PRETO")
+Private oSPink   	:= LoadBitmap(GetResources(),"BR_PINK")
+Private oSEclui		:= LoadBitmap(GetResources(),"XCLOSE")
 //-- Lógico
-	Private INCLUI	 	:= (nOpc == 3)
-	Private ALTERA	 	:= (nOpc == 4)
-	Private lBscImp 	:= .T.
-	Private lDesUsuCst	:= .F.
+Private INCLUI	 	:= (nOpc == 3)
+Private ALTERA	 	:= (nOpc == 4)
+Private lBscImp 	:= .T.
+Private lDesUsuCst	:= .F.
 //-- Array
-	Private	aIteUM		:= {"",""}
-	Private	aCabec1		:= {}
-	Private	aDadIt1		:= {}
-	Private aDadAux		:= {}
-	Private aUsados		:= {}
-	Private aImpostos	:= {}
-	Private aImposDef	:= {}
-	Private aImposUsu	:= {}
-	Private aTela[0][0],aGets[0]
+Private	aIteUM		:= {"",""}
+Private	aCabec1		:= {}
+Private	aDadIt1		:= {}
+Private aDadAux		:= {}
+Private aUsados		:= {}
+Private aImpostos	:= {}
+Private aImposDef	:= {}
+Private aImposUsu	:= {}
+Private aTela[0][0],aGets[0]
 //--Numérico
-	Private nHBrows1 := 0
-	Private nQtdUM1 := CriaVar("ZD_QUANT1")
-	Private nQtdUM2 := CriaVar("ZD_QUANT2")
-	Private nDefCst := CriaVar("ZD_CUSTDEF")
-	Private nDeDCst := CriaVar("ZD_CUSDDEF")
-	Private nDeDFre := CriaVar("ZD_FREDDEF")
-	Private nDefMrg := CriaVar("ZD_MARGDEF")
-	Private nDefAut := CriaVar("ZD_AUTDDEF")
-	Private nUsuAut := CriaVar("ZD_AUTDUSU")
-	Private nDefCom := CriaVar("ZD_PCMSDEF")
-	Private nDefCHi := CriaVar("ZD_PCMSDHI")
-	Private nDefCMi := CriaVar("ZD_PCMSDMI")
-	Private nDefDes := CriaVar("ZD_MARGDEF")
-	Private nDefFre := CriaVar("ZD_FRETDEF")
-	Private nDefImp := CriaVar("ZD_MARGDEF")
-	Private nDefPRE := CriaVar("ZD_PV1RDEF")
-	Private nDefPUS := CriaVar("ZD_PV1DDEF")
-	Private nDeDMBR := CriaVar("ZD_MABDDEF")
-	Private nDEDMLQ := CriaVar("ZD_MALDDEF")
-	Private nDefPRM := CriaVar("ZD_PV1RDEM")
-	Private nDeDPRM := CriaVar("ZD_PV1DDEM")
-	Private nDefMBM := CriaVar("ZD_MABRDEM")
-	Private nDeDMBM := CriaVar("ZD_MABDDEM")
-	Private nDefMLM := CriaVar("ZD_MALQDEM")
-	Private nDeDMLM := CriaVar("ZD_MALDDEM")
-	Private nDefTRE := CriaVar("ZD_TO1RDEF")
-	Private nDefTUS := CriaVar("ZD_TO1DDEF")
-	Private nUsuCst := CriaVar("ZD_CUSTUSU")
-	Private nUsuMrg := CriaVar("ZD_MARGUSU")
-	Private nUsuCom := CriaVar("ZD_PCMSUSU")
-	Private nUsuCPd := CriaVar("ZD_PCMSUSU")
-	Private nUsuCHi := CriaVar("ZD_PCMSUHI")
-	Private nUsuCMi := CriaVar("ZD_PCMSUMI")
-	Private nUsuCPd := CriaVar("ZD_PCOMPAD")
-	Private cClcCRN := "NAO"
-	Private nUsuDes := CriaVar("ZD_MARGUSU")
-	Private nUsuFre := CriaVar("ZD_FRETUSU")
-	Private nUsuImp := CriaVar("ZD_MARGUSU")
-	Private nUsuPRE := CriaVar("ZD_PV1RUSU")
-	Private nUsuPUS := CriaVar("ZD_PV1DUSU")
-	Private nUsDMBR := CriaVar("ZD_MABRDUS")
-	Private nUsDMLQ := CriaVar("ZD_MALQDUS")
-	Private nUsuPTb := CriaVar("ZD_PV1RUSU")
-	Private nDUsPTb := CriaVar("ZD_PV1RUSU")
-	Private nDUsDsc := CriaVar("ZD_PV1RUSU")
-	Private nUsuTRE := CriaVar("ZD_TO1RUSU")
-	Private nUsuTUS := CriaVar("ZD_TO1DUSU")
-	Private nDef2PRE := CriaVar("ZD_PV1RDEF")
-	Private nUsu2PRE := CriaVar("ZD_PV1RDEF")
-	Private nDef2PUS := CriaVar("ZD_PV1RDEF")
-	Private nUsu2PUS := CriaVar("ZD_PV1RDEF")
-	Private nQtdAte := CriaVar("ZD_QTD1ATE")
-	Private nDefMBR := CriaVar("ZD_MABRDEF")
-	Private nDefMLQ := CriaVar("ZD_MALQDEF")
-	Private nUsuMBR := CriaVar("ZD_MABRUSU")
-	Private nUsuMLQ := CriaVar("ZD_MALQUSU")
-	Private nDUsCst := CriaVar("ZD_CUSTUSU")
-	Private nDUsFre := CriaVar("ZD_FRETUSU")
-	Private nDUsTRE := CriaVar("ZD_TO1RUSU")
-	Private nDUsTUS := CriaVar("ZD_TO1DUSU")
-	Private nUsuPRM := CriaVar("ZD_PV1RUSM")
-	Private nUsDPRM := CriaVar("ZD_PV1DUSM")
-	Private nUsuMBM := CriaVar("ZD_MABRUSM")
-	Private nUsDMBM := CriaVar("ZD_MABDUSM")
-	Private nUsuMLM := CriaVar("ZD_MALQUSM")
-	Private nUsDMLM := CriaVar("ZD_MALDUSM")
-	Private cProcess:= CriaVar("ZD_PROCESS")//--23/04/2020 - Wemerson Souza - Variavel para tratar Processo de Cotação de Venda
-	Private cProcApv:= CriaVar("ZD_PROCAPV")//--23/04/2020 - Wemerson Souza - Variavel para tratar Processo de Cotação de Venda
-	Private cBloDir := CriaVar("ZD_BLODIR")//--AS - Aleluia - Bloqueio Diretoria
-	Private cMsgDir := CriaVar("ZD_MSGDIR")//--AS - Aleluia - Msg. de Bloqueio Dir
-	Private nDeDPRM2 := CriaVar("ZD_PV2DDEM") // -- Preco Minimo Default Dolar UM2
-	Private nUsDPRM2 := CriaVar("ZD_PV2DUSM") // -- Preco Minimo Usuario Dolar UM2
-	Private nDefPRM2 := CriaVar("ZD_PV2RDEM") // -- Preco Minimo Default Real UM2
-	Private nUsuPRM2 := CriaVar("ZD_PV2RUSM") // -- Preco Minimo Usuario Real UM2
-	Private cCodTabCot := CriaVar("ZD_CODTABC") // -- Codigo Tabela Comissao
+Private nHBrows1 := 0
+Private nQtdUM1 := CriaVar("ZD_QUANT1")
+Private nQtdUM2 := CriaVar("ZD_QUANT2")
+Private nDefCst := CriaVar("ZD_CUSTDEF")
+Private nDeDCst := CriaVar("ZD_CUSDDEF")
+Private nDeDFre := CriaVar("ZD_FREDDEF")
+Private nDefMrg := CriaVar("ZD_MARGDEF")
+Private nDefAut := CriaVar("ZD_AUTDDEF")
+Private nUsuAut := CriaVar("ZD_AUTDUSU")
+Private nDefCom := CriaVar("ZD_PCMSDEF")
+Private nDefCHi := CriaVar("ZD_PCMSDHI")
+Private nDefCMi := CriaVar("ZD_PCMSDMI")
+Private nDefDes := CriaVar("ZD_MARGDEF")
+Private nDefFre := CriaVar("ZD_FRETDEF")
+Private nDefImp := CriaVar("ZD_MARGDEF")
+Private nDefPRE := CriaVar("ZD_PV1RDEF")
+Private nDefPUS := CriaVar("ZD_PV1DDEF")
+Private nDeDMBR := CriaVar("ZD_MABDDEF")
+Private nDEDMLQ := CriaVar("ZD_MALDDEF")
+Private nDefPRM := CriaVar("ZD_PV1RDEM")
+Private nDeDPRM := CriaVar("ZD_PV1DDEM")
+Private nDefMBM := CriaVar("ZD_MABRDEM")
+Private nDeDMBM := CriaVar("ZD_MABDDEM")
+Private nDefMLM := CriaVar("ZD_MALQDEM")
+Private nDeDMLM := CriaVar("ZD_MALDDEM")
+Private nDefTRE := CriaVar("ZD_TO1RDEF")
+Private nDefTUS := CriaVar("ZD_TO1DDEF")
+Private nUsuCst := CriaVar("ZD_CUSTUSU")
+Private nUsuMrg := CriaVar("ZD_MARGUSU")
+Private nUsuCom := CriaVar("ZD_PCMSUSU")
+Private nUsuCPd := CriaVar("ZD_PCMSUSU")
+Private nUsuCHi := CriaVar("ZD_PCMSUHI")
+Private nUsuCMi := CriaVar("ZD_PCMSUMI")
+Private nUsuCPd := CriaVar("ZD_PCOMPAD")
+Private cClcCRN := "NAO"
+Private nUsuDes := CriaVar("ZD_MARGUSU")
+Private nUsuFre := CriaVar("ZD_FRETUSU")
+Private nUsuImp := CriaVar("ZD_MARGUSU")
+Private nUsuPRE := CriaVar("ZD_PV1RUSU")
+Private nUsuPUS := CriaVar("ZD_PV1DUSU")
+Private nUsDMBR := CriaVar("ZD_MABRDUS")
+Private nUsDMLQ := CriaVar("ZD_MALQDUS")
+Private nUsuPTb := CriaVar("ZD_PV1RUSU")
+Private nDUsPTb := CriaVar("ZD_PV1RUSU")
+Private nDUsDsc := CriaVar("ZD_PV1RUSU")
+Private nUsuTRE := CriaVar("ZD_TO1RUSU")
+Private nUsuTUS := CriaVar("ZD_TO1DUSU")
+Private nDef2PRE := CriaVar("ZD_PV1RDEF")
+Private nUsu2PRE := CriaVar("ZD_PV1RDEF")
+Private nDef2PUS := CriaVar("ZD_PV1RDEF")
+Private nUsu2PUS := CriaVar("ZD_PV1RDEF")
+Private nQtdAte := CriaVar("ZD_QTD1ATE")
+Private nDefMBR := CriaVar("ZD_MABRDEF")
+Private nDefMLQ := CriaVar("ZD_MALQDEF")
+Private nUsuMBR := CriaVar("ZD_MABRUSU")
+Private nUsuMLQ := CriaVar("ZD_MALQUSU")
+Private nDUsCst := CriaVar("ZD_CUSTUSU")
+Private nDUsFre := CriaVar("ZD_FRETUSU")
+Private nDUsTRE := CriaVar("ZD_TO1RUSU")
+Private nDUsTUS := CriaVar("ZD_TO1DUSU")
+Private nUsuPRM := CriaVar("ZD_PV1RUSM")
+Private nUsDPRM := CriaVar("ZD_PV1DUSM")
+Private nUsuMBM := CriaVar("ZD_MABRUSM")
+Private nUsDMBM := CriaVar("ZD_MABDUSM")
+Private nUsuMLM := CriaVar("ZD_MALQUSM")
+Private nUsDMLM := CriaVar("ZD_MALDUSM")
+Private cProcess:= CriaVar("ZD_PROCESS")//--23/04/2020 - Wemerson Souza - Variavel para tratar Processo de Cotação de Venda
+Private cProcApv:= CriaVar("ZD_PROCAPV")//--23/04/2020 - Wemerson Souza - Variavel para tratar Processo de Cotação de Venda
+Private cBloDir := CriaVar("ZD_BLODIR")//--AS - Aleluia - Bloqueio Diretoria
+Private cMsgDir := CriaVar("ZD_MSGDIR")//--AS - Aleluia - Msg. de Bloqueio Dir
+Private nDeDPRM2 := CriaVar("ZD_PV2DDEM") // -- Preco Minimo Default Dolar UM2
+Private nUsDPRM2 := CriaVar("ZD_PV2DUSM") // -- Preco Minimo Usuario Dolar UM2
+Private nDefPRM2 := CriaVar("ZD_PV2RDEM") // -- Preco Minimo Default Real UM2
+Private nUsuPRM2 := CriaVar("ZD_PV2RUSM") // -- Preco Minimo Usuario Real UM2
+Private cCodTabCot := CriaVar("ZD_CODTABC") // -- Codigo Tabela Comissao
+	
+Private nOpcMnt := nOpc
+Private lObrigaRM := SuperGetMv( "FS_OBRIREM", .F., .F. )	// AS - Aleluia - Parâmetro, obriga ou não preenchimento de remessa para os itens da cotação
 
-	Private nOpcMnt := nOpc
-	Private lObrigaRM := SuperGetMv( "FS_OBRIREM", .F., .F. )	// AS - Aleluia - Parâmetro, obriga ou não preenchimento de remessa para os itens da cotação
+private oBtnSalvar := Nil
+private oBtnCancel := Nil
+private oBtnLeg    := Nil
+private oBtnAprov  := Nil 
 
-	PUBLIC N := 1
+PUBLIC N := 1
 
-	zCriaEPopulaVariavelPublica()
+zCriaEPopulaVariavelPublica()
 
 //-- Recalcula posicao dos objetos
-	aSize := MsAdvSize()
+aSize := MsAdvSize()
 
 //-- Inicio Montagem da tela
-	oDlg := MSDialog():New(aSize[7],aSize[1],aSize[6],aSize[5],cCadastro,,,.F.,DS_MODALFRAME,,,,oMainWnd,.T.,,,.T.)
+oDlg := MSDialog():New(aSize[7],aSize[1],aSize[6],aSize[5],cCadastro,,,.F.,DS_MODALFRAME,,,,oMainWnd,.T.,,,.T.)
 
 //oDlg:nClrPane 	:= RGB(240,240,240) //-- Define cor da tela.
-	oDlg:lMaximized := .T.   			//-- Ocupa tela inteira
-	oDlg:LEscClose 	:= .F.   			//-- Nao Permitir fechar a janela pelo ESC do teclado
+oDlg:lMaximized := .T.   			//-- Ocupa tela inteira
+oDlg:LEscClose 	:= .F.   			//-- Nao Permitir fechar a janela pelo ESC do teclado
 
-	oLayer:= FWLayer():New() 			//-- Cria painel.
-	oLayer:Init(oDlg,.F.,.T.) 			//-- Inicializa painel.
+oLayer:= FWLayer():New() 			//-- Cria painel.
+oLayer:Init(oDlg,.F.,.T.) 			//-- Inicializa painel.
 
 //-- Adiciona 2 linhas separando a tela no meio.
-	oLayer:addLine("Lin01",45,.F.)
-	oLayer:addLine("Lin02",47,.F.)
+oLayer:addLine("Lin01",45,.F.)
+oLayer:addLine("Lin02",55,.F.)
 
 //-- Adiciona as colunas de cada janela.
-	oLayer:addCollumn("Col01",100,.F.,"Lin01")
-	oLayer:addCollumn("Col02",100,.F.,"Lin02")
+oLayer:addCollumn("Col01",100,.F.,"Lin01")
+oLayer:addCollumn("Col02",100,.F.,"Lin02")
 
 //-- Cria Janela dos Pedidos
-	oLayer:addWindow("Col01","Jan01","Dados Gerais da Cotação",100,.F.,.T.,,"Lin01",)
+oLayer:addWindow("Col01","Jan01","Dados Gerais da Cotação",100,.F.,.T.,,"Lin01",)
 
 //-- Retorna o objeto da Janela Dados Gerais da Cotação
-	oDlg01:= oLayer:getWinPanel("Col01","Jan01","Lin01")
+oDlg01:= oLayer:getWinPanel("Col01","Jan01","Lin01")
 
 //-- Cria Painel da Janela Itens da Cotação
-	oPan01:= TPanel():New(oDlg01:nTop,oDlg01:nBottom,,oDlg01,,,,,/*RGB(245,245,245)*/,oDlg01:nRight,oDlg01:nLeft,.T.,.T.)
-	oPan01:Align := CONTROL_ALIGN_ALLCLIENT
+oPan01:= TPanel():New(oDlg01:nTop,oDlg01:nBottom,,oDlg01,,,,,/*RGB(245,245,245)*/,oDlg01:nRight,oDlg01:nLeft,.T.,.T.)
+oPan01:Align := CONTROL_ALIGN_ALLCLIENT
 
 //-- Monta o array de campos do cabeçalho
-	dbSelectArea("SX3")
-	dbSetOrder(1)
-	dbSeek("SZC")
-	Do While !Eof() .And. SX3->X3_ARQUIVO == "SZC"
-		If X3USO(SX3->X3_USADO) .And. cNivel >= SX3->X3_NIVEL
-			If Empty(SX3->X3_RELACAO)
-				&("M->"+SX3->X3_CAMPO) := CriaVar(SX3->X3_CAMPO)
-			EndIf
-			aAdd(aFldEnch,SX3->X3_CAMPO)
+aStru := FWSX3Util():GetListFieldsStruct( "SZC" , .T. )
+
+For nXi := 1 To Len(aStru)
+	If X3Uso(GETSX3CACHE(aStru[nXi][1], "X3_Usado")) .And. cNivel >= GETSX3CACHE(aStru[nXi][1],"X3_NIVEL")
+		If Empty(GETSX3CACHE(aStru[nXi][1], "X3_RELACAO"))
+			&("M->"+GETSX3CACHE(aStru[nXi][1], "X3_CAMPO")) := CriaVar(GETSX3CACHE(aStru[nXi][1], "X3_CAMPO"))
 		EndIf
-		dbSelectArea("SX3")
-		dbSkip()
-	EndDo
+		aAdd(aFldEnch,GETSX3CACHE(aStru[nXi][1], "X3_CAMPO"))
+	EndIf
+Next nXi
 
 //-- Cria variáveis de memória.
-	RegToMemory(cAlias, If(nOpc==3 .And. !lCopia,.T.,.F.))
+RegToMemory(cAlias, If(nOpc==3 .And. !lCopia,.T.,.F.))
 
-	If lCopia
-		M->ZC_CODIGO := GETSXENUM("SZC","ZC_CODIGO")
-		M->ZC_EMISSAO := DDATABASE //Adicionado
-	EndIf
+If lCopia
+	M->ZC_CODIGO := GETSXENUM("SZC","ZC_CODIGO")
+	M->ZC_EMISSAO := DDATABASE //Adicionado
+EndIf
 
 //-- Enchoice com os campos do cabeçalho.
-	oEnch := MsMGet():New("SZC",SZC->(RECNO()),nOpc,,,,aFldEnch,/*aPosEnch*/{oPan01:nTop,oPan01:nLeft,oPan01:nBottom,oPan01:nRight-(oPan01:nRight*0.65)},,,,,,oPan01,,,.F.)
-	oEnch:oBox:Align := CONTROL_ALIGN_ALLCLIENT
+oEnch := MsMGet():New("SZC",SZC->(RECNO()),nOpc,,,,aFldEnch,/*aPosEnch*/{oPan01:nTop,oPan01:nLeft,oPan01:nBottom,oPan01:nRight-(oPan01:nRight*0.65)},,,,,,oPan01,,,.F.)
+oEnch:oBox:Align := CONTROL_ALIGN_ALLCLIENT
 
 //-- Cria Janela dos Itens da Cotação
-	oLayer:addWindow("Col02","Jan02","Itens da Cotação",100,.F.,.T.,,"Lin02",)
+oLayer:addWindow("Col02","Jan02","Itens da Cotação",100,.F.,.T.,,"Lin02",)
 
 //-- Retorna o objeto da Janela Itens da Cotação
-	oDlg02:= oLayer:getWinPanel("Col02","Jan02","Lin02")
+oDlg02:= oLayer:getWinPanel("Col02","Jan02","Lin02")
 //oLayer:winChgState("Col02","Jan02","Lin02")
 
 //-- Cria Painel da Janela Itens da Cotação
-	oPan02:= TPanel():New(oDlg02:nTop,oDlg02:nBottom,,oDlg02,,,,,/*RGB(245,245,245)*/,oDlg02:nRight,oDlg02:nLeft,.T.,.T.)
-	oPan02:Align := CONTROL_ALIGN_ALLCLIENT
+oPan02:= TPanel():New(oDlg02:nTop,oDlg02:nBottom,,oDlg02,,,,,/*RGB(245,245,245)*/,oDlg02:nRight,oDlg02:nLeft,.T.,.T.)
+oPan02:Align := CONTROL_ALIGN_ALLCLIENT
 
 //-- Cria barra de botões na tela de manuteção de itens da cotação
-	oTMenuBar := TMenuBar():New(oPan02)
-	oTMenuBar:SetCss("QMenuBar{background-color:#4d6094;color:#ffffff;}")
-	oTMenuBar:Align     := CONTROL_ALIGN_TOP
-	oTMenuBar:nClrPane  := RGB(77,96,148)
-	oTMenuBar:bRClicked := {||}
+oTMenuBar := TMenuBar():New(oPan02)
+oTMenuBar:SetCss("QMenuBar{background-color:#4d6094;color:#ffffff;}")
+oTMenuBar:Align     := CONTROL_ALIGN_TOP
+oTMenuBar:nClrPane  := RGB(77,96,148)
+oTMenuBar:bRClicked := {||}
 //oTMenuBar:SetDefaultUp(.T.) //-- Joga as opções do menu pra cima
 
 //-- Cria itens do menu Manut Itens.
-	oTMenu1 := TMenu():New(0,0,0,0,.T.,,oTMenuBar)
-	oTMenu1:Add(TMenuItem():New(oTMenu1,"Novo <F2>"      ,,,,{|| (FsBtnMnt(1,'N'))},,"SDUNEW",,,,,,,.T.))
-	oTMenu1:Add(TMenuItem():New(oTMenu1,"Cons.Prev.Rem",,,,{|| U_ASFATR05('I')},,"BMPTABLE",,,,,,,.T.))
-	oTMenu1:Add(TMenuItem():New(oTMenu1,"Excluir"   ,,,,{|| (FsBtnMnt(3))},,"SDUDELETE",,,,,,,.T.))
-	oTMenuBar:AddItem('Manut. Itens', oTMenu1, .T.)
+oTMenu1 := TMenu():New(0,0,0,0,.T.,,oTMenuBar)
+oTMenu1:Add(TMenuItem():New(oTMenu1,"Novo <F2>"      ,,,,{|| (FsBtnMnt(1,'N'))},,"SDUNEW",,,,,,,.T.))
+oTMenu1:Add(TMenuItem():New(oTMenu1,"Cons.Prev.Rem",,,,{|| U_ASFATR05('I')},,"BMPTABLE",,,,,,,.T.))
+oTMenu1:Add(TMenuItem():New(oTMenu1,"Excluir"   ,,,,{|| (FsBtnMnt(3))},,"SDUDELETE",,,,,,,.T.))
+oTMenuBar:AddItem('Manut. Itens', oTMenu1, .T.)
 //-- Cria itens do menu Follow Up
-	oTMenu2 := TMenu():New(0,0,0,0,.T.,,oTMenuBar)
-	oTMenu2:Add(TMenuItem():New(oTMenu2,"Perdeu Cotação"  ,,,,{|| (cSubMen := "P"  , FsBtnMnt(4,cSubMen))},,"BR_MARROM",,,,,,,.T.))
-	oTMenu2:Add(TMenuItem():New(oTMenu2,"Cancelar"        ,,,,{|| (cSubMen := "C"  , FsBtnMnt(4,cSubMen))},,"BR_PRETO",,,,,,,.T.))
-	oTMenu2:Add(TMenuItem():New(oTMenu2,"Eliminar Residuo",,,,{|| (cSubMen := "E"  , FsBtnMnt(4,cSubMen))},,"BR_PINK",,,,,,,.T.))
-	oTMenuBar:AddItem('Follow Up'   , oTMenu2, .T.)
+oTMenu2 := TMenu():New(0,0,0,0,.T.,,oTMenuBar)
+oTMenu2:Add(TMenuItem():New(oTMenu2,"Perdeu Cotação"  ,,,,{|| (cSubMen := "P"  , FsBtnMnt(4,cSubMen))},,"BR_MARROM",,,,,,,.T.))
+oTMenu2:Add(TMenuItem():New(oTMenu2,"Cancelar"        ,,,,{|| (cSubMen := "C"  , FsBtnMnt(4,cSubMen))},,"BR_PRETO",,,,,,,.T.))
+oTMenu2:Add(TMenuItem():New(oTMenu2,"Eliminar Residuo",,,,{|| (cSubMen := "E"  , FsBtnMnt(4,cSubMen))},,"BR_PINK",,,,,,,.T.))
+oTMenuBar:AddItem('Follow Up'   , oTMenu2, .T.)
 //-- Cria itens do menu Outras Ações
-	oTMenu3 := TMenu():New(0,0,0,0,.T.,,oTMenuBar)
-	oTMenu3:Add(TMenuItem():New(oTMenu3,"Legenda"   ,,,,{|| (FsBtnMnt(5))},,"COLOR",,,,,,,.T.))
-	oTMenuBar:AddItem('Outras Ações', oTMenu3, .T.)
+oTMenu3 := TMenu():New(0,0,0,0,.T.,,oTMenuBar)
+oTMenu3:Add(TMenuItem():New(oTMenu3,"Legenda"   ,,,,{|| (FsBtnMnt(5))},,"COLOR",,,,,,,.T.))
+oTMenuBar:AddItem('Outras Ações', oTMenu3, .T.)
 //-- Cria itens do menu Processo
-	oTMenu4 := TMenu():New(0,0,0,0,.T.,,oTMenuBar)
-	oTMenu4:Add(TMenuItem():New(oTMenu3,"Vincular Processo"   ,,,,{|| (FsProCot(1))},,/*"COLOR"*/,,,,,,,.T.))
-	oTMenu4:Add(TMenuItem():New(oTMenu3,"Aprovar"   ,,,,{|| (FsProCot(2))},,/*"COLOR"*/,,,,,,,.T.))
-	oTMenuBar:AddItem('Processo Cotação', oTMenu4, .T.)
+oTMenu4 := TMenu():New(0,0,0,0,.T.,,oTMenuBar)
+oTMenu4:Add(TMenuItem():New(oTMenu3,"Vincular Processo"   ,,,,{|| (FsProCot(1))},,/*"COLOR"*/,,,,,,,.T.))
+oTMenu4:Add(TMenuItem():New(oTMenu3,"Aprovar"   ,,,,{|| (FsProCot(2))},,/*"COLOR"*/,,,,,,,.T.))
+oTMenuBar:AddItem('Processo Cotação', oTMenu4, .T.)
 
-	SetKey(VK_F2,{|| FsBtnMnt(1,'N')}) //-- Novo - Atalho F2
+SetKey(VK_F2,{|| FsBtnMnt(1,'N')}) //-- Novo - Atalho F2
 
 //-- Cordenad. Objetos Vertical
-	aPosHei := MsObjGetPos(oPan02:nHeight,12,{{011.0,087.0,;	//-- 1  ,  2
+aPosHei := MsObjGetPos(oPan02:nHeight,12,{{011.0,087.0,;	//-- 1  ,  2
 	101.0,101.0,;	//-- 3  ,  4
-	020.0,020.0}})	//-- 5  ,  6
+	020.0,020.0,;	//-- 5  ,  6
+	120.0,120.0}})  //-- 7  ,  8
 //-- Cordenad. Objetos Horizontal
-	aPosWid := MsObjGetPos(oPan02:nWidth,1322,{{000.0,330.0,;	//-- 1  ,  2
+aPosWid := MsObjGetPos(oPan02:nWidth,1322,{{000.0,330.0,;	//-- 1  ,  2
 	010.0,160.0,;	//-- 3  ,  4
-	150.0,150.0}})  //-- 5  ,  6
+	150.0,150.0,;  //-- 5  ,  6
+	210.0,240.0,;  //-- 7  ,  8
+	270.0,300.0}})  //-- 9  ,  10
+
 //-- Cria array com itens da cotação
-	aCabec1 := {}
-	aDadIt1 := {}
+aCabec1 := {}
+aDadIt1 := {}
 
 //-- Add primeiro campo de status
-	Aadd(aCabec1,{"",,"LEFT",10})
-	Aadd(aDadIt1,{""})
+Aadd(aCabec1,{"",,"LEFT",10})
+Aadd(aDadIt1,{""})
 
 //-- Add demais campos marcados como usado
-	dbSelectArea("SX3")
-	dbSetOrder(1)
-	dbSeek("SZD")
-	Do While !Eof() .And. SX3->X3_ARQUIVO == "SZD"
-		If X3USO(SX3->X3_USADO) .And. cNivel >= SX3->X3_NIVEL
-			If X3_TIPO == 'N'
-				Aadd(aCabec1,{X3_TITULO,X3_PICTURE,"RIGTH",X3_TAMANHO})
-			ElseIf X3_TIPO == 'C'
-				Aadd(aCabec1,{X3_TITULO,"@!","LEFT" ,X3_TAMANHO})
-			ElseIf X3_TIPO == 'D'
-				Aadd(aCabec1,{X3_TITULO,"@D","LEFT" ,X3_TAMANHO})
-			Else
-				Aadd(aCabec1,{X3_TITULO,,"LEFT" ,X3_TAMANHO})
-			EndIf
-			Aadd(aUsados,SX3->X3_CAMPO)
-			Aadd(aDadIt1[1],CriaVar(SX3->X3_CAMPO))
-		EndIf
-		dbSelectArea("SX3")
-		dbSkip()
-	EndDo
+aStru  := FWSX3Util():GetListFieldsStruct( "SZD" , .T. )
 
-	Aadd(aDadIt1[1],.F.)
+For nXi := 1 To Len(aStru)
+	If X3Uso(GETSX3CACHE(aStru[nXi][1], "X3_Usado")) .And. cNivel >= GETSX3CACHE(aStru[nXi][1], "X3_NIVEL")
+		If GETSX3CACHE(aStru[nXi][1], "X3_TIPO") == 'N'
+			Aadd(aCabec1,{GETSX3CACHE(aStru[nXi][1], "X3_TITULO"),GETSX3CACHE(aStru[nXi][1], "X3_PICTURE"),"RIGTH",GETSX3CACHE(aStru[nXi][1], "X3_TAMANHO")})
+		ElseIf GETSX3CACHE(aStru[nXi][1], "X3_TIPO") == 'C'
+			Aadd(aCabec1,{GETSX3CACHE(aStru[nXi][1], "X3_TITULO"),"@!","LEFT" ,GETSX3CACHE(aStru[nXi][1], "X3_TAMANHO")})
+		ElseIf GETSX3CACHE(aStru[nXi][1], "X3_TIPO") == 'D'
+			Aadd(aCabec1,{GETSX3CACHE(aStru[nXi][1], "X3_TITULO"),"@D","LEFT" ,GETSX3CACHE(aStru[nXi][1], "X3_TAMANHO")})
+		Else
+			Aadd(aCabec1,{GETSX3CACHE(aStru[nXi][1], "X3_TITULO"),,"LEFT" ,GETSX3CACHE(aStru[nXi][1], "X3_TAMANHO")})
+		EndIf
+		Aadd(aUsados,GETSX3CACHE(aStru[nXi][1], "X3_CAMPO"))
+		Aadd(aDadIt1[1],CriaVar(GETSX3CACHE(aStru[nXi][1], "X3_CAMPO")))
+	EndIf
+Next nXi
+
+Aadd(aDadIt1[1],.F.)
 
 //-- Cria browse de itens de cotação
-	oBrowse1 := MsBrGetDBase():New(aPosHei[1,1],aPosWid[1,1],aPosWid[1,2],aPosHei[1,2],,,,oPan02,,,,,,,,,,,,.F.,"",.T.,,.F.,,,)
+oBrowse1 := MsBrGetDBase():New(aPosHei[1,1],aPosWid[1,1],aPosWid[1,2],aPosHei[1,2],,,,oPan02,,,,,,,,,,,,.F.,"",.T.,,.F.,,,)
 
 //-- Cria coluna de legenda do browse
-	bColumn :=  &("{ || FsDefCor(aDadIt1,oBrowse1:nAt) }")
-	oBrowse1:AddColumn(TCColumn():New(aCabec1[1,1],bColumn,aCabec1[1,2],,,aCabec1[1,3],aCabec1[1,4],.T.,.F.,,,,.F.,))
+bColumn :=  &("{ || FsDefCor(aDadIt1,oBrowse1:nAt) }")
+oBrowse1:AddColumn(TCColumn():New(aCabec1[1,1],bColumn,aCabec1[1,2],,,aCabec1[1,3],aCabec1[1,4],.T.,.F.,,,,.F.,))
 
 //-- Cria demais colunas do browse
-	For nXi:= 2 to Len(aCabec1)
-		bColumn :=  &("{ || aDadIt1[oBrowse1:nAt,"+cValToChar(nXi)+"] }")
-		oBrowse1:AddColumn(TCColumn():New(aCabec1[nXi,1],bColumn,aCabec1[nXi,2],,,aCabec1[nXi,3],/*aCabec1[nXi,4]*/,.F.,.F.,,,,.F.,))
-	Next nXi
+For nXi:= 2 to Len(aCabec1)
+	bColumn :=  &("{ || aDadIt1[oBrowse1:nAt,"+cValToChar(nXi)+"] }")
+	oBrowse1:AddColumn(TCColumn():New(aCabec1[nXi,1],bColumn,aCabec1[nXi,2],,,aCabec1[nXi,3],/*aCabec1[nXi,4]*/,.F.,.F.,,,,.F.,))
+Next nXi
 
-	oBrowse1:nScrollType:= 1 //-- Define a barra de rolagem VCR
+oBrowse1:nScrollType:= 1 //-- Define a barra de rolagem VCR
 
 //oBrowse1:bChange := {|x| FSCrgMnt()}
-	oBrowse1:bLDblClick	:= {|| MsgRun("Carregando Item...","Aguarde...",{|| FSCrgMnt()})}
+oBrowse1:bLDblClick	:= {|| MsgRun("Carregando Item...","Aguarde...",{|| FSCrgMnt()})}
 //-- Define cores do registro deletado.
-	bColor := &("{|| if(aDadIt1[oBrowse1:nAt,Len(aDadIt1[oBrowse1:nAt])],"+Str(CLR_WHITE)+","+Str(CLR_BLACK)+")}")
-	oBrowse1:SetBlkColor(bColor)
-	bColor := &("{|| if(aDadIt1[oBrowse1:nAt,Len(aDadIt1[oBrowse1:nAt])],"+Str(CLR_LIGHTGRAY)+","+Str(CLR_WHITE)+")}")
-	oBrowse1:SetBlkBackColor(bColor)
+bColor := &("{|| if(aDadIt1[oBrowse1:nAt,Len(aDadIt1[oBrowse1:nAt])],"+Str(CLR_WHITE)+","+Str(CLR_BLACK)+")}")
+oBrowse1:SetBlkColor(bColor)
+bColor := &("{|| if(aDadIt1[oBrowse1:nAt,Len(aDadIt1[oBrowse1:nAt])],"+Str(CLR_LIGHTGRAY)+","+Str(CLR_WHITE)+")}")
+oBrowse1:SetBlkBackColor(bColor)
 
-	oBrowse1:SetArray(aDadIt1)
-	oBrowse1:SetFocus()
-	nHBrows1 := GetFocus()
+oBrowse1:SetArray(aDadIt1)
+oBrowse1:SetFocus()
+nHBrows1 := GetFocus()
 
 //-- Total em R$
-	oSayTo1	:= TSay():New(aPosHei[1,3],aPosWid[1,3],{||cTotRea},oPan02,,oFont19N,.F.,.F.,.F.,.T.,CLR_BLACK,,aPosWid[1,5],aPosHei[1,5],,,,,,.T.)
+oSayTo1	:= TSay():New(aPosHei[1,3],aPosWid[1,3],{||cTotRea},oPan02,,oFont19N,.F.,.F.,.F.,.T.,CLR_BLACK,,aPosWid[1,5],aPosHei[1,5],,,,,,.T.)
 //-- Total em US$
-	oSayTo2	:= TSay():New(aPosHei[1,4],aPosWid[1,4],{||cTotDol},oPan02,,oFont19N,.F.,.F.,.F.,.T.,CLR_BLACK,,aPosWid[1,6],aPosHei[1,6],,,,,,.T.)
+oSayTo2	:= TSay():New(aPosHei[1,4],aPosWid[1,4],{||cTotDol},oPan02,,oFont19N,.F.,.F.,.F.,.T.,CLR_BLACK,,aPosWid[1,6],aPosHei[1,6],,,,,,.T.)
 
-	Aadd(aButEnc, {"COLOR", {|| FsBtnMnt(5)}, "Legenda Itens", "Legenda Itens" , {|| .T.}} )
-	Aadd(aButEnc, {"COLOR", {|| u_telaZ0E()}, "Contr.Aprov.", "Controle Aprovação" , {|| .T.}} )		// AS - Aleluia
+//Cria os botões da Tela 
+oBtnSalvar := tButton():New(aPosHei[1,7] ,aPosWid[1,10],OemToAnsi("Salvar"),oPan02,{|| iIf(!obrigatorio(aGets,aTela),nOpca := 0,iIf(!FsVldCad(),nOpca := 0,(nOpca:=1, oDlg:End())))  },040,015,,,.T.,.T.,,OemToAnsi("Salvar"))
+oBtnSalvar:SetCSS(cCSS) 
+oBtnSalvar:SetColor(CLR_WHITE)
+oBtnCancel := tButton():New(aPosHei[1,7] ,aPosWid[1,9],OemToAnsi("Cancelar"),oPan02,{|| nOpca := 2, oDlg:End() },040,015,,,.T.,.T.,,OemToAnsi("Cancelar"))
+oBtnLeg    := tButton():New(aPosHei[1,7] ,aPosWid[1,8],OemToAnsi("Legenda"),oPan02,{|| FsBtnMnt(5) },040,015,,,.T.,.T.,,OemToAnsi("Legenda"))
+oBtnAprov  := tButton():New(aPosHei[1,7] ,aPosWid[1,7],OemToAnsi("Contr.Aprov"),oPan02,{|| U_telaZ0E() },040,015,,,.T.,.T.,,OemToAnsi("Contr.Aprov"))
 
-	ACTIVATE MSDIALOG oDlg CENTERED ON INIT (EnchoiceBar(oDlg,{|| iIf(!obrigatorio(aGets,aTela),nOpca := 0,iIf(!FsVldCad(),nOpca := 0,(nOpca:=1, oDlg:End()))) },{|| (nOpca := 2, oDlg:End())},,aButEnc),;
-		iIf(ALTERA .OR. lCopia .Or. nOpc == 2 .Or. nOpc == 5,MsgRun("Carregando Itens...","Aguarde...",{|| FsCarReg(nOpc)}),Nil))
 
-	If nOpca == 1
+iIf(ALTERA .OR. lCopia .Or. nOpc == 2 .Or. nOpc == 5,MsgRun("Carregando Itens...","Aguarde...",{|| FsCarReg(nOpc)}),Nil)
 
-		Begin Transaction
+ACTIVATE MSDIALOG oDlg CENTERED
+//Aadd(aButEnc, {"COLOR", {|| FsBtnMnt(5)}, "Legenda Itens", "Legenda Itens" , {|| .T.}} )
+//Aadd(aButEnc, {"COLOR", {|| u_telaZ0E()}, "Contr.Aprov.", "Controle Aprovação" , {|| .T.}} )		// AS - Aleluia
 
-			If nOpc == 3 .Or. nOpc == 4 .Or. nOpc == 5
-				FsSlvOrc()
-				ConfirmSX8()
-				// ->> AS - Aleluia - Processa os bloqueios nas cotações de venda
-				U_TIVRO130( FWxFilial("SZC"), SZC->ZC_CODIGO)
-				// <<- AS - Aleluia - Processa os bloqueios nas cotações de venda
-			EndIf
+//ACTIVATE MSDIALOG oDlg CENTERED ON INIT (EnchoiceBar(oDlg,{|| iIf(!obrigatorio(aGets,aTela),nOpca := 0,iIf(!FsVldCad(),nOpca := 0,(nOpca:=1, oDlg:End()))) },{|| (nOpca := 2, oDlg:End())},,aButEnc),;
+	//iIf(ALTERA .OR. lCopia .Or. nOpc == 2 .Or. nOpc == 5,MsgRun("Carregando Itens...","Aguarde...",{|| FsCarReg(nOpc)}),Nil))
 
-		End Transaction
-	ElseIf nOpca == 2
-		RollBackSx8()
-	EndIf
+If nOpca == 1
+
+	Begin Transaction
+
+		If nOpc == 3 .Or. nOpc == 4 .Or. nOpc == 5
+			FsSlvOrc()
+			ConfirmSX8()
+			// ->> AS - Aleluia - Processa os bloqueios nas cotações de venda
+			U_TIVRO130( FWxFilial("SZC"), SZC->ZC_CODIGO)
+			// <<- AS - Aleluia - Processa os bloqueios nas cotações de venda
+		EndIf
+
+	End Transaction
+ElseIf nOpca == 2
+	RollBackSx8()
+EndIf
 
 //-- Fim Montagem da Tela
 
 // ->> AS - 020421 - Inutiliza a variável pública
-	If type("aXaColsPublicaTelaCotacaoVenda") <> "U"
-		aXaColsPublicaTelaCotacaoVenda := Nil
-	EndIf
+If type("aXaColsPublicaTelaCotacaoVenda") <> "U"
+	aXaColsPublicaTelaCotacaoVenda := Nil
+EndIf
 // ->> AS - 020421 - Inutiliza a variável pública
 
 Return()
@@ -633,42 +653,42 @@ Função para validar cadastro de cotação
 //-------------------------------------------------------------------
 Static Function FsVldCad()
 
-	Local lOk := .T.
-	Local cTexto := ""
-	Local nX := 0
-	Local nY := 0
+Local lOk := .T.
+Local cTexto := ""
+Local nX := 0
+Local nY := 0
 
-	If Empty(M->ZC_CLIENTE) .And. Empty(M->ZC_PROSPEC)
+If Empty(M->ZC_CLIENTE) .And. Empty(M->ZC_PROSPEC)
+	lOk := .F.
+	Alert("Necessário informar pelo menos um cliente e ou prospect para cotação de venda.")
+EndIf
+
+If lOk
+	If Empty(aDadAux)
 		lOk := .F.
-		Alert("Necessário informar pelo menos um cliente e ou prospect para cotação de venda.")
+		Alert("Necessário cadastrar pelo menos um item para cotação de venda.")
 	EndIf
-
-	If lOk
-		If Empty(aDadAux)
-			lOk := .F.
-			Alert("Necessário cadastrar pelo menos um item para cotação de venda.")
-		EndIf
-	EndIf
+EndIf
 
 // ->> AS - Aleluia - 11042021
-	if lOk .AND. lObrigaRM .AND. type("aXaColsPublicaTelaCotacaoVenda") <> "U" .AND. len(aXaColsPublicaTelaCotacaoVenda) == 0
-		cTexto := "Quando o parâmetro FS_OBRIREM estiver ligado é obrigatório o preenchimento da Remessa para o item."
-		ApMsgAlert( cTexto, "PIFATC12 - " + AllTrim(Str(ProcLine(0))) + " - Atenção!")
-		lOk := .F.
-	endif
+if lOk .AND. lObrigaRM .AND. type("aXaColsPublicaTelaCotacaoVenda") <> "U" .AND. len(aXaColsPublicaTelaCotacaoVenda) == 0
+	cTexto := "Quando o parâmetro FS_OBRIREM estiver ligado é obrigatório o preenchimento da Remessa para o item."
+	ApMsgAlert( cTexto, "PIFATC12 - " + AllTrim(Str(ProcLine(0))) + " - Atenção!")
+	lOk := .F.
+endif
 // <<- AS - Aleluia - 11042021
 
 // ->> Valida se existe distribuição de remessa para os itens
-	if lOk .AND. type("aXaColsPublicaTelaCotacaoVenda") <> "U"
+if lOk .AND. type("aXaColsPublicaTelaCotacaoVenda") <> "U"
 
-		// ----> Lucas :: 22/06/21 :: Aqui tenho que conferir se todas as previsoes estao cadastradas para todos os itens com as quantidades corretas...
-		If INCLUI .Or. ALTERA
-			If !FVldPrv()
-				Return .F.
-			End If
+	// ----> Lucas :: 22/06/21 :: Aqui tenho que conferir se todas as previsoes estao cadastradas para todos os itens com as quantidades corretas...
+	If INCLUI .Or. ALTERA 
+		If !FVldPrv()
+			Return .F.
 		End If
-
-	endif
+	End If
+	
+endif
 // <<- Valida se existe distribuição de remessa para os itens
 
 Return(lOk)
@@ -688,95 +708,95 @@ Rotinas do Menu de Manutençaõ de Itens
 //-------------------------------------------------------------------
 Static Function FsBtnMnt(nOpcMnu,cSubMen)
 
-	Local aAreaB1 := SB1->( GetArea() )
+Local aAreaB1 := SB1->( GetArea() )
 
-	Default cSubMen := ""
+Default cSubMen := ""
 
-	If nOpcMnu == 1 //-- Novo
-		aImpostos	:= {}
-		aImposDef	:= {}
-		aImposUsu	:= {}
-		cIteAtu		:= ""
-		cMotivo := ""
-		cObserv := ""
-		nQtdAte := 0
-		cStatus	:= ""
-		cUMPad	:= ""
-		cQtdUM1 := " "
-		cQtdUM2 := " "
-		aIteUM	:= {"",""}
-		cCodPrd := CriaVar("ZD_PRODUTO")
-		cPrePrd := CriaVar("ZD_PREPROD")
-		cDscPrd := CriaVar("B1_DESC")
-		nQtdUM1 := CriaVar("ZD_QUANT1")
-		nQtdUM2 := CriaVar("ZD_QUANT2")
-		nDefCst := CriaVar("ZD_CUSTDEF")
-		nDeDCst := CriaVar("ZD_CUSDDEF")
-		nDeDFre := CriaVar("ZD_FREDDEF")
-		nDefAut := CriaVar("ZD_AUTDDEF")
-		nUsuAut := CriaVar("ZD_AUTDUSU")
-		nDefMrg := CriaVar("ZD_MARGDEF")
-		nDefCHi := CriaVar("ZD_PCMSDHI")
-		nDefCMi := CriaVar("ZD_PCMSDMI")
-		nDefCom := CriaVar("ZD_PCMSDEF")
-		nDefDes := CriaVar("ZD_MARGDEF")
-		nDefFre := CriaVar("ZD_FRETDEF")
-		nDefImp := CriaVar("ZD_MARGDEF")
-		nDefPRE := CriaVar("ZD_PV1RDEF")
-		nDefPUS := CriaVar("ZD_PV1DDEF")
-		nDefTRE := CriaVar("ZD_TO1RDEF")
-		nDefTUS := CriaVar("ZD_TO1DDEF")
-		nUsuCst := CriaVar("ZD_CUSTUSU")
-		nUsuMrg := CriaVar("ZD_MARGUSU")
-		nUsuCom := CriaVar("ZD_PCMSUSU")
-		nUsuCPd := CriaVar("ZD_PCMSUSU")
-		nUsuCHi := CriaVar("ZD_PCMSUHI")
-		nUsuCMi := CriaVar("ZD_PCMSUMI")
-		nUsuCPd := CriaVar("ZD_PCOMPAD")
-		nUsuDes := CriaVar("ZD_MARGUSU")
-		nUsuFre := CriaVar("ZD_FRETUSU")
-		nUsuImp := CriaVar("ZD_MARGUSU")
-		nUsuPRE := CriaVar("ZD_PV1RUSU")
-		nUsuPUS := CriaVar("ZD_PV1DUSU")
-		nUsuTRE := CriaVar("ZD_TO1RUSU")
-		nUsuTUS := CriaVar("ZD_TO1DUSU")
-		nDefMBR := CriaVar("ZD_MABRDEF")
-		nDefMLQ := CriaVar("ZD_MALQDEF")
-		nUsuMBR := CriaVar("ZD_MABRUSU")
-		nUsuMLQ := CriaVar("ZD_MALQUSU")
-		nDUsCst := CriaVar("ZD_CUSTUSU")
-		nDUsFre := CriaVar("ZD_FRETUSU")
-		nDUsTRE := CriaVar("ZD_TO1RUSU")
-		nDUsTUS := CriaVar("ZD_TO1DUSU")
-		nDUsMLQ := CriaVar("ZD_MALQUSU")
-		nDefPRM := CriaVar("ZD_PV1RDEM")
-		nDeDPRM := CriaVar("ZD_PV1DDEM")
-		nDefMBM := CriaVar("ZD_MABRDEM")
-		nDeDMBM := CriaVar("ZD_MABDDEM")
-		nDefMLM := CriaVar("ZD_MALQDEM")
-		nDeDMLM := CriaVar("ZD_MALDDEM")
-		nDeDMBR := CriaVar("ZD_MABDDEF")
-		nDEDMLQ := CriaVar("ZD_MALDDEF")
-		nUsuPRM := CriaVar("ZD_PV1RUSM")
-		nUsDPRM := CriaVar("ZD_PV1DUSM")
-		nUsuMBM := CriaVar("ZD_MABRUSM")
-		nUsDMBM := CriaVar("ZD_MABDUSM")
-		nUsuMLM := CriaVar("ZD_MALQUSM")
-		nUsDMLM := CriaVar("ZD_MALDUSM")
-		nUsDMBR := CriaVar("ZD_MALDUSM")
-		nUsDMLQ := CriaVar("ZD_MALDUSM")
-		cProcess:= CriaVar("ZD_PROCESS")//--23/04/2020 - Wemerson Souza - Variavel para tratar Processo de Cotação de Venda
-		cProcApv:= CriaVar("ZD_PROCAPV")//--23/04/2020 - Wemerson Souza - Variavel para tratar Processo de Cotação de Venda
-		cBloDir := CriaVar("ZD_BLODIR")//--AS - Bloqueio Diretoria
-		cBloDir := CriaVar("ZD_MSGDIR")//--AS - Msg. de Bloqueio Dir
-		nDeDPRM2 := CriaVar("ZD_PV2DDEM") // -- Preco Minimo Default Dolar UM2
-		nUsDPRM2 := CriaVar("ZD_PV2DUSM") // -- Preco Minimo Usuario Dolar UM2
-		nDefPRM2 := CriaVar("ZD_PV2RDEM") // -- Preco Minimo Default Real UM2
-		nUsuPRM2 := CriaVar("ZD_PV2RUSM") // -- Preco Minimo Usuario Real UM2
+If nOpcMnu == 1 //-- Novo
+	aImpostos	:= {}
+	aImposDef	:= {}
+	aImposUsu	:= {}
+	cIteAtu		:= ""
+	cMotivo := ""
+	cObserv := ""
+	nQtdAte := 0
+	cStatus	:= ""
+	cUMPad	:= ""
+	cQtdUM1 := " "
+	cQtdUM2 := " "
+	aIteUM	:= {"",""}
+	cCodPrd := CriaVar("ZD_PRODUTO")
+	cPrePrd := CriaVar("ZD_PREPROD")
+	cDscPrd := CriaVar("B1_DESC")
+	nQtdUM1 := CriaVar("ZD_QUANT1")
+	nQtdUM2 := CriaVar("ZD_QUANT2")
+	nDefCst := CriaVar("ZD_CUSTDEF")
+	nDeDCst := CriaVar("ZD_CUSDDEF")
+	nDeDFre := CriaVar("ZD_FREDDEF")
+	nDefAut := CriaVar("ZD_AUTDDEF")
+	nUsuAut := CriaVar("ZD_AUTDUSU")
+	nDefMrg := CriaVar("ZD_MARGDEF")
+	nDefCHi := CriaVar("ZD_PCMSDHI")
+	nDefCMi := CriaVar("ZD_PCMSDMI")
+	nDefCom := CriaVar("ZD_PCMSDEF")
+	nDefDes := CriaVar("ZD_MARGDEF")
+	nDefFre := CriaVar("ZD_FRETDEF")
+	nDefImp := CriaVar("ZD_MARGDEF")
+	nDefPRE := CriaVar("ZD_PV1RDEF")
+	nDefPUS := CriaVar("ZD_PV1DDEF")
+	nDefTRE := CriaVar("ZD_TO1RDEF")
+	nDefTUS := CriaVar("ZD_TO1DDEF")
+	nUsuCst := CriaVar("ZD_CUSTUSU")
+	nUsuMrg := CriaVar("ZD_MARGUSU")
+	nUsuCom := CriaVar("ZD_PCMSUSU")
+	nUsuCPd := CriaVar("ZD_PCMSUSU")
+	nUsuCHi := CriaVar("ZD_PCMSUHI")
+	nUsuCMi := CriaVar("ZD_PCMSUMI")
+	nUsuCPd := CriaVar("ZD_PCOMPAD")
+	nUsuDes := CriaVar("ZD_MARGUSU")
+	nUsuFre := CriaVar("ZD_FRETUSU")
+	nUsuImp := CriaVar("ZD_MARGUSU")
+	nUsuPRE := CriaVar("ZD_PV1RUSU")
+	nUsuPUS := CriaVar("ZD_PV1DUSU")
+	nUsuTRE := CriaVar("ZD_TO1RUSU")
+	nUsuTUS := CriaVar("ZD_TO1DUSU")
+	nDefMBR := CriaVar("ZD_MABRDEF")
+	nDefMLQ := CriaVar("ZD_MALQDEF")
+	nUsuMBR := CriaVar("ZD_MABRUSU")
+	nUsuMLQ := CriaVar("ZD_MALQUSU")
+	nDUsCst := CriaVar("ZD_CUSTUSU")
+	nDUsFre := CriaVar("ZD_FRETUSU")
+	nDUsTRE := CriaVar("ZD_TO1RUSU")
+	nDUsTUS := CriaVar("ZD_TO1DUSU")
+	nDUsMLQ := CriaVar("ZD_MALQUSU")
+	nDefPRM := CriaVar("ZD_PV1RDEM")
+	nDeDPRM := CriaVar("ZD_PV1DDEM")
+	nDefMBM := CriaVar("ZD_MABRDEM")
+	nDeDMBM := CriaVar("ZD_MABDDEM")
+	nDefMLM := CriaVar("ZD_MALQDEM")
+	nDeDMLM := CriaVar("ZD_MALDDEM")
+	nDeDMBR := CriaVar("ZD_MABDDEF")
+	nDEDMLQ := CriaVar("ZD_MALDDEF")
+	nUsuPRM := CriaVar("ZD_PV1RUSM")
+	nUsDPRM := CriaVar("ZD_PV1DUSM")
+	nUsuMBM := CriaVar("ZD_MABRUSM")
+	nUsDMBM := CriaVar("ZD_MABDUSM")
+	nUsuMLM := CriaVar("ZD_MALQUSM")
+	nUsDMLM := CriaVar("ZD_MALDUSM")
+	nUsDMBR := CriaVar("ZD_MALDUSM")
+	nUsDMLQ := CriaVar("ZD_MALDUSM")
+	cProcess:= CriaVar("ZD_PROCESS")//--23/04/2020 - Wemerson Souza - Variavel para tratar Processo de Cotação de Venda
+	cProcApv:= CriaVar("ZD_PROCAPV")//--23/04/2020 - Wemerson Souza - Variavel para tratar Processo de Cotação de Venda
+	cBloDir := CriaVar("ZD_BLODIR")//--AS - Bloqueio Diretoria
+	cBloDir := CriaVar("ZD_MSGDIR")//--AS - Msg. de Bloqueio Dir
+	nDeDPRM2 := CriaVar("ZD_PV2DDEM") // -- Preco Minimo Default Dolar UM2
+	nUsDPRM2 := CriaVar("ZD_PV2DUSM") // -- Preco Minimo Usuario Dolar UM2
+	nDefPRM2 := CriaVar("ZD_PV2RDEM") // -- Preco Minimo Default Real UM2
+	nUsuPRM2 := CriaVar("ZD_PV2RUSM") // -- Preco Minimo Usuario Real UM2
 
-		cCodTabCot := CriaVar("ZD_CODTABC") //--Codigo Tabela Comissao
+	cCodTabCot := CriaVar("ZD_CODTABC") //--Codigo Tabela Comissao
 
-		lBscImp := .T.
+	lBscImp := .T.
 
 		lDesUsuCst := .F.
 
@@ -788,63 +808,63 @@ Static Function FsBtnMnt(nOpcMnu,cSubMen)
 			EndIf
 		EndIf
 
-	ElseIf nOpcMnu == 2 //-- Salvar
+ElseIf nOpcMnu == 2 //-- Salvar
 
-		If (Empty(cCodPrd) .And. Empty(cPrePrd)) .Or. Empty(nQtdUM1)
-			Alert("Informe os dados da formação de preço para salvar o registro.")
-			RestArea(aAreaB1)
-			Return()
+	If (Empty(cCodPrd) .And. Empty(cPrePrd)) .Or. Empty(nQtdUM1)
+		Alert("Informe os dados da formação de preço para salvar o registro.")
+		RestArea(aAreaB1)
+		Return()
+	EndIf
+	
+	If !Empty(cCodPrd)
+		If SB1->B1_ZSTATUS <> '3'
+			Alert("ATENÇÃO! O produto encontra-se não liberado em sistema, caso a venda seja realizada é importante que seja solicitada a reativação antes da inserção do pedido.")
 		EndIf
-
-		If !Empty(cCodPrd)
-			If SB1->B1_ZSTATUS <> '3'
-				Alert("ATENÇÃO! O produto encontra-se não liberado em sistema, caso a venda seja realizada é importante que seja solicitada a reativação antes da inserção do pedido.")
-			EndIf
-			If SB1->B1_MSBLQL  == '1'
-				Alert("ATENÇÃO! O produto encontra-se inativo em sistema, caso a venda seja realizada é importante que seja solicitada a reativação antes da inserção do pedido.")
-			EndIf
-		EndIf
-
-		// 29/06/21 :: Lucas - MAIS - Fecha janela
-		nXOpc := 1
-		oDlgMnt:End()
-
-		FsSlvIte()
-
-	ElseIf nOpcMnu == 3 //-- Excluir
-		FsExcIte()
-	ElseIf nOpcMnu == 4 //-- FollowUp
-		If cSubMen == "C" //-- Cancelar
-			FsCanIte()
-		ElseIf cSubMen == "P" //-- Perdeu Cotação
-			FsPrdIte()
-		ElseIf cSubMen == "E" //-- Eliminar Resíduo
-			FsEReIte()
-		EndIf
-	ElseIf nOpcMnu == 5	//-- Legenda
-		BrwLegenda(cCadastro,"Legenda", {	{"BR_VERDE"		,OemToAnsi("Incluido")},;
-			{"BR_AMARELO"	,OemToAnsi("Renegociado")},;
-			{"BR_LARANJA"	,OemToAnsi("Parcialmente Atendido")},;
-			{"BR_VERMELHO"	,OemToAnsi("Atendido")},;
-			{"BR_MARROM"	,OemToAnsi("Perdeu Cotação")},;
-			{"BR_PRETO"		,OemToAnsi("Cancelado")},;
-			{"BR_PINK"		,OemToAnsi("Residuo Eliminado")}})
-	ElseIf nOpcMnu == 6 //-- Alterar Imposto
-		If (!Empty(cCodPrd) .Or. !Empty(cPrePrd)) .And. !Empty(nQtdUM1)
-			FsAltImp()
-			FsVldCmp("GERAL")
-		Else
-			Alert("Nenhuma simulação de preço carregada para alteração de impostos!")
-		EndIf
-	ElseIf nOpcMnu == 7 //-- Histórico
-		If (!Empty(cCodPrd) .Or. !Empty(cPrePrd))
-			FsTelHis()
-		Else
-			Alert("Nenhum produto ou pré-produto selecionado para carregar histórico!")
+		If SB1->B1_MSBLQL  == '1'
+			Alert("ATENÇÃO! O produto encontra-se inativo em sistema, caso a venda seja realizada é importante que seja solicitada a reativação antes da inserção do pedido.")
 		EndIf
 	EndIf
 
-	RestArea(aAreaB1)
+	// 29/06/21 :: Lucas - MAIS - Fecha janela
+	nXOpc := 1
+	oDlgMnt:End()
+
+	FsSlvIte()
+
+ElseIf nOpcMnu == 3 //-- Excluir
+	FsExcIte()
+ElseIf nOpcMnu == 4 //-- FollowUp
+	If cSubMen == "C" //-- Cancelar
+		FsCanIte()
+	ElseIf cSubMen == "P" //-- Perdeu Cotação
+		FsPrdIte()
+	ElseIf cSubMen == "E" //-- Eliminar Resíduo
+		FsEReIte()
+	EndIf
+ElseIf nOpcMnu == 5	//-- Legenda
+	BrwLegenda(cCadastro,"Legenda", {	{"BR_VERDE"		,OemToAnsi("Incluido")},;
+										{"BR_AMARELO"	,OemToAnsi("Renegociado")},;
+										{"BR_LARANJA"	,OemToAnsi("Parcialmente Atendido")},;
+										{"BR_VERMELHO"	,OemToAnsi("Atendido")},;
+										{"BR_MARROM"	,OemToAnsi("Perdeu Cotação")},;
+										{"BR_PRETO"		,OemToAnsi("Cancelado")},;
+										{"BR_PINK"		,OemToAnsi("Residuo Eliminado")}})
+ElseIf nOpcMnu == 6 //-- Alterar Imposto
+	If (!Empty(cCodPrd) .Or. !Empty(cPrePrd)) .And. !Empty(nQtdUM1)
+		FsAltImp()
+		FsVldCmp("GERAL")
+	Else
+		Alert("Nenhuma simulação de preço carregada para alteração de impostos!")
+	EndIf
+ElseIf nOpcMnu == 7 //-- Histórico
+	If (!Empty(cCodPrd) .Or. !Empty(cPrePrd))
+		FsTelHis()
+	Else
+		Alert("Nenhum produto ou pré-produto selecionado para carregar histórico!")
+	EndIf
+EndIf
+
+RestArea(aAreaB1)
 
 Return(Nil)
 
@@ -860,25 +880,25 @@ Define legenda dos itens
 //-------------------------------------------------------------------
 Static Function FsDefCor(aDadIt1,nLin)
 
-	Local oLegend
+Local oLegend
 
-	If (aDadIt1[nLin,Len(aDadIt1[nLin])]) //-- Excluido
-		oLegend := oSEclui
-	ElseIf (aDadIt1[nLin,1]) == 'I' //-- Incluido
-		oLegend := oSVerde
-	ElseIf (aDadIt1[nLin,1]) == 'R' //-- Renegociado
-		oLegend := oSAmare
-	ElseIf (aDadIt1[nLin,1]) == 'P' //-- Parcialmente Atendido
-		oLegend := oSLaran
-	ElseIf (aDadIt1[nLin,1]) == 'A' //-- Atendido
-		oLegend := oSVerme
-	ElseIf (aDadIt1[nLin,1]) == 'D' //-- Perdeu Cotação
-		oLegend := oSMarro
-	ElseIf (aDadIt1[nLin,1]) == 'C' //-- Cancelado
-		oLegend := oSPreto
-	ElseIf (aDadIt1[nLin,1]) == 'E' //-- Residuo Eliminado
-		oLegend := oSPink
-	EndIf
+If (aDadIt1[nLin,Len(aDadIt1[nLin])]) //-- Excluido
+	oLegend := oSEclui
+ElseIf (aDadIt1[nLin,1]) == 'I' //-- Incluido
+	oLegend := oSVerde
+ElseIf (aDadIt1[nLin,1]) == 'R' //-- Renegociado
+	oLegend := oSAmare
+ElseIf (aDadIt1[nLin,1]) == 'P' //-- Parcialmente Atendido
+	oLegend := oSLaran
+ElseIf (aDadIt1[nLin,1]) == 'A' //-- Atendido
+	oLegend := oSVerme
+ElseIf (aDadIt1[nLin,1]) == 'D' //-- Perdeu Cotação
+	oLegend := oSMarro
+ElseIf (aDadIt1[nLin,1]) == 'C' //-- Cancelado
+	oLegend := oSPreto
+ElseIf (aDadIt1[nLin,1]) == 'E' //-- Residuo Eliminado
+	oLegend := oSPink
+EndIf
 
 Return oLegend
 
@@ -894,24 +914,24 @@ Função colocada no WHEN da SX3 para validar edição de campo.
 //-------------------------------------------------------------------
 User Function PIFAT12B(cCampo)
 
-	Local lPode := .F.
-	Local cAliasCota := ""
+Local lPode := .F.
+Local cAliasCota := ""
 
-	If INCLUI
+If INCLUI
+	lPode := .T.
+ElseIf ALTERA
+	If SZC->ZC_STATUS == 'I' //-- Se Incluida
 		lPode := .T.
-	ElseIf ALTERA
-		If SZC->ZC_STATUS == 'I' //-- Se Incluida
+	ElseIf SZC->ZC_STATUS == 'P' //-- Se Porposta
+		If AllTrim(cCampo) $ 'ZC_CONDPAG,ZC_DTVALID'
 			lPode := .T.
-		ElseIf SZC->ZC_STATUS == 'P' //-- Se Porposta
-			If AllTrim(cCampo) $ 'ZC_CONDPAG,ZC_DTVALID'
-				lPode := .T.
-			EndIf
-		ElseIf SZC->ZC_STATUS == 'A' //-- Se Parcialmente Atendida
-			If AllTrim(cCampo) $ 'ZC_DTVALID'
-				lPode := .T.
-			EndIf
+		EndIf
+	ElseIf SZC->ZC_STATUS == 'A' //-- Se Parcialmente Atendida
+		If AllTrim(cCampo) $ 'ZC_DTVALID'
+			lPode := .T.
 		EndIf
 	EndIf
+EndIf
 
 Return(lPode)
 
@@ -929,96 +949,87 @@ Função para validar preenchimento dos campos dos itens
 //-------------------------------------------------------------------
 Static Function FsVldCmp(cCampo)
 
-	Local lOK := .T.
-	Local nPrcRea := 0
-	Local nPrcDol := 0
-	Local nFatorConver := 0
-	Local cCodSTrib := ''
-	Local nCTirbEIcm  := 0
-	Local nBCustPiCo  := 0
-	Local nXi := 0
+Local lOK := .T.
+Local nPrcRea := 0
+Local nPrcDol := 0
+Local nFatorConver := 0
+Local cCodSTrib := ''
+Local nCTirbEIcm  := 0
+Local nBCustPiCo  := 0
+Local nXi := 0
+If cCampo == "ZD_PRODUTO"
+	//-- Primeira coisa é avaliar se informou o Cliente e ou Prospect
+	If (Empty(M->ZC_CLIENTE) .And. Empty(M->ZC_PROSPEC)) .Or. (Empty(M->ZC_LOJACLI) .And. Empty(M->ZC_LOJAPRO)) .Or. !obrigatorio(aGets,aTela)
+		If !Empty(cCodPrd)
+			Alert("Informe os dados do cabeçalho primeiramente!")
+			cCodPrd := CriaVar("ZD_PRODUTO")
+			lOk := .F.
+		EndIf
+	Else
+		//-- Avaliar se produto existe
+		SB1->(dbSetOrder(1))
+		If SB1->(dbSeek(xFilial("SB1")+AvKey(cCodPrd,"B1_COD")))
+			if !RetCodUsr() $ SuperGetMv("V_USCOTPLI", .F., "000887")
+				//Valida se o Produto é customizado ou Materia-Prima
+				if !( SB1->B1_ZCTMIZA $ "C/P" .OR. SB1->B1_TIPO == "MP" )
+					Alert("Não é permitido produto de linha na cotação.")
+					Return .F.	
+				endif
+			endif
+			//-- Primeira coisa e garantir que a tela ta limpa
+			cCodAux := cCodPrd
+			FsBtnMnt(1)
+			cCodPrd := cCodAux
 
-	If cCampo == "ZD_PRODUTO"
-		//-- Primeira coisa é avaliar se informou o Cliente e ou Prospect
-		If (Empty(M->ZC_CLIENTE) .And. Empty(M->ZC_PROSPEC)) .Or. (Empty(M->ZC_LOJACLI) .And. Empty(M->ZC_LOJAPRO)) .Or. !obrigatorio(aGets,aTela)
-			If !Empty(cCodPrd)
-				Alert("Informe os dados do cabeçalho primeiramente!")
-				cCodPrd := CriaVar("ZD_PRODUTO")
-				lOk := .F.
+			//-- Busca Descrição
+			cDscPrd := SB1->B1_DESC
+
+			cQtdUM1 := SB1->B1_UM
+			cQtdUM2 := SB1->B1_SEGUM
+			//aIteUM	:= {cQtdUM1,cQtdUM2}
+			if cQtdUM1 == 'KG'
+				aIteUM	:= {cQtdUM1,cQtdUM2}	
+			else
+				aIteUM	:= {cQtdUM2,cQtdUM1}
+			endif
+
+			If procname(1) <> 'FSCRGCPY'
+				oGetUm:SetItems(aIteUM)
+				oGetUm:ReFresh()
 			EndIf
-		Else
-			//-- Avaliar se produto existe
-			SB1->(dbSetOrder(1))
-			If SB1->(dbSeek(xFilial("SB1")+AvKey(cCodPrd,"B1_COD")))
-				if !RetCodUsr() $ SuperGetMv("V_USCOTPLI", .F., "000887")
-					//Valida se o Produto é customizado ou Materia-Prima
-					if !( SB1->B1_ZCTMIZA $ "C/P" .OR. SB1->B1_TIPO == "MP" )
-						Alert("Não é permitido produto de linha na cotação.")
-						Return .F.
-					endif
+
+			//-- Altera descrição das UMs
+			//cUMPad	:= SB1->B1_UM
+			If procname(1) <> 'FSCRGCPY'
+				oGetUm:Select(1)
+				oGetUm:ReFresh()
+			EndIf
+			
+			//-- Zera quantidades
+			If nQtdUM1 <> 0 .Or. nQtdUM2 <> 0
+				nQtdUM1 := 0
+				nQtdUM2 := 0
+				FsVldCmp("ZD_QUANT1")
+			EndIf
+
+			//-- Limpa o código do Pre-Produto
+			cPrePrd := CriaVar("ZD_PREPROD")
+
+			//-- Busca o custo
+			nDefCst := FsBscCst(cCodPrd,1)
+			if SB1->B1_TIPO == "MP"
+				SBZ->(dbSetOrder(1))
+				//Busca Carga Tributaria de entrada no Indicador do Produto.
+				If SBZ->(dbSeek(xFilial("SBZ") + SB1->B1_COD))
+					nCTirbEIcm := SBZ->BZ_ZCARTRB
 				endif
-				//-- Primeira coisa e garantir que a tela ta limpa
-				cCodAux := cCodPrd
-				FsBtnMnt(1)
-				cCodPrd := cCodAux
-
-				//-- Busca Descrição
-				cDscPrd := SB1->B1_DESC
-
-				cQtdUM1 := SB1->B1_UM
-				cQtdUM2 := SB1->B1_SEGUM
-				//aIteUM	:= {cQtdUM1,cQtdUM2}
-				if cQtdUM1 == 'KG'
-					aIteUM	:= {cQtdUM1,cQtdUM2}
-				else
-					aIteUM	:= {cQtdUM2,cQtdUM1}
-				endif
-
-				If procname(1) <> 'FSCRGCPY'
-					oGetUm:SetItems(aIteUM)
-					oGetUm:ReFresh()
-				EndIf
-
-				//-- Altera descrição das UMs
-				//cUMPad	:= SB1->B1_UM
-				If procname(1) <> 'FSCRGCPY'
-					oGetUm:Select(1)
-					oGetUm:ReFresh()
-				EndIf
-
-				//-- Zera quantidades
-				If nQtdUM1 <> 0 .Or. nQtdUM2 <> 0
-					nQtdUM1 := 0
-					nQtdUM2 := 0
-					FsVldCmp("ZD_QUANT1")
-				EndIf
-
-				//-- Limpa o código do Pre-Produto
-				cPrePrd := CriaVar("ZD_PREPROD")
-
-				//-- Busca o custo
-				nDefCst := FsBscCst(cCodPrd,1)
-				if SB1->B1_TIPO == "MP"
-
-					SBZ->(dbSetOrder(1))
-					//Busca Carga Tributaria de entrada no Indicador do Produto.
-					If SBZ->(dbSeek(xFilial("SBZ") + SB1->B1_COD))
-						nCTirbEIcm := SBZ->BZ_ZCARTRB
-					endif
-					FsBscImp(cCodPrd,nDefCst,@cCodSTrib)
-					//Valida se Embuti no custo da Materia Prima o Gross Up.
-					if nCTirbEIcm > (aImpostos[3]/100) .And. cCodSTrib $ '20/40'
-						nBCustPiCo := ( nDefCst / (1 -(((aImpostos[1]/100)+(aImpostos[2]/100)) + nCTirbEIcm) ))
-						nDefCst  := nDefCst + (nBCustPiCo * (nCTirbEIcm - (aImpostos[3]/100)))
-					endif
-				endif
-
-				//--Desabilita campo custo quando não for MP.
-			/*If SB1->B1_TIPO != "MP"
-				oGetUsCstR:Disable()
-				oGetUsCstD:Disable()
-			EndIf*/
-
+				FsBscImp(cCodPrd,nDefCst,@cCodSTrib)
+				//Valida se Embuti no custo da Materia Prima o Gross Up.
+				if nCTirbEIcm > (aImpostos[3]/100) .And. cCodSTrib $ '20/40'
+					nBCustPiCo := ( nDefCst / (1 -(((aImpostos[1]/100)+(aImpostos[2]/100)) + nCTirbEIcm) ))					
+					nDefCst  := nDefCst + (nBCustPiCo * (nCTirbEIcm - (aImpostos[3]/100)))						
+				endif				
+			endif
 			nDeDCst := FsCnvDol(nDefCst)
 			//nUsuCst := iif(SB1->B1_TIPO == "PA",0,nDefCst) //--03/10/2022 -- .iNi Wemerson -- Não é necessáio, devido a nova regra para pesquisa do csuto de produtos PA.
 			nUsuCst := nDefCst
@@ -1066,16 +1077,6 @@ ElseIf cCampo == "ZD_PREPROD"
 		//-- Avaliar se pre-produto existe
 		SZA->(dbSetOrder(1))
 		If SZA->(dbSeek(xFilial("SZA")+AvKey(cPrePrd,"ZA_CODIGO")))
-
-			/*SB1->(dbSetOrder(1))
-			if SB1->(DBSEEK(xFilial("SB1")+SZA->ZA_PRDSIMI))
-				//--Desabilita campo custo quando não for MP.
-				If SB1->B1_TIPO != "MP"
-					oGetUsCstR:Disable()
-					oGetUsCstD:Disable()
-				EndIf
-			EndIf*/
-
 			//-- Não permie cotar pré-produto que a 1ª ou 2º unidade de medida não seja KG
 			If SZA->ZA_UM == 'KG' .Or. SZA->ZA_SEGUM == 'KG'
 				//-- Primeira coisa e garantir que a tela ta limpa
@@ -1392,7 +1393,7 @@ ElseIf cCampo == "ZD_PCMSUMI"
 
 ElseIf cCampo $ ("ZD_CUSTUSU,ZD_FRETUSU,GERAL")
 
-	If !Empty(cCodPrd)
+	if !Empty(cCodPrd)
 		SB1->(dbSetOrder(1))
 		SB1->(dbSeek(xFilial("SB1")+AvKey(cCodPrd,"B1_COD")))
 		nFatorConver := SB1->B1_CONV
@@ -1917,6 +1918,8 @@ Static Function FsBscCst(cCodigo,nTipo)
 	SB1->(dbSetOrder(1))
 	SB1->(dbSeek(xFilial("SB1")+cCodigo))
 
+	cTpPrd := SB1->B1_TIPO
+
 	RestArea(aAreaB1)
 	// <---- Lucas - MAIS : 08/10/2020 - Posiciona no cadastro do produto para avaliar o tipo.
 	If nTipo == 1 //--Custo para Produto
@@ -2333,7 +2336,6 @@ Static Function FsClcPrc(nTipo,nPrcRea,nPrcDol,nTpPrc,nCusto)
 	nFatorCota := (cAliasCota)->M2_MOEDA2
 	(cAliasCota)->(dbCloseArea())
 
-
 	If !Empty(cPrePrd) //-- Se for para Pré-Produto, usa produto similar
 		cCodigo := Posicione("SZA",1,xFilial("SZA")+cPrePrd,"ZA_PRDSIMI")
 	Else
@@ -2360,17 +2362,17 @@ Static Function FsClcPrc(nTipo,nPrcRea,nPrcDol,nTpPrc,nCusto)
 			nComisao  := nDefCom + nDefCHi
 		EndIf
 		*/
-				nComisao  := nDefCMi + nDefCHi
-				//-- .iNi Retirado Percentual de Comissão Sugerido do Cálculo de Preço
-				nDespesa  := nDefDes
-				nFrete    := nDefFre
-				nImposto  := nDefImp
-				aImpostos := aImposDef
-				nAutDsc   := nDefAut
-			ElseIf nTipo == 2 //-- Usuário
-				//nCusto 	  := nUsuCst
-				nMargem   := nUsuMrg
-				//-- .iNi Retirado Percentual de Comissão Sugerido do Cálculo de Preço
+		nComisao  := nDefCMi + nDefCHi
+		//-- .iNi Retirado Percentual de Comissão Sugerido do Cálculo de Preço
+		nDespesa  := nDefDes
+		nFrete    := nDefFre
+		nImposto  := nDefImp
+		aImpostos := aImposDef
+		nAutDsc   := nDefAut
+	ElseIf nTipo == 2 //-- Usuário
+		//nCusto 	  := nUsuCst
+		nMargem   := nUsuMrg
+		//-- .iNi Retirado Percentual de Comissão Sugerido do Cálculo de Preço
 		/*
 		If nTpPrc == 1 //-- Calcular preço mínimo
 			nComisao  := nUsuCMi + nUsuCHi
@@ -2378,65 +2380,65 @@ Static Function FsClcPrc(nTipo,nPrcRea,nPrcDol,nTpPrc,nCusto)
 			nComisao  := nUsuCom + nUsuCHi
 		EndIf
 		*/
-				nComisao  := nUsuCMi + nUsuCHi
-				//-- .iNi Retirado Percentual de Comissão Sugerido do Cálculo de Preço
-				nDespesa  := nUsuDes
-				nFrete    := nUsuFre
-				nImposto  := nUsuImp
-				aImpostos := aImposUsu
-				nAutDsc   := nUsuAut
-			ElseIf nTipo == 3 //-- Outra Unidade de Medida do Usuario
-				nMargem   := nUsuMrg
-				nComisao  := nUsuCMi + nUsuCHi
-				nDespesa  := nUsuDes
-				nFrete    :=  iif(AllTrim(cUMPad) == 'KG',nUsuFre * nPesPrd,nUsuFre) //FsBscFrt(cCodigo,iif(AllTrim(cUMPad) == AllTrim(cQtdUM1),cQtdUM2,cQtdUM1),1)
-				nImposto  := nUsuImp
-				aImpostos := aImposUsu
-				nAutDsc   := nUsuAut
-			EndIf
+		nComisao  := nUsuCMi + nUsuCHi
+		//-- .iNi Retirado Percentual de Comissão Sugerido do Cálculo de Preço
+		nDespesa  := nUsuDes
+		nFrete    := nUsuFre
+		nImposto  := nUsuImp
+		aImpostos := aImposUsu
+		nAutDsc   := nUsuAut
+	ElseIf nTipo == 3 //-- Outra Unidade de Medida do Usuario
+		nMargem   := nUsuMrg
+		nComisao  := nUsuCMi + nUsuCHi
+		nDespesa  := nUsuDes
+		nFrete    :=  iif(AllTrim(cUMPad) == 'KG',nUsuFre * nPesPrd,nUsuFre) //FsBscFrt(cCodigo,iif(AllTrim(cUMPad) == AllTrim(cQtdUM1),cQtdUM2,cQtdUM1),1)
+		nImposto  := nUsuImp
+		aImpostos := aImposUsu
+		nAutDsc   := nUsuAut	
+	EndIf
 
-			//-- Retirado a pedido do Leo. Verificar se será necessário posteriormente.
+	//-- Retirado a pedido do Leo. Verificar se será necessário posteriormente.
 	/*
 	nResulFat := (nCusto +; //Custo Brill
 				   ((nCusto / (1 - (IIF(AllTrim(SB1->B1_ZCTMIZA) == "S",0,nFatorSeg) / 100))) - nCusto) +; //Calculo do Fator de Segurança
 				   ((nCusto / (1 - (nFatorAjus / 100))) - nCusto); //Calculo do Fator de Ajuste
 				   )
 	*/
-			nResulFat := nCusto
+	nResulFat := nCusto
 
-			nCalcMarg := (nResulFat / (1 - (nMargem / 100)))
+	nCalcMarg := (nResulFat / (1 - (nMargem / 100)))
 
-			nTotLiq := (nCalcMarg +; // Custo Brill, com os Fatores de Segurança e Ajuste, e Margem
-			nFrete +; // Frete
-			((nCalcMarg / (1 - ((nComisao + nDespesa) / 100))) - nCalcMarg); //Calculo do Percentual de Comissao
-			)
-			If nImposto == 0 .And. lBscImp
-				nImposto := 0
-				FsBscImp(cCodigo,nTotLiq)
+	nTotLiq := (nCalcMarg +; // Custo Brill, com os Fatores de Segurança e Ajuste, e Margem
+		nFrete +; // Frete
+		((nCalcMarg / (1 - ((nComisao + nDespesa) / 100))) - nCalcMarg); //Calculo do Percentual de Comissao
+		)
+	If nImposto == 0 .And. lBscImp
+		nImposto := 0
+		FsBscImp(cCodigo,nTotLiq)
 
-				For nXi := 1 To Len(aImpostos)
-					nImposto += aImpostos[nXi]
-				Next nXi
-				//-- Se busca o imposto igual a .T. e for preço de usuário, marca para não buscar mais o imposto.
-				If lBscImp .And. nTipo == 2
-					lBscImp := .F.
-				EndIf
-			EndIf
+		For nXi := 1 To Len(aImpostos)
+			nImposto += aImpostos[nXi]
+		Next nXi
+		//-- Se busca o imposto igual a .T. e for preço de usuário, marca para não buscar mais o imposto.
+		If lBscImp .And. nTipo == 2
+			lBscImp := .F.
+		EndIf
+	EndIf
 
-			//-- Se for preço sugerido então aplica autonomia de desconto.
-			If nTpPrc == 2
-				nTotLiq := (nTotLiq / (1 - (nAutDsc / 100)))
-			EndIf
+	//-- Se for preço sugerido então aplica autonomia de desconto.
+	If nTpPrc == 2
+		nTotLiq := (nTotLiq / (1 - (nAutDsc / 100)))
+	EndIf
 
-			nTotLiq := (nTotLiq / (1 - (nImposto / 100))) //-- Aplica o imposto
+	nTotLiq := (nTotLiq / (1 - (nImposto / 100))) //-- Aplica o imposto
 
-			nTxEnca := (1 - (iIf(M->ZC_ENCARGO>0,M->ZC_ENCARGO,0)/100)) //-- Acha o encargo
-			nTotLiq := (nTotLiq / nTxEnca) //-- Aplica o encargo.
+	nTxEnca := (1 - (iIf(M->ZC_ENCARGO>0,M->ZC_ENCARGO,0)/100)) //-- Acha o encargo
+	nTotLiq := (nTotLiq / nTxEnca) //-- Aplica o encargo.
 
-			nPrcRea := Round(nTotLiq,3)
-			nPrcDol := Round((nTotLiq / nFatorCota),3)
+	nPrcRea := Round(nTotLiq,3)
+	nPrcDol := Round((nTotLiq / nFatorCota),3)
 
-			Return(Nil)
+Return(Nil)
 
 //-------------------------------------------------------------------
 /*/{Protheus.doc} FsBscImp
@@ -2458,7 +2460,7 @@ Static Function FsBscImp(cCodigo,nValor,cCodSTrib)
 	Local nICM	   := 0
 
 	default cCodSTrib := ''
-
+		
 	//--Limpa array de impostos.
 	aImpostos := {}
 	SB1->(dbSetOrder(1))
@@ -2473,9 +2475,9 @@ Static Function FsBscImp(cCodigo,nValor,cCodSTrib)
 	SA1->(dbSetOrder(1))
 	SA1->(dbSeek(xFilial("SA1") + cCliente + cLojaCli))
 	cTes := MaTesInt(2,IIF(xFilial("SBZ") == "010055","31",;
-		IIF((SB1->B1_TIPO $ "MP/RV" .Or. SB1->B1_TIPO $ "PA/TR" .And. xFilial("SBZ") == "010025"),;
-		"02",;
-		"01")),SA1->A1_COD,SA1->A1_LOJA,"C",SB1->B1_COD)
+					   IIF((SB1->B1_TIPO $ "MP/RV" .Or. SB1->B1_TIPO $ "PA/TR" .And. xFilial("SBZ") == "010025"),;
+					   "02",;
+					   "01")),SA1->A1_COD,SA1->A1_LOJA,"C",SB1->B1_COD)
 	If Empty(cTes) //Caso nao encontre registro de TES inteligente...
 		cTes := "504" //...tratamento necessario para que os impostos continuem sendo calculados corretamente de acordo com a região, com bases cheias
 	EndIf
@@ -2483,31 +2485,31 @@ Static Function FsBscImp(cCodigo,nValor,cCodSTrib)
 	SA1->(dbSetOrder(1))
 	SA1->(dbSeek(xFilial("SA1") + cCliente + cLojaCli))
 	MaFisIni(SA1->A1_COD,; //1 - Codigo Cliente/Fornecedor
-	SA1->A1_LOJA,; //2 - Loja do Cliente/Fornecedor
-	"C",; //3 - C: Cliente, F: Fornecedor
-	"N",; //4 - Tipo da NF
-	SA1->A1_TIPO,; //5 - Tipo do Cliente/Fornecedor
-	,; //6 - Relacao de Impostos que suportados no arquivo
-	,; //7 - Tipo de complemento
-	,; //8 - Permite Incluir Impostos no Rodape .T./.F.
-	"SB1",; //9 - Alias do Cadastro de Produtos - ("SBI" P/ Front Loja)
-	"MATA410") //10 - Nome da rotina que esta utilizando a funcao
+			 SA1->A1_LOJA,; //2 - Loja do Cliente/Fornecedor
+			 "C",; //3 - C: Cliente, F: Fornecedor
+			 "N",; //4 - Tipo da NF
+			 SA1->A1_TIPO,; //5 - Tipo do Cliente/Fornecedor
+			 ,; //6 - Relacao de Impostos que suportados no arquivo
+			 ,; //7 - Tipo de complemento
+			 ,; //8 - Permite Incluir Impostos no Rodape .T./.F.
+			 "SB1",; //9 - Alias do Cadastro de Produtos - ("SBI" P/ Front Loja)
+			 "MATA410") //10 - Nome da rotina que esta utilizando a funcao
 	MaFisAdd(SB1->B1_COD,; //1 - Codigo do Produto (Obrigatorio)
-	cTes,; //2 - Codigo do TES (Opcional)
-	1,; //3 - Quantidade (Obrigatorio)
-	nValor,; //4 - Preco Unitario (Obrigatorio)
-	0,; //5 - Valor do Desconto (Opcional)
-	"",; //6 - Numero da NF Original (Devolucao/Benef)
-	"",; //7 - Serie da NF Original (Devolucao/Benef)
-	0,; //8 - RecNo da NF Original no arq SD1/SD2
-	0,; //9 - Valor do Frete do Item (Opcional)
-	0,; //10 - Valor da Despesa do item (Opcional)
-	0,; //11 - Valor do Seguro do item (Opcional)
-	0,; //12 - Valor do Frete Autonomo (Opcional)
-	nValor,; //13 - Valor da Mercadoria (Obrigatorio)
-	0,; //14 - Valor da Embalagem (Opcional)
-	0,; //15 - RecNo do SB1
-	0) //16 - RecNo do SF4
+			 cTes,; //2 - Codigo do TES (Opcional)
+			 1,; //3 - Quantidade (Obrigatorio)
+			 nValor,; //4 - Preco Unitario (Obrigatorio)
+			 0,; //5 - Valor do Desconto (Opcional)
+			 "",; //6 - Numero da NF Original (Devolucao/Benef)
+			 "",; //7 - Serie da NF Original (Devolucao/Benef)
+			 0,; //8 - RecNo da NF Original no arq SD1/SD2
+			 0,; //9 - Valor do Frete do Item (Opcional)
+			 0,; //10 - Valor da Despesa do item (Opcional)
+			 0,; //11 - Valor do Seguro do item (Opcional)
+			 0,; //12 - Valor do Frete Autonomo (Opcional)
+			 nValor,; //13 - Valor da Mercadoria (Obrigatorio)
+			 0,; //14 - Valor da Embalagem (Opcional)
+			 0,; //15 - RecNo do SB1
+			 0) //16 - RecNo do SF4
 	AADD(aImpostos,IIF(AllTrim(SF4->F4_PISCOF) $ "1/3" .And. AllTrim(SF4->F4_PISCRED) <> "4",MaFisRet(1,"IT_ALIQPIS"),0))
 	AADD(aImpostos,IIF(AllTrim(SF4->F4_PISCOF) $ "2/3" .And. AllTrim(SF4->F4_PISCRED) <> "4",MaFisRet(1,"IT_ALIQCOF"),0))
 	nICM := IIF(!Empty(SF4->F4_BASEICM),((MaFisRet(1,"IT_ALIQICM")) * SF4->F4_BASEICM) / 100,MaFisRet(1,"IT_ALIQICM"))
@@ -2521,9 +2523,9 @@ Static Function FsBscImp(cCodigo,nValor,cCodSTrib)
 
 	AADD(aImpostos,nICM)
 	AADD(aImpostos,IIF(!Empty(MaFisRet(1,"IT_BASEIPI")),MaFisRet(1,"IT_ALIQIPI"),0))
-
+		 
 	cCodSTrib := SF4->F4_SITTRIB
-
+	
 	MaFisEnd() //Encerra as MaFis daquele pedido e daqueles itens
 Return(Nil)
 
@@ -2702,9 +2704,9 @@ nTotLiq := (nCalcMarg +; // Custo Brill, com os Fatores de Segurança e Ajuste, e
 				 )
 	*/
 	nTotLiq := (nCalcMarg +; // Custo Brill, com os Fatores de Segurança e Ajuste, e Margem
-	nUsuFre +; // Frete
-	((nCalcMarg / (1 - ((nUsuCMi + nUsuCHi + nUsuDes) / 100))) - nCalcMarg); //Calculo do Percentual de Comissao
-	)
+		nUsuFre +; // Frete
+		((nCalcMarg / (1 - ((nUsuCMi + nUsuCHi + nUsuDes) / 100))) - nCalcMarg); //Calculo do Percentual de Comissao
+		)
 	//-- .iNi Retirado Percentual de Comissão Sugerido do Cálculo de Preço
 
 	nAutRet := Round((1 - (nTotLiq / nToCAut)),4)*100
@@ -2899,8 +2901,8 @@ Static Function FsCrgIte(nOpc)
 
 			nDeDPRM2 := SZD->ZD_PV2DDEM // -- Preco Minimo Default Dolar UM2
 			nUsDPRM2 := SZD->ZD_PV2DUSM // -- Preco Minimo Usuario Dolar UM2
-			nDefPRM2 := SZD->ZD_PV2RDEM // -- Preco Minimo Default Real UM2
-			nUsuPRM2 := SZD->ZD_PV2RUSM // -- Preco Minimo Usuario Real UM2
+	    	nDefPRM2 := SZD->ZD_PV2RDEM // -- Preco Minimo Default Real UM2
+	    	nUsuPRM2 := SZD->ZD_PV2RUSM // -- Preco Minimo Usuario Real UM2
 
 			cCodTabCot := SZD->ZD_CODTABC //Codigo Tabela Comissao
 
@@ -3003,89 +3005,89 @@ Static Function FsSlvIte(lCarrega)
 
 		//-- Inclui novo item no array auxiliar.
 		aAdd(aDadAux,{	{"ZD_ITEM   ", cCodIte},; 						//-- 01
-		{"ZD_PRODUTO", cCodPrd},;						//-- 02
-		{"ZD_PREPROD", cPrePrd},;						//-- 03
-		{"ZD_QUANT1 ", nQtdUM1},; 						//-- 04
-		{"ZD_QUANT2 ", nQtdUM2},; 						//-- 05
-		{"ZD_CUSTDEF", nDefCst},; 						//-- 06
-		{"ZD_CUSTUSU", nUsuCst},; 						//-- 07
-		{"ZD_MARGDEF", nDefMrg},; 						//-- 08
-		{"ZD_MARGUSU", nUsuMrg},; 						//-- 09
-		{"ZD_PERCDES", nDefDes},;	 					//-- 10
-		{"ZD_PCMSDEF", nDefCom},; 						//-- 11
-		{"ZD_PCMSUSU", nUsuCom},; 						//-- 12
-		{"ZD_FRETDEF", nDefFre},; 						//-- 13
-		{"ZD_FRETUSU", nUsuFre},; 						//-- 14
-		{"ZD_PPISDEF", iIf(Len(aImposDef)>0,aImposDef[1],0)},; 					//-- 15 - PIS
-		{"ZD_PPISUSU", iIf(Len(aImposUsu)>0,aImposUsu[1],0)},; 					//-- 16 - PIS
-		{"ZD_PCOFDEF", iIf(Len(aImposDef)>0,aImposDef[2],0)},; 					//-- 17 - COFINS
-		{"ZD_PCOFUSU", iIf(Len(aImposUsu)>0,aImposUsu[2],0)},; 					//-- 18 - COFINS
-		{"ZD_PICMDEF", iIf(Len(aImposDef)>0,aImposDef[3],0)},; 					//-- 19 - ICMS
-		{"ZD_PICMUSU", iIf(Len(aImposUsu)>0,aImposUsu[3],0)},; 					//-- 20 - ICMS
-		{"ZD_PIPIDEF", iIf(Len(aImposDef)>0,aImposDef[4],0)},; 					//-- 21 - IPI
-		{"ZD_PIPIUSU", iIf(Len(aImposUsu)>0,aImposUsu[4],0)},; 					//-- 22 - IPI
-		{"ZD_PV1RDEF", nDefPRE},; 						//-- 23
-		{"ZD_PV1RUSU", nUsuPRE},; 						//-- 24
-		{"ZD_PV2RDEF", nDef2PRE},; 						//-- 25
-		{"ZD_PV2RUSU", nUsu2PRE},; 						//-- 26
-		{"ZD_PV1DDEF", nDefPUS},; 						//-- 27
-		{"ZD_PV1DUSU", nUsuPUS},; 						//-- 28
-		{"ZD_PV2DDEF", nDef2PUS},; 						//-- 29
-		{"ZD_PV2DUSU", nUsu2PUS},;		 				//-- 30
-		{"ZD_TO1RDEF", nDefTRE},; 						//-- 31
-		{"ZD_TO1RUSU", nUsuTRE},; 						//-- 32
-		{"ZD_TO1DDEF", nDefTUS},; 						//-- 33
-		{"ZD_TO1DUSU", nUsuTUS},; 						//-- 34
-		{"ZD_OBSERV ", cObserv},;						//-- 35
-		{"ZD_MOTIVO ", cMotivo},;						//-- 36
-		{"ZD_QTD1ATE", nQtdAte},;						//-- 37
-		{"ZD_STATUS ", cStatus},;						//-- 38
-		{"ZD_DTRENEG", sTod("")},;						//-- 39
-		{"ZD_COTACAO", M->ZC_CODIGO},;					//-- 40
-		{"ZD_MABRDEF", nDefMBR},;						//-- 41
-		{"ZD_MALQDEF", nDefMLQ},;						//-- 42
-		{"ZD_MABRUSU", nUsuMBR},;						//-- 43
-		{"ZD_MALQUSU", nUsuMLQ},;						//-- 44
-		{"ZD_CUSTDUS", nDUsCst},;						//-- 45
-		{"ZD_FRETDUS", nDUsFre},;						//-- 46
-		{"ZD_MABRDUS", nUsDMBR},;						//-- 47
-		{"ZD_MALQDUS", nUsDMLQ},;						//-- 48
-		{"ZD_UMPAD"  , cUMPad},;						//-- 49
-		{"ZD_CODCON" , cCodCon},;						//-- 50
-		{"ZD_AUTDDEF", nDefAut},;						//-- 51
-		{"ZD_AUTDUSU", nUsuAut},;						//-- 52
-		{"ZD_PCMSDHI", nDefCHi},;						//-- 53
-		{"ZD_PCMSDMI", nDefCMi},;						//-- 54
-		{"ZD_PCMSUHI", nUsuCHi},;						//-- 55
-		{"ZD_PCMSUMI", nUsuCMi},;						//-- 56
-		{"ZD_PV1RDEM", nDefPRM},;						//-- 57
-		{"ZD_PV1DDEM", nDeDPRM},;						//-- 58
-		{"ZD_MABRDEM", nDefMBM},;						//-- 60
-		{"ZD_MABDDEM", nDeDMBM},;						//-- 61
-		{"ZD_MALQDEM", nDefMLM},;						//-- 62
-		{"ZD_MALDDEM", nDeDMLM},;						//-- 63
-		{"ZD_MABDDEF", nDeDMBR},;						//-- 64
-		{"ZD_MALDDEF", nDEDMLQ},;						//-- 65
-		{"ZD_PV1RUSM", nUsuPRM},;						//-- 66
-		{"ZD_PV1DUSM", nUsDPRM},;						//-- 67
-		{"ZD_MABRUSM", nUsuMBM},;						//-- 68
-		{"ZD_MABDUSM", nUsDMBM},;						//-- 69
-		{"ZD_MALQUSM", nUsuMLM},;						//-- 70
-		{"ZD_MALDUSM", nUsDMLM},;						//-- 71
-		{"ZD_CUSDDEF", nDeDCst},;						//-- 72
-		{"ZD_FREDDEF", nDeDFre},; 						//-- 73
-		{"ZD_PCOMPAD", nUsuCPd},; 						//-- 74
-		{"ZD_CALCMRC", cClcCRN},; 						//-- 75
-		{"ZD_PROCESS", cProcess},; 						//-- 76 //--23/04/2020 - Wemerson Souza - Variavel para tratar Processo de Cotação de Venda
-		{"ZD_PROCAPV", cProcApv},; 						//-- 77 //--23/04/2020 - Wemerson Souza - Variavel para tratar Processo de Cotação de Venda
-		{"ZD_BLODIR" , cBloDir},; 						//-- 78 //--AS - Aleluia - Bloqueio diretoria
-		{"ZD_MSGDIR" , cMsgDir},; 						//-- 79 //--AS - Aleluia - Msg. de Bloqueio Dir
-		{"ZD_PV2DDEM" , nDeDPRM2},; 					//-- 80 //-- Preco Minimo Default Dolar UM2
-		{"ZD_PV2DUSM" , nUsDPRM2},; 					//-- 81 //-- Preco Minimo Usuario Dolar UM2
-		{"ZD_PV2RDEM" , nDefPRM2},; 					//-- 82 //-- Preco Minimo Default Real UM2
-		{"ZD_PV2RUSM" , nUsuPRM2},; 					//-- 83 //-- Preco Minimo Usuario Real UM2
-		{"ZD_CODTABC" , cCodTabCot},;                   //-- 84 //-- Codigo tabela Comissao
-		{"DELETE"	 , .F.}})							//-- 85 //-- Sempre manter esse campo como o ultimo.
+			{"ZD_PRODUTO", cCodPrd},;						//-- 02
+			{"ZD_PREPROD", cPrePrd},;						//-- 03
+			{"ZD_QUANT1 ", nQtdUM1},; 						//-- 04
+			{"ZD_QUANT2 ", nQtdUM2},; 						//-- 05
+			{"ZD_CUSTDEF", nDefCst},; 						//-- 06
+			{"ZD_CUSTUSU", nUsuCst},; 						//-- 07
+			{"ZD_MARGDEF", nDefMrg},; 						//-- 08
+			{"ZD_MARGUSU", nUsuMrg},; 						//-- 09
+			{"ZD_PERCDES", nDefDes},;	 					//-- 10
+			{"ZD_PCMSDEF", nDefCom},; 						//-- 11
+			{"ZD_PCMSUSU", nUsuCom},; 						//-- 12
+			{"ZD_FRETDEF", nDefFre},; 						//-- 13
+			{"ZD_FRETUSU", nUsuFre},; 						//-- 14
+			{"ZD_PPISDEF", iIf(Len(aImposDef)>0,aImposDef[1],0)},; 					//-- 15 - PIS
+			{"ZD_PPISUSU", iIf(Len(aImposUsu)>0,aImposUsu[1],0)},; 					//-- 16 - PIS
+			{"ZD_PCOFDEF", iIf(Len(aImposDef)>0,aImposDef[2],0)},; 					//-- 17 - COFINS
+			{"ZD_PCOFUSU", iIf(Len(aImposUsu)>0,aImposUsu[2],0)},; 					//-- 18 - COFINS
+			{"ZD_PICMDEF", iIf(Len(aImposDef)>0,aImposDef[3],0)},; 					//-- 19 - ICMS
+			{"ZD_PICMUSU", iIf(Len(aImposUsu)>0,aImposUsu[3],0)},; 					//-- 20 - ICMS
+			{"ZD_PIPIDEF", iIf(Len(aImposDef)>0,aImposDef[4],0)},; 					//-- 21 - IPI
+			{"ZD_PIPIUSU", iIf(Len(aImposUsu)>0,aImposUsu[4],0)},; 					//-- 22 - IPI
+			{"ZD_PV1RDEF", nDefPRE},; 						//-- 23
+			{"ZD_PV1RUSU", nUsuPRE},; 						//-- 24
+			{"ZD_PV2RDEF", nDef2PRE},; 						//-- 25
+			{"ZD_PV2RUSU", nUsu2PRE},; 						//-- 26
+			{"ZD_PV1DDEF", nDefPUS},; 						//-- 27
+			{"ZD_PV1DUSU", nUsuPUS},; 						//-- 28
+			{"ZD_PV2DDEF", nDef2PUS},; 						//-- 29
+			{"ZD_PV2DUSU", nUsu2PUS},;		 				//-- 30
+			{"ZD_TO1RDEF", nDefTRE},; 						//-- 31
+			{"ZD_TO1RUSU", nUsuTRE},; 						//-- 32
+			{"ZD_TO1DDEF", nDefTUS},; 						//-- 33
+			{"ZD_TO1DUSU", nUsuTUS},; 						//-- 34
+			{"ZD_OBSERV ", cObserv},;						//-- 35
+			{"ZD_MOTIVO ", cMotivo},;						//-- 36
+			{"ZD_QTD1ATE", nQtdAte},;						//-- 37
+			{"ZD_STATUS ", cStatus},;						//-- 38
+			{"ZD_DTRENEG", sTod("")},;						//-- 39
+			{"ZD_COTACAO", M->ZC_CODIGO},;					//-- 40
+			{"ZD_MABRDEF", nDefMBR},;						//-- 41
+			{"ZD_MALQDEF", nDefMLQ},;						//-- 42
+			{"ZD_MABRUSU", nUsuMBR},;						//-- 43
+			{"ZD_MALQUSU", nUsuMLQ},;						//-- 44
+			{"ZD_CUSTDUS", nDUsCst},;						//-- 45
+			{"ZD_FRETDUS", nDUsFre},;						//-- 46
+			{"ZD_MABRDUS", nUsDMBR},;						//-- 47
+			{"ZD_MALQDUS", nUsDMLQ},;						//-- 48
+			{"ZD_UMPAD"  , cUMPad},;						//-- 49
+			{"ZD_CODCON" , cCodCon},;						//-- 50
+			{"ZD_AUTDDEF", nDefAut},;						//-- 51
+			{"ZD_AUTDUSU", nUsuAut},;						//-- 52
+			{"ZD_PCMSDHI", nDefCHi},;						//-- 53
+			{"ZD_PCMSDMI", nDefCMi},;						//-- 54
+			{"ZD_PCMSUHI", nUsuCHi},;						//-- 55
+			{"ZD_PCMSUMI", nUsuCMi},;						//-- 56
+			{"ZD_PV1RDEM", nDefPRM},;						//-- 57
+			{"ZD_PV1DDEM", nDeDPRM},;						//-- 58
+			{"ZD_MABRDEM", nDefMBM},;						//-- 60
+			{"ZD_MABDDEM", nDeDMBM},;						//-- 61
+			{"ZD_MALQDEM", nDefMLM},;						//-- 62
+			{"ZD_MALDDEM", nDeDMLM},;						//-- 63
+			{"ZD_MABDDEF", nDeDMBR},;						//-- 64
+			{"ZD_MALDDEF", nDEDMLQ},;						//-- 65
+			{"ZD_PV1RUSM", nUsuPRM},;						//-- 66
+			{"ZD_PV1DUSM", nUsDPRM},;						//-- 67
+			{"ZD_MABRUSM", nUsuMBM},;						//-- 68
+			{"ZD_MABDUSM", nUsDMBM},;						//-- 69
+			{"ZD_MALQUSM", nUsuMLM},;						//-- 70
+			{"ZD_MALDUSM", nUsDMLM},;						//-- 71
+			{"ZD_CUSDDEF", nDeDCst},;						//-- 72
+			{"ZD_FREDDEF", nDeDFre},; 						//-- 73
+			{"ZD_PCOMPAD", nUsuCPd},; 						//-- 74
+			{"ZD_CALCMRC", cClcCRN},; 						//-- 75
+			{"ZD_PROCESS", cProcess},; 						//-- 76 //--23/04/2020 - Wemerson Souza - Variavel para tratar Processo de Cotação de Venda
+			{"ZD_PROCAPV", cProcApv},; 						//-- 77 //--23/04/2020 - Wemerson Souza - Variavel para tratar Processo de Cotação de Venda
+			{"ZD_BLODIR" , cBloDir},; 						//-- 78 //--AS - Aleluia - Bloqueio diretoria
+			{"ZD_MSGDIR" , cMsgDir},; 						//-- 79 //--AS - Aleluia - Msg. de Bloqueio Dir
+			{"ZD_PV2DDEM" , nDeDPRM2},; 					//-- 80 //-- Preco Minimo Default Dolar UM2	
+			{"ZD_PV2DUSM" , nUsDPRM2},; 					//-- 81 //-- Preco Minimo Usuario Dolar UM2	
+			{"ZD_PV2RDEM" , nDefPRM2},; 					//-- 82 //-- Preco Minimo Default Real UM2
+			{"ZD_PV2RUSM" , nUsuPRM2},; 					//-- 83 //-- Preco Minimo Usuario Real UM2	
+			{"ZD_CODTABC" , cCodTabCot},;                   //-- 84 //-- Codigo tabela Comissao	
+			{"DELETE"	 , .F.}})							//-- 85 //-- Sempre manter esse campo como o ultimo.
 
 		If Empty(aDadIt1[1][1]) //-- Verifica se é primeiro item.
 			aDadIt1:={}
@@ -3367,7 +3369,6 @@ Static Function FSCrgMnt()
 	//--Limpa a tela
 	FsBtnMnt(1)
 
-
 	//-- Carrega produto
 	cIteAtu := aDadAux[oBrowse1:nAt][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_ITEM")})][2]
 	cCodPrd := aDadAux[oBrowse1:nAt][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PRODUTO")})][2]
@@ -3452,14 +3453,14 @@ Static Function FSCrgMnt()
 	nUsu2PRE := aDadAux[oBrowse1:nAt][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSU")})][2] //--Preço Sugerido Usuario Real UM2
 	nDef2PUS := aDadAux[oBrowse1:nAt][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2DDEF")})][2] //--Preço Sugerido Defaut Dolar UM2
 	nUsu2PUS := aDadAux[oBrowse1:nAt][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2DUSU")})][2] //--Preço Sugerido Usuario Dolar UM2
-
+	
 	nDeDPRM2 := aDadAux[oBrowse1:nAt][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2DDEM")})][2] // -- Preco Minimo Default Dolar UM2
 	nUsDPRM2 := aDadAux[oBrowse1:nAt][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2DUSM")})][2] // -- Preco Minimo Usuario Dolar UM2
-	nDefPRM2 := aDadAux[oBrowse1:nAt][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RDEM")})][2] // -- Preco Minimo Default Real UM2
-	nUsuPRM2 := aDadAux[oBrowse1:nAt][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSM")})][2] // -- Preco Minimo Usuario Real UM2
+	nDefPRM2 := aDadAux[oBrowse1:nAt][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RDEM")})][2] // -- Preco Minimo Default Real UM2	
+	nUsuPRM2 := aDadAux[oBrowse1:nAt][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSM")})][2] // -- Preco Minimo Usuario Real UM2	
 
 	cCodTabCot := aDadAux[oBrowse1:nAt][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CODTABC")})][2] // -- Codigo Tabela Comissao
-
+	
 	aImposDef	:= {}
 	aAdd(aImposDef,aDadAux[oBrowse1:nAt][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PPISDEF")})][2])
 	aAdd(aImposDef,aDadAux[oBrowse1:nAt][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PCOFDEF")})][2])
@@ -3536,7 +3537,7 @@ Static Function FSCrgMnt()
 
 Return()
 
-//------------------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------
 /*/{Protheus.doc} FsExeRef
 Função para fazer REFRESH em todos objetos.
 
@@ -3550,7 +3551,7 @@ Função para fazer REFRESH em todos objetos.
 								   mudando para oGetD1,oGetD2,oGetD3... para os campos default.
 								   Incluindo na função de refresh todos os objetos dos campos.
 /*/
-//-------------------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------
 Static Function FsExeRef()
 	Local nXi := 0
 	//Local aObjects := { "oSay","oGet","oGetUM","oPan03","oDlg03"}
@@ -3562,7 +3563,7 @@ Static Function FsExeRef()
 	"oGet15","oGet16","oGet17","oGet18","oGet19","oGet20","oGet21"}
 
 	For nXi := 1 To Len(aObjects)
-		If Type(aObjects[nXi]) <> 'U'
+		If U_ValAtrib(aObjects[nXi]) <> 'U'
 			&(aObjects[nXi]+":Refresh()")
 		EndIf
 	Next nXi
@@ -3746,7 +3747,7 @@ Static Function FsPrdIte()
 
 	cMotPer := FsTelMot(@cObser,@cCConc)
 	If Empty(cMotPer)
-		Alert("Obrigatório informar o motivo de perca da cotação.")
+		Alert("Obrigatório informar o motivo de perda da cotação.")
 		Return()
 	EndIf
 
@@ -3828,7 +3829,7 @@ Return()
 
 //-------------------------------------------------------------------
 /*/{Protheus.doc} FsTelMot
-Função para criar tela para informar motivo de perca da cotação.
+Função para criar tela para informar motivo de perda da cotação.
 
 @type function
 @author		Igor Rabelo
@@ -3873,7 +3874,7 @@ Return(cCodMot)
 
 //-------------------------------------------------------------------
 /*/{Protheus.doc} FsVldMot
-Função preencher a descricao do motivo de perca da cotação.
+Função preencher a descricao do motivo de perda da cotação.
 
 @type function
 @author		Igor Rabelo
@@ -3986,7 +3987,7 @@ Static Function FsSlvOrc()
 		RecLock("SZC",INCLUI)
 		For nXi := 1 To FCount()                      //-- For de 1 ateh o numero de campos que sao utilizados na tabela SZC(FCount())
 			cAuxMem := Alltrim("M->"+FieldName(nXi))  //-- Armazena o conteudo do campo da tabela em uma variavel auxiliar.
-			If Type(cAuxMem) <> "U"
+			If U_ValAtrib(cAuxMem) <> "U"
 				FieldPut(nXi,&(cAuxMem))                  //-- Grava o conteudo do campo armazenado na auxilar no Banco de Dados.
 			EndIf
 		Next
@@ -4042,7 +4043,7 @@ Static Function FsSlvOrc()
 			SZD->(MsUnlock())
 
 			// ->> AS - Aleluia - Grava os dados da previsão de remessa do item da cotação
-			If type("aXaColsPublicaTelaCotacaoVenda") <> "U";
+			If U_ValAtrib("aXaColsPublicaTelaCotacaoVenda") <> "U";
 					.AND. valtype(aXaColsPublicaTelaCotacaoVenda) == "A";
 					.AND. len(aXaColsPublicaTelaCotacaoVenda) > 0
 
@@ -5020,7 +5021,7 @@ Return(nPAutDsc)
 
 //-------------------------------------------------------------------
 /*/{Protheus.doc} FsProCot
-Rotinas do Menu de Manutenção de Processo de cotação de veaUsadosnda
+Rotinas do Menu de Manutenção de Processo de cotação de venda
 
 @type function
 @author		Wemerson Souza
@@ -5301,6 +5302,7 @@ Static Function fMSNewGe1()
 	Local aFields       := {"NOUSER"}
 	Local aAlterFields  := {}
 	Local cItem			:= ""
+	Local cSeek := ""
 
 	Static oMSNewGe1    := Nil
 
@@ -5310,23 +5312,21 @@ Static Function fMSNewGe1()
 	aAlterFields := {}//aClone( aFields )
 
 	// Define field properties
-	DbSelectArea( "SX3" )
-	SX3->( DbSetOrder(2) )
 	For nX := 1 to Len( aFields )
-		If SX3->( DbSeek( aFields[nX] ) )
+		If GETSX3CACHE(aFields[nX],"X3_CAMPO") != "" .And. aFields[nX] != "NOUSER"
 			Aadd( aHeaderEx, {;
-				AllTrim(X3Titulo()),;
-				SX3->X3_CAMPO,;
-				SX3->X3_PICTURE,;
-				SX3->X3_TAMANHO,;
-				SX3->X3_DECIMAL,;
-				SX3->X3_VALID,;
-				SX3->X3_USADO,;
-				SX3->X3_TIPO,;
-				SX3->X3_F3,;
-				SX3->X3_CONTEXT,;
-				SX3->X3_CBOX,;
-				SX3->X3_RELACAO;
+				AllTrim(GETSX3CACHE(aFields[nX],"X3_TITULO")),;
+				GETSX3CACHE(aFields[nX],"X3_CAMPO"),;
+				GETSX3CACHE(aFields[nX],"X3_PICTURE"),;
+				GETSX3CACHE(aFields[nX],"X3_TAMANHO"),;
+				GETSX3CACHE(aFields[nX],"X3_DECIMAL"),;
+				GETSX3CACHE(aFields[nX],"X3_VALID"),;
+				GETSX3CACHE(aFields[nX],"X3_USADO"),;
+				GETSX3CACHE(aFields[nX],"X3_TIPO"),;
+				GETSX3CACHE(aFields[nX],"X3_F3"),;
+				GETSX3CACHE(aFields[nX],"X3_CONTEXT"),;
+				GETSX3CACHE(aFields[nX],"X3_CBOX"),;
+				GETSX3CACHE(aFields[nX],"X3_RELACAO");
 				})
 		Endif
 	Next nX
@@ -5472,6 +5472,7 @@ Local nPosQtd :=  aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT1")})
 Local nPosQtd2 :=  aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT2")})
 Local nPosDel :=  aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("DELETE")})
 Local nQtdGrd := 0
+
 
 Local nPosLoc := 0
 Local lFalhou := .F.
@@ -5947,7 +5948,7 @@ Função que carrega variaveis necessárias para recalcular tela.
 @version	P12
 /*/
 //-------------------------------------------------------------------
-Static Function FCarVar(n_REG)
+Static Function FCarVar(n_REG,aDadAux)
 
 Local nXi := 0
 
@@ -6064,3 +6065,1393 @@ Local nXi := 0
 	Next nXi
 
 Return()
+
+
+
+//-----------------------------------------------------------------------------------------------
+/*/
+{Protheus.doc} F_ExCotV
+Função execauto da cotação. 
+@author		.iNi Sistemas
+@since     	27/03/2023
+@version  	P.12
+@param 		aCabec - Cabeçalho da cotação.
+@param 		aItens - Itens da cotação
+@param 		aCPOS - campos a serem validados no Enchauto
+@param 		nOpc - Opção 3=Incluir; 4=Alterar
+@return    	array[1] lErro - Se deu erro ou não de execução do execauto.
+@return    	array[2] cMsgErro - Mensagem de erro caso tenha ocorrido erro de execução.
+@return    	array[3] oJson1 - Objeto json gerado em caso de sucesso.
+@obs        
+Alterações Realizadas desde a Estruturação Inicial
+------------+-----------------+--------------------------------------------------------------
+Data       	|Desenvolvedor    |Motivo
+------------+-----------------+--------------------------------------------------------------
+/*/
+//----------------------------------------------------------------------------------------------
+User Function F_ExeCotV(aCabec,aItens,aCPOS,nOpc)
+    Local cTabela   := "SZC"
+	Local nXz 		:= 0
+	Local nXi 		:= 0
+	Local lAchou	:= .F.
+	Local cMsgErro 	:= ""
+	Local aRet 		:= {}
+	Local nFilial 	:= 0
+	Local aDadEAut 	:= {}
+	Local nPosIte 	:= 0
+	Local cTransact := ""
+    Local nRetorno  := 0
+	Local lRet 		:= .T.
+	Local lErro 	:= .F.
+	Local nPDelIt 	:= 0
+	Local cStaBlAlt := 'I,P,A,S'	// Status bloqueio de alteração de cotação
+	Private oJson1 	:= JsonObject():New()
+	Private oJsonCot:= JsonObject():New()
+	Private oJsonPrd:= JsonObject():New()
+	Private lMsErroAuto := .F.
+	Private aTELA[0][0],aGETS[0]
+
+    //--Inicializa a transação
+    Begin Transaction
+
+		//--Validação da alteração/exclusão, A da função EnchAuto retorna um erro que não indica o motivo correto.
+		If nOpc == 4 .OR. nOpc == 5
+
+			SZC->(dbSetOrder(1))
+			If !SZC->(dbSeek(xFilial("SZC")+ACABEC[aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZC_CODIGO" })][2]))
+				
+				cMsgErro += "Cotação não encontrada! Filial: "+AllTrim(xFilial("SZC"))+" Cotação: "+Alltrim(ACABEC[aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZC_CODIGO" })][2])
+				lRet := .F.
+
+			Else
+
+				//--Validação de alteração do registro.
+				If nOpc == 4 .And. !(SZC->ZC_STATUS $ cStaBlAlt)
+					cMsgErro += "Não é permitida a alteração da cotação para o status atual."
+					lRet := .F.
+				EndIf
+
+				//--Validação de exclusão do registro.
+				If nOpc == 5 .And. !(SZC->ZC_STATUS == 'I') .And. !(SZC->ZC_STATUS == 'B')
+					cMsgErro += "Não é permitida a exclusão da cotação para o status atual."
+					lRet := .F.
+				EndIf
+
+			EndIf
+
+		Else
+			
+			If aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZC_CODIGO" }) > 0
+				cMsgErro += "Não é permitido informar o código da cotação na operação de inclusão."
+				lRet := .F.
+			EndIf
+
+		EndIf
+
+		If lRet
+
+			//Joga a tabela para a memória (M->)
+			RegToMemory(;
+				cTabela,; // cAlias - Alias da Tabela
+				iif(nOpc==4 .or. nOpc==5,.F.,.T.),;     // lInc   - Define se é uma operação de inclusão ou atualização
+				.F.;      // lDic   - Define se irá inicilizar os campos conforme o dicionário
+			)
+			
+		
+			//--Se conseguir fazer a execução automática - Validação do cabeçalho.
+			If EnchAuto(;
+				cTabela,; // cAlias  - Alias da Tabela
+				aCabec,;  // aField  - Array com os campos e valores
+				{ || Obrigatorio( aGets, aTela ) },; // uTUDOOK - Validação do botão confirmar
+				nOpc,;        // nOPC    - Operação do Menu (3=inclusão, 4=alteração, 5=exclusão)
+				aCPOS;
+			)
+
+				If nOpc != 5
+					//--Validação dos itens.
+					aRet :=  FValidIt(aItens,@aDadEAut,nOpc)
+				Else
+					aRet := {.T.,""} //--Permite exclusão pois já passou pela validação de exclusão.
+				EndIf
+
+				If aRet[1]
+
+					If nOpc != 5
+
+						//--Aciona a efetivação da gravação do cabeçalho.
+						nRetorno := AxIncluiAuto(;
+							cTabela,;   // cAlias     - Alias da Tabela
+							,;          // cTudoOk    - Operação do TudoOk (se usado no EnchAuto não precisa usar aqui)
+							cTransact,; // cTransact  - Operação acionada após a gravação mas dentro da transação
+							nOpc,;          // nOpcaoAuto - Operação do Menu (3=inclusão, 4=alteração, 5=exclusão)
+							SZC->(recno());
+						)					
+
+						//--Aciona a efetivação da gravação dos itens.						
+						dbSelectArea("SZD")
+						nFilial := aScan(dbStruct(), {|x| "_FILIAL" $ x[1]})	//-- Procura no array a filial
+						nPDelIt := aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("DELETE")}) //--Verifica se é exclusão de item.
+
+						For nXi := 1 to Len(aDadEAut)                  			//-- FOR de 1 ateh a quantidade do numero do aDadEAut
+
+							nPosIte := aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_ITEM")})
+
+							SZD->(dbSetOrder(1))
+							SZD->(dbGoTop())
+							lAchou := SZD->(dbSeek(xFilial("SZD")+M->ZC_CODIGO+aDadEAut[nXi][nPosIte][2]))						
+
+							If aDadEAut[nXi][nPDelIt][2] 	//-- Se for registro deletado
+								If lAchou					//-- Se achar o registro tem que deletar!!!
+									RecLock("SZD",.F.)      //-- Trava a tabela
+									dbDelete()
+									SZD->(MsUnlock())
+								EndIf
+								Loop         									//-- Loop da condicao For
+							EndIf
+
+							//-- Se achou o registro altera os dados se não inclui.
+							If lAchou
+								RecLock("SZD",.F.)
+							Else
+								RecLock("SZD",.T.)
+							EndIf
+
+							//--Grava os campos da SZD
+							For nXz := 1 to Len(aDadEAut[nXi])
+								If (nFieldPos := FieldPos(aDadEAut[nXi][nXz][1])) > 0
+									FieldPut(nFieldPos, aDadEAut[nXi][nXz][2])
+								Endif
+							Next nXz
+
+							//--Grava o conteudo da filial
+							If nFilial > 0
+								FieldPut(nFilial, xFilial("SZD"))
+							Endif
+
+							SZD->(MsUnlock())
+
+						Next nXi
+					Else
+
+						//--Realiza exclusão da cotação.
+						SZC->(dbSetOrder(1))
+						If SZC->(dbSeek(xFilial("SZC")+M->ZC_CODIGO))	
+
+							RecLock("SZC",.F.)
+								SZC->(dbDelete())
+							SZC->(MsUnlock())
+
+							SZD->(dbSetOrder(1))
+							If SZD->(dbSeek(xFilial("SZD")+M->ZC_CODIGO))	
+								While SZD->ZD_FILIAL == xFilial("SZD") .And. SZD->ZD_COTACAO == M->ZC_CODIGO
+									RecLock("SZD",.F.)
+										SZD->(dbDelete())
+									SZD->(MsUnlock())
+									SZD->(dbSkip())
+								EndDo
+							EndIf
+						
+						EndIf
+
+					EndIf
+				Else
+					lRet := .F.
+					cMsgErro := aRet[2]
+				EndIf
+			Else            
+				//MostraErro()
+				cMsgErro := MemoRead(NomeAutoLog())
+				Ferase(NomeAutoLog())
+				DisarmTransaction()
+			EndIf
+		EndIf
+    End Transaction  
+
+	If lRet
+		If nOpc != 5
+
+			SZC->(dbSetOrder(1))
+			If SZC->(dbSeek(xFilial("SZC")+M->ZC_CODIGO))
+
+				oJson1['status'] 		:= "200"
+				oJson1['mensagem'] 		:= "Sucesso!"	
+				oJson1['conteudo'] 		:= {}			
+				
+				oJsonCot['ZC_FILIAL'] 	= SZC->ZC_FILIAL
+				oJsonCot['ZC_CODIGO'] 	:= SZC->ZC_CODIGO
+				oJsonCot['ZC_CLIENTE'] 	:= SZC->ZC_CLIENTE
+				oJsonCot['ZC_LOJACLI'] 	:= SZC->ZC_LOJACLI
+				oJsonCot['ZC_TIPFRET'] 	:= SZC->ZC_TIPFRET
+				oJsonCot['ZC_DTVALID'] 	:= SZC->ZC_DTVALID
+				oJsonCot['ZC_DTINIFO'] 	:= SZC->ZC_DTINIFO
+				oJsonCot['ZC_DTFIMFO'] 	:= SZC->ZC_DTFIMFO
+				oJsonCot['ZC_CONDPAG'] 	:= SZC->ZC_CONDPAG
+				oJsonCot['ZC_VEND1'] 	:= SZC->ZC_VEND1
+				oJsonCot['ZC_VEND2'] 	:= SZC->ZC_VEND2
+				oJsonCot['itens'] 		:= {}		
+
+				SZD->(dbSetOrder(1))
+				If SZD->(dbSeek(xFilial("SZD")+SZC->ZC_CODIGO))
+
+					While !SZD->(Eof()) .and. SZD->ZD_FILIAL = SZC->ZC_FILIAL .and. SZD->ZD_COTACAO == SZC->ZC_CODIGO
+
+						oJsonPrd := JsonObject():New()
+						oJsonPrd['ZD_ITEM'] 	:= SZD->ZD_ITEM
+						oJsonPrd['ZD_PRODUTO'] 	:= SZD->ZD_PRODUTO
+						oJsonPrd['ZD_PV1RUSU'] 	:= SZD->ZD_PV1RUSU
+
+						Aadd(oJsonCot['itens'],oJsonPrd)
+
+						SZD->(dbSkip())
+					EndDo
+				EndIf
+
+				Aadd(oJson1['conteudo'],oJsonCot)
+
+			EndIf
+		Else
+			oJson1['status'] 		:= "200"
+			oJson1['mensagem'] 		:= "Sucesso na exclusão da cotação!"	
+		EndIf
+	Else
+		lErro := .T.		
+	EndIf
+
+Return({lErro,cMsgErro,oJson1})
+
+
+//-----------------------------------------------------------------------------------------------
+/*/
+{Protheus.doc} FValidIt
+Função de validação dos itens da cotação. 
+@author		.iNi Sistemas
+@since     	27/03/2023
+@version  	P.12
+@param 		aItens - Itens da cotação
+@param 		aDadEAut - Array que será atualizado com as informações calculadas.
+@param 		nOpc - Opção 3=Incluir; 4=Alterar
+@return    	array[1] lRet - Se apresenta erro ou não na validação dos itens.
+@return    	array[2] cMsgErro - Mensagem de erro caso tenha ocorrido na validação dos itens.
+@obs        
+Alterações Realizadas desde a Estruturação Inicial
+------------+-----------------+------------------------------------------------------------------
+Data       	|Desenvolvedor    |Motivo
+------------+-----------------+------------------------------------------------------------------
+/*/
+//-----------------------------------------------------------------------------------------------
+Static Function FValidIt(aItens,aDadEAut,nOpc)
+
+Local cProd 	:= ""
+Local cPrePr 	:= ""
+Local cUM 	  	:= ""
+Local nQtd1 	:= ""
+Local nQtd2 	:= ""
+Local cCusUsu 	:= ""
+Local nPPrd 	:= 0
+Local nPPrePr 	:= 0
+Local nPUm 		:= 0
+Local nPQtd1 	:= 0
+Local nPQtd2 	:= 0
+Local nPCusUs 	:= 0
+LOcal nPDelIt 	:= 0
+Local lDelIt    := .F.
+Local nX	  	:= 0
+Local cMsgErro 	:= ""
+Local lRet 		:= .T.
+Local cUm1P 	:= "" //-- 1º unidade de medida no cadastro do produto ou pré-produto
+Local cUm2P 	:= "" //-- 2º unidade de medida no cadastro do produto ou pré-produto
+
+Private lBscImp 	:= .T.
+Private lDesUsuCst	:= .F.
+Private cCodPrd 	:= ""
+Private cPrePrd 	:= ""
+Private cUMPad 	  	:= ""
+
+//-- Array
+Private	aIteUM		:= {"",""}
+Private	aCabec1		:= {}
+Private	aDadIt1		:= {}
+Private aUsados		:= {}
+Private aImpostos	:= {}
+Private aImposDef	:= {}
+Private aImposUsu	:= {}	
+//--Numérico
+Private nQtdUM1 := CriaVar("ZD_QUANT1")
+Private nQtdUM2 := CriaVar("ZD_QUANT2")
+Private nDefCst := CriaVar("ZD_CUSTDEF")
+Private nDeDCst := CriaVar("ZD_CUSDDEF")
+Private nDeDFre := CriaVar("ZD_FREDDEF")
+Private nDefMrg := CriaVar("ZD_MARGDEF")
+Private nDefAut := CriaVar("ZD_AUTDDEF")
+Private nUsuAut := CriaVar("ZD_AUTDUSU")
+Private nDefCom := CriaVar("ZD_PCMSDEF")
+Private nDefCHi := CriaVar("ZD_PCMSDHI")
+Private nDefCMi := CriaVar("ZD_PCMSDMI")
+Private nDefDes := CriaVar("ZD_MARGDEF")
+Private nDefFre := CriaVar("ZD_FRETDEF")
+Private nDefImp := CriaVar("ZD_MARGDEF")
+Private nDefPRE := CriaVar("ZD_PV1RDEF")
+Private nDefPUS := CriaVar("ZD_PV1DDEF")
+Private nDeDMBR := CriaVar("ZD_MABDDEF")
+Private nDEDMLQ := CriaVar("ZD_MALDDEF")
+Private nDefPRM := CriaVar("ZD_PV1RDEM")
+Private nDeDPRM := CriaVar("ZD_PV1DDEM")
+Private nDefMBM := CriaVar("ZD_MABRDEM")
+Private nDeDMBM := CriaVar("ZD_MABDDEM")
+Private nDefMLM := CriaVar("ZD_MALQDEM")
+Private nDeDMLM := CriaVar("ZD_MALDDEM")
+Private nDefTRE := CriaVar("ZD_TO1RDEF")
+Private nDefTUS := CriaVar("ZD_TO1DDEF")
+Private nUsuCst := CriaVar("ZD_CUSTUSU")
+Private nUsuMrg := CriaVar("ZD_MARGUSU")
+Private nUsuCom := CriaVar("ZD_PCMSUSU")
+Private nUsuCHi := CriaVar("ZD_PCMSUHI")
+Private nUsuCMi := CriaVar("ZD_PCMSUMI")
+Private nUsuCPd := CriaVar("ZD_PCOMPAD")
+Private cClcCRN := "NAO"
+Private nUsuDes := CriaVar("ZD_MARGUSU")
+Private nUsuFre := CriaVar("ZD_FRETUSU")
+Private nUsuImp := CriaVar("ZD_MARGUSU")
+Private nUsuPRE := CriaVar("ZD_PV1RUSU")
+Private nUsuPUS := CriaVar("ZD_PV1DUSU")
+Private nUsDMBR := CriaVar("ZD_MABRDUS")
+Private nUsDMLQ := CriaVar("ZD_MALQDUS")
+Private nUsuPTb := CriaVar("ZD_PV1RUSU")
+Private nDUsPTb := CriaVar("ZD_PV1RUSU")
+Private nDUsDsc := CriaVar("ZD_PV1RUSU")
+Private nUsuTRE := CriaVar("ZD_TO1RUSU")
+Private nUsuTUS := CriaVar("ZD_TO1DUSU")
+Private nDef2PRE := CriaVar("ZD_PV1RDEF")
+Private nUsu2PRE := CriaVar("ZD_PV1RDEF")
+Private nDef2PUS := CriaVar("ZD_PV1RDEF")
+Private nUsu2PUS := CriaVar("ZD_PV1RDEF")
+Private nQtdAte := CriaVar("ZD_QTD1ATE")
+Private nDefMBR := CriaVar("ZD_MABRDEF")
+Private nDefMLQ := CriaVar("ZD_MALQDEF")
+Private nUsuMBR := CriaVar("ZD_MABRUSU")
+Private nUsuMLQ := CriaVar("ZD_MALQUSU")
+Private nDUsCst := CriaVar("ZD_CUSTUSU")
+Private nDUsFre := CriaVar("ZD_FRETUSU")
+Private nDUsTRE := CriaVar("ZD_TO1RUSU")
+Private nDUsTUS := CriaVar("ZD_TO1DUSU")
+Private nUsuPRM := CriaVar("ZD_PV1RUSM")
+Private nUsDPRM := CriaVar("ZD_PV1DUSM")
+Private nUsuMBM := CriaVar("ZD_MABRUSM")
+Private nUsDMBM := CriaVar("ZD_MABDUSM")
+Private nUsuMLM := CriaVar("ZD_MALQUSM")
+Private nUsDMLM := CriaVar("ZD_MALDUSM")
+Private cProcess:= CriaVar("ZD_PROCESS")//--23/04/2020 - Wemerson Souza - Variavel para tratar Processo de Cotação de Venda
+Private cProcApv:= CriaVar("ZD_PROCAPV")//--23/04/2020 - Wemerson Souza - Variavel para tratar Processo de Cotação de Venda
+Private cBloDir := CriaVar("ZD_BLODIR")//--AS - Aleluia - Bloqueio Diretoria
+Private cMsgDir := CriaVar("ZD_MSGDIR")//--AS - Aleluia - Msg. de Bloqueio Dir
+Private nDeDPRM2 := CriaVar("ZD_PV2DDEM") // -- Preco Minimo Default Dolar UM2
+Private nUsDPRM2 := CriaVar("ZD_PV2DUSM") // -- Preco Minimo Usuario Dolar UM2
+Private nDefPRM2 := CriaVar("ZD_PV2RDEM") // -- Preco Minimo Default Real UM2
+Private nUsuPRM2 := CriaVar("ZD_PV2RUSM") // -- Preco Minimo Usuario Real UM2
+Private cCodTabCot := CriaVar("ZD_CODTABC") // -- Codigo Tabela Comissao
+Private cMotivo := CriaVar("ZD_MOTIVO")
+Private cObserv := CriaVar("ZD_OBSERV")
+Private cCodCon	:= CriaVar("ZD_CODCON")
+Private cStatus := "I"
+
+
+	For nX := 1 To Len(aItens)
+
+		cProd 		:= ""	
+		cPrePr 	:= ""
+		cUM 	  	:= ""
+		cQtdUm1 	:= ""
+		cQtdUm2 	:= ""
+		cCusUsu 	:= ""
+
+		nPPrd 	:= aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "ZD_PRODUTO" })
+		nPPrePr := aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "ZD_PREPROD" })
+		nPUm 	:= aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "ZD_UMPAD" })
+		nPQtd1 	:= aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "ZD_QUANT1" })
+		nPQtd2 	:= aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "ZD_QUANT2" })
+		nPCusUs := aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "ZD_CUSTUSU" })
+		nPDelIt := aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "D_E_L_E_T_" })
+
+		If !Empty(nPPrd)
+			cProd := aItens[nX][nPPrd][2]
+		EndIf
+		If !Empty(nPPrePr)
+			cPrePr := aItens[nX][nPPrePr][2]
+		EndIf
+		If !Empty(nPUm)
+			cUM := aItens[nX][nPUm][2]
+		EndIf
+		If !Empty(nPQtd1)
+			nQtd1 := Val(aItens[nX][nPQtd1][2])
+		EndIf
+		If !Empty(nPQtd2)
+			nQtd2 := Val(aItens[nX][nPQtd2][2])
+		EndIf
+		If !Empty(nPCusUs)
+			cCusUsu := aItens[nX][nPCusUs][2]
+		EndIf
+		If !Empty(nPDelIt)
+			lDelIt := iif(aItens[nX][nPDelIt][2]=='*',.T.,.F.)
+		Else
+			lDelIt := .F.
+		EndIf
+
+		If lDelIt .and. nOpc == 3
+			cMsgErro += "Não é possivel deletar um item de uma cotação que esta sendo incluída. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+			lRet := .F.
+		EndIf
+
+		//--Não valida produtos que estão sendo deletados.
+		If lRet .and. !lDelIt
+			If EMPTY(cProd) .AND. Empty(cPrePr)
+				cMsgErro += "Obrigatorio informar pre produto ou produto. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+				lRet := .F.
+			ElseIf !EMPTY(cProd) .AND. !Empty(cPrePr)
+				cMsgErro += "Deve ser informado pré produto ou produto. Nunca os dois juntos. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+				lRet := .F.
+			ElseIf !Empty(cPrePr)
+				//-- Avaliar se pre-produto existe
+				SZA->(dbSetOrder(1))
+				If SZA->(dbSeek(xFilial("SZA")+AvKey(cPrePr,"ZA_CODIGO")))
+					If !(SZA->ZA_UM == 'KG' .Or. SZA->ZA_SEGUM == 'KG')
+						cMsgErro += "Não é permitido cotar pré-produto que a 1ª ou 2º unidade de medida não seja KG. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+						lRet := .F.
+					EndIf
+				Else
+					cMsgErro += "Pré produto "+AllTrim(cPrePr)+" não encontrado. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+					lRet := .F.
+				EndIf
+			ElseIf !Empty(cProd)
+				//-- Avaliar se produto existe
+				SB1->(dbSetOrder(1))
+				If SB1->(dbSeek(xFilial("SB1")+AvKey(cProd,"B1_COD")))
+					//if !RetCodUsr() $ SuperGetMv("V_USCOTPLI", .F., "000887")
+						//Valida se o Produto é customizado ou Materia-Prima
+						if !( SB1->B1_ZCTMIZA $ "C/P" .OR. SB1->B1_TIPO == "MP" )						
+							cMsgErro += "Não é permitido produto de linha na cotação. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+							lRet := .F.	
+						endif
+					//EndIf
+				Else
+					cMsgErro += "Produto "+AllTrim(cProd)+" não encontrado. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+					lRet := .F.		
+				EndIf
+			EndIf
+			If lRet
+
+				If !Empty(cProd)
+					cUm1P := SB1->B1_UM
+					cUm2P := SB1->B1_SEGUM
+				Else
+					cUm1P := SZA->ZA_UM
+					cUm2P := SZA->ZA_SEGUM
+				EndIf
+				
+				If Empty(cUM)
+					cMsgErro += "Obrigatório informar Unidade de Medida. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+					lRet := .F.
+				EndIf
+
+				If lRet 
+
+					If EMPTY(nQtd1) .AND. Empty(nQtd2)
+						cMsgErro += "Obrigatorio informar quantidade. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+						lRet := .F.
+					ElseIf !Empty(nQtd1) .AND. !Empty(nQtd2)
+						cMsgErro += "Deve ser informado apenas um campo de quantidade. Nunca os dois juntos. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+						lRet := .F.
+					EndIf
+					
+					If lRet
+
+						//--Se unidade de medida enviada for a mesma da 1º unidade de medida obrigatório informar quantidade 1.
+						If cUm == cUm1P .and. Empty(nQtd1) 
+							cMsgErro += "Obrigatorio informar quantidade 1. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+							lRet := .F.
+						//--Se unidade de medida enviada for a diferente da 1º unidade de medida obrigatório informar quantidade 2.
+						ElseIf cUm != cUm1P .and. Empty(nQtd2) 
+							cMsgErro += "Obrigatorio informar quantidade 2. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+							lRet := .F.					
+						EndIf
+
+					EndIf
+
+					If lRet 
+						If Empty(cCusUsu)
+							cMsgErro += "Obrigatório informar o custo. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+							lRet := .F.
+						EndIf
+					EndIf
+				EndIf
+			EndIf
+		EndIf
+	Next nX
+
+	//--Monta array de gravação para posteriormente atualizar com os calculos.
+	If lRet
+		FMonRegIt(aItens,@aDadEAut)
+	EndIf
+
+	//--Realiza calculo com base no array dos campos de itens.
+	If !Empty(aDadEAut)
+		fCalcCot(@aDadEAut,"ZD_PREPROD")
+		fCalcCot(@aDadEAut,"ZD_QUANT1")
+		fCalcCot(@aDadEAut,"ZD_QUANT2")
+		fCalcCot(@aDadEAut,"ZD_CUSTUSU")
+	EndIf
+
+Return({lRet,cMsgErro})
+
+
+//-----------------------------------------------------------------------------------------------
+/*/
+{Protheus.doc} FMonRegIt
+Função para montar aDadEAut para posteriormente atualiza-lo com os cálculos.
+@author		.iNi Sistemas
+@since     	27/03/2023
+@version  	P.12
+@param 		aItens - Itens da cotação
+@param 		aDadEAut - Array que será atualizado com as informações calculadas.
+@return    	null
+@obs        
+Alterações Realizadas desde a Estruturação Inicial
+------------+-----------------+------------------------------------------------------------------
+Data       	|Desenvolvedor    |Motivo
+------------+-----------------+------------------------------------------------------------------
+/*/
+//-----------------------------------------------------------------------------------------------
+Static Function FMonRegIt(aItens,aDadEAut)
+	
+/*Local nQtdUm1 	:= 0
+Local nQtdUm2 	:= 0
+Local nPPrd 	:= 0
+Local nPPrePr 	:= 0
+Local nPUm 		:= 0
+Local nPQtd1 	:= 0
+Local nPQtd2 	:= 0
+Local nPCusUs 	:= 0
+Local nPDelIt	:= 0*/
+Local lDelIt    := .F.
+Local nX 		:= 0
+
+Local aFields := {}
+Local nZ := 0
+
+For nX := 1 to Len(aItens)
+
+	/*nPPrd 	:= aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "ZD_PRODUTO" })
+	nPPrePr := aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "ZD_PREPROD" })
+	nPUm 	:= aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "ZD_UMPAD" })
+	nPQtd1 	:= aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "ZD_QUANT1" })
+	nPQtd2 	:= aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "ZD_QUANT2" })
+	nPCusUs := aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "ZD_CUSTUSU" })*/
+	nPDelIt := aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "D_E_L_E_T_" })
+
+	/*If !Empty(nPPrd)
+		cCodPrd := aItens[nX][nPPrd][2]
+	EndIf
+	if !Empty(nPPrePr)
+		cPrePrd := aItens[nX][nPPrePr][2]
+	EndIf
+	cUMPad  := aItens[nX][nPUm][2]
+	IF !Empty(nPQtd1)
+		nQtdUm1 := Val(aItens[nX][nPQtd1][2])
+	EndIf
+	If !Empty(nPQtd2)
+		nQtdUm2 := Val(aItens[nX][nPQtd2][2])
+	EndIf
+	nUsuCst := Val(aItens[nX][nPCusUs][2])*/
+
+
+	If !Empty(nPDelIt)
+		lDelIt := iif(aItens[nX][nPDelIt][2]=='*',.T.,.F.)
+	Else
+		lDelIt := .F.
+	EndIf
+	
+
+	aFields := FWSX3Util():GetAllFields( "SZD" , .F. ) 	
+	aadd( aDadEAut,{})
+	For nZ := 1 To len(aFields)
+		If aFields[nz] == "ZD_ITEM" //--Se for item incrementa com o nX
+			aadd( aDadEAut[nX] ,{aFields[nz],strzero(nx,3)})
+		ElseIf aFields[nz] == "ZD_COTACAO" 
+			aadd( aDadEAut[nX] ,{aFields[nz], M->ZC_CODIGO})
+		ElseIf aFields[nz] == "ZD_FILIAL" //--Se Filial n inclui no array... pois pega automatico na gravação.
+		ElseIf aFields[nz] == "ZD_STATUS"
+			aadd( aDadEAut[nX] , IIF(aScan(aItens[nX],{|x|ALLTRIM(x[1])==aFields[nz]})> 0 , { aFields[nz],aItens[nX][aScan(aItens[nX],{|x|ALLTRIM(x[1])==aFields[nz]})][2] } , {aFields[nz] , cStatus}))
+		Else		
+			aadd( aDadEAut[nX] , IIF(aScan(aItens[nX],{|x|ALLTRIM(x[1])==aFields[nz]})> 0 , { aFields[nz],iif(FWSX3Util():GetFieldStruct( aFields[nz] )[2] == "N",Val(aItens[nX][aScan(aItens[nX],{|x|ALLTRIM(x[1])==aFields[nz]})][2]),aItens[nX][aScan(aItens[nX],{|x|ALLTRIM(x[1])==aFields[nz]})][2]) } , {aFields[nz] , CriaVar(aFields[nz])}))
+		EndIf
+	Next nZ	
+	aadd(aDadEAut[nX],{"DELETE",lDelIt})
+
+	//-- Inclui novo item no array auxiliar.
+	/*aAdd(aDadEAut,{	{"ZD_ITEM   ", strzero(nx,3)},; 	//-- 01
+		{"ZD_PRODUTO", cCodPrd},;						//-- 02
+		{"ZD_PREPROD", cPrePrd},;						//-- 03
+		{"ZD_QUANT1 ", nQtdUm1},; 						//-- 04
+		{"ZD_QUANT2 ", nQtdUm2},; 						//-- 05
+		{"ZD_CUSTDEF", nDefCst},; 						//-- 06
+		{"ZD_CUSTUSU", nUsuCst},; 						//-- 07
+		{"ZD_MARGDEF", nDefMrg},; 						//-- 08
+		{"ZD_MARGUSU", nUsuMrg},; 						//-- 09
+		{"ZD_PERCDES", nDefDes},;	 					//-- 10
+		{"ZD_PCMSDEF", nDefCom},; 						//-- 11
+		{"ZD_PCMSUSU", nUsuCom},; 						//-- 12
+		{"ZD_FRETDEF", nDefFre},; 						//-- 13
+		{"ZD_FRETUSU", nUsuFre},; 						//-- 14
+		{"ZD_PPISDEF", iIf(Len(aImposDef)>0,aImposDef[1],0)},; 					//-- 15 - PIS
+		{"ZD_PPISUSU", iIf(Len(aImposUsu)>0,aImposUsu[1],0)},; 					//-- 16 - PIS
+		{"ZD_PCOFDEF", iIf(Len(aImposDef)>0,aImposDef[2],0)},; 					//-- 17 - COFINS
+		{"ZD_PCOFUSU", iIf(Len(aImposUsu)>0,aImposUsu[2],0)},; 					//-- 18 - COFINS
+		{"ZD_PICMDEF", iIf(Len(aImposDef)>0,aImposDef[3],0)},; 					//-- 19 - ICMS
+		{"ZD_PICMUSU", iIf(Len(aImposUsu)>0,aImposUsu[3],0)},; 					//-- 20 - ICMS
+		{"ZD_PIPIDEF", iIf(Len(aImposDef)>0,aImposDef[4],0)},; 					//-- 21 - IPI
+		{"ZD_PIPIUSU", iIf(Len(aImposUsu)>0,aImposUsu[4],0)},; 					//-- 22 - IPI
+		{"ZD_PV1RDEF", nDefPRE},; 						//-- 23
+		{"ZD_PV1RUSU", nUsuPRE},; 						//-- 24
+		{"ZD_PV2RDEF", nDef2PRE},; 						//-- 25
+		{"ZD_PV2RUSU", nUsu2PRE},; 						//-- 26
+		{"ZD_PV1DDEF", nDefPUS},; 						//-- 27
+		{"ZD_PV1DUSU", nUsuPUS},; 						//-- 28
+		{"ZD_PV2DDEF", nDef2PUS},; 						//-- 29
+		{"ZD_PV2DUSU", nUsu2PUS},;		 				//-- 30
+		{"ZD_TO1RDEF", nDefTRE},; 						//-- 31
+		{"ZD_TO1RUSU", nUsuTRE},; 						//-- 32
+		{"ZD_TO1DDEF", nDefTUS},; 						//-- 33
+		{"ZD_TO1DUSU", nUsuTUS},; 						//-- 34
+		{"ZD_OBSERV ", cObserv},;						//-- 35
+		{"ZD_MOTIVO ", cMotivo},;						//-- 36
+		{"ZD_QTD1ATE", nQtdAte},;						//-- 37
+		{"ZD_STATUS ", cStatus},;						//-- 38
+		{"ZD_DTRENEG", sTod("")},;						//-- 39
+		{"ZD_COTACAO", M->ZC_CODIGO},;					//-- 40
+		{"ZD_MABRDEF", nDefMBR},;						//-- 41
+		{"ZD_MALQDEF", nDefMLQ},;						//-- 42
+		{"ZD_MABRUSU", nUsuMBR},;						//-- 43
+		{"ZD_MALQUSU", nUsuMLQ},;						//-- 44
+		{"ZD_CUSTDUS", nDUsCst},;						//-- 45
+		{"ZD_FRETDUS", nDUsFre},;						//-- 46
+		{"ZD_MABRDUS", nUsDMBR},;						//-- 47
+		{"ZD_MALQDUS", nUsDMLQ},;						//-- 48
+		{"ZD_UMPAD"  , cUMPad},;						//-- 49
+		{"ZD_CODCON" , cCodCon},;						//-- 50
+		{"ZD_AUTDDEF", nDefAut},;						//-- 51
+		{"ZD_AUTDUSU", nUsuAut},;						//-- 52
+		{"ZD_PCMSDHI", nDefCHi},;						//-- 53
+		{"ZD_PCMSDMI", nDefCMi},;						//-- 54
+		{"ZD_PCMSUHI", nUsuCHi},;						//-- 55
+		{"ZD_PCMSUMI", nUsuCMi},;						//-- 56
+		{"ZD_PV1RDEM", nDefPRM},;						//-- 57
+		{"ZD_PV1DDEM", nDeDPRM},;						//-- 58
+		{"ZD_MABRDEM", nDefMBM},;						//-- 60
+		{"ZD_MABDDEM", nDeDMBM},;						//-- 61
+		{"ZD_MALQDEM", nDefMLM},;						//-- 62
+		{"ZD_MALDDEM", nDeDMLM},;						//-- 63
+		{"ZD_MABDDEF", nDeDMBR},;						//-- 64
+		{"ZD_MALDDEF", nDEDMLQ},;						//-- 65
+		{"ZD_PV1RUSM", nUsuPRM},;						//-- 66
+		{"ZD_PV1DUSM", nUsDPRM},;						//-- 67
+		{"ZD_MABRUSM", nUsuMBM},;						//-- 68
+		{"ZD_MABDUSM", nUsDMBM},;						//-- 69
+		{"ZD_MALQUSM", nUsuMLM},;						//-- 70
+		{"ZD_MALDUSM", nUsDMLM},;						//-- 71
+		{"ZD_CUSDDEF", nDeDCst},;						//-- 72
+		{"ZD_FREDDEF", nDeDFre},; 						//-- 73
+		{"ZD_PCOMPAD", nUsuCPd},; 						//-- 74
+		{"ZD_CALCMRC", cClcCRN},; 						//-- 75
+		{"ZD_PROCESS", cProcess},; 						//-- 76 //--23/04/2020 - Wemerson Souza - Variavel para tratar Processo de Cotação de Venda
+		{"ZD_PROCAPV", cProcApv},; 						//-- 77 //--23/04/2020 - Wemerson Souza - Variavel para tratar Processo de Cotação de Venda
+		{"ZD_BLODIR" , cBloDir},; 						//-- 78 //--AS - Aleluia - Bloqueio diretoria
+		{"ZD_MSGDIR" , cMsgDir},; 						//-- 79 //--AS - Aleluia - Msg. de Bloqueio Dir
+		{"ZD_PV2DDEM" , nDeDPRM2},; 					//-- 80 //-- Preco Minimo Default Dolar UM2
+		{"ZD_PV2DUSM" , nUsDPRM2},; 					//-- 81 //-- Preco Minimo Usuario Dolar UM2
+		{"ZD_PV2RDEM" , nDefPRM2},; 					//-- 82 //-- Preco Minimo Default Real UM2
+		{"ZD_PV2RUSM" , nUsuPRM2},; 					//-- 83 //-- Preco Minimo Usuario Real UM2
+		{"ZD_CODTABC" , cCodTabCot},;	                //-- 84 //-- Codigo tabela Comissao
+		{"DELETE"	  , lDelIt}})						//-- 85 //-- Sempre manter esse campo como o ultimo.*/
+
+Next nX
+
+Return()
+
+//-----------------------------------------------------------------------------------------------
+/*/
+{Protheus.doc} fCalcCot
+Função de cálculo da cotação de acordo com as informações passadas pelo usuário.
+@author		.iNi Sistemas
+@since     	27/03/2023
+@version  	P.12
+@param 		aDadEAut - Array que será atualizado com as informações calculadas.
+@param 		cCampo - Campo utilizado para cálculo.
+@return    	null
+@obs        
+Alterações Realizadas desde a Estruturação Inicial
+------------+-----------------+------------------------------------------------------------------
+Data       	|Desenvolvedor    |Motivo
+------------+-----------------+------------------------------------------------------------------
+/*/
+//-----------------------------------------------------------------------------------------------
+Static Function fCalcCot(aDadEAut,cCampo)
+
+Local nPrcRea := 0
+Local nPrcDol := 0
+Local nXi := 0
+Local nX := 1
+Local nPProd := aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PRODUTO")})
+Local nPPreP := aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PREPROD")})
+Local nPUmPad := aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_UMPAD")})
+Local nPCusUs := aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CUSTUSU")})
+Local nPQtUm1 := aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT1")})
+Local nPQtUm2 := aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT2")})
+Local nPDelIt := aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("DELETE")})
+	
+If cCampo == "ZD_PRODUTO"
+
+	For nX := 1 to Len(aDadEAut)
+		
+		If !aDadEAut[nX][nPDelIt][2] //--Desconsidera item deletado
+
+			//--Reseta variavel para buscar imposto por item.
+			lBscImp := .T.
+			nDefImp := 0
+			nUsuImp := 0
+			//nImposto := 0
+
+			//Carrega variáveis que sao necessárias para o recalculo.
+			FCarVar(nX,@aDadEAut)
+
+			cCodPrd := aDadEAut[nX][nPProd][2]
+			cUMPad := aDadEAut[nX][nPUmPad][2]
+			nUsuCst := aDadEAut[nX][nPCusUs][2]
+			
+			SB1->(dbSetOrder(1))
+			SB1->(dbSeek(xFilial("SB1")+AvKey(cCodPrd,"B1_COD")))
+
+			//-- Busca Descrição
+			cDscPrd := SB1->B1_DESC
+			cQtdUM1 := SB1->B1_UM
+			cQtdUM2 := SB1->B1_SEGUM
+
+			if cQtdUM1 == 'KG'
+				aIteUM	:= {cQtdUM1,cQtdUM2}
+			else
+				aIteUM	:= {cQtdUM2,cQtdUM1}
+			endif
+
+			//-- Busca o custo
+			nDefCst := nUsuCst
+			nDefCst := nUsuCst
+			if SB1->B1_TIPO == "MP"
+
+				SBZ->(dbSetOrder(1))
+				//Busca Carga Tributaria de entrada no Indicador do Produto.
+				If SBZ->(dbSeek(xFilial("SBZ") + SB1->B1_COD))
+					nCTirbEIcm := SBZ->BZ_ZCARTRB
+				endif
+				FsBscImp(cCodPrd,nDefCst,@cCodSTrib)
+				//Valida se Embuti no custo da Materia Prima o Gross Up.
+				if nCTirbEIcm > (aImpostos[3]/100) .And. cCodSTrib $ '20/40'
+					nBCustPiCo := ( nDefCst / (1 -(((aImpostos[1]/100)+(aImpostos[2]/100)) + nCTirbEIcm) ))
+					nDefCst  := nDefCst + (nBCustPiCo * (nCTirbEIcm - (aImpostos[3]/100)))
+				endif
+			EndIf
+
+			nDeDCst := FsCnvDol(nDefCst)
+			//nUsuCst := iif(SB1->B1_TIPO == "PA",0,nDefCst) //--03/10/2022 -- .iNi Wemerson -- Não é necessáio, devido a nova regra para pesquisa do csuto de produtos PA.
+			nUsuCst := nDefCst
+			nDUsCst := FsCnvDol(nUsuCst)
+
+			//-- Busca a Margem
+			nDefMrg := FsBscMrg(cCodPrd,1)
+			nUsuMrg := nDefMrg
+
+			//-- Busca a Comissão
+			aPerCms := FsBscCom(cCodPrd,1)
+			nDefCMi := aPerCms[1]
+			nDefCom := aPerCms[2]
+			nDefCHi := aPerCms[3]
+
+			cCodTabCot := aPerCms[4]
+
+			nUsuCMi := nDefCMi
+			nUsuCom := nDefCom
+			nUsuCPd := nUsuCom
+			nUsuCHi := nDefCHi
+
+			//-- Busca a Despesa
+			nDefDes := FsBscDes(cCodPrd,1)
+			nUsuDes := nDefDes
+
+			//-- Busca Autonomia de Desconto
+			nDefAut := FsBscAut(cCodPrd,1)
+			nUsuAut := nDefAut
+
+			FAtuArr(nX,@aDadEAut)
+
+		EndIf
+
+	Next nX
+
+EndIf
+
+If cCampo == "ZD_PREPROD"
+
+	For nX := 1 to Len(aDadEAut)
+
+		If !aDadEAut[nX][nPDelIt][2] //--Desconsidera item deletado
+			//--Reseta variavel para buscar imposto por item.
+			lBscImp := .T.
+			nDefImp := 0
+			nUsuImp := 0
+			//nImposto := 0
+
+			//Carrega variáveis que sao necessárias para o recalculo.
+			FCarVar(nX,@aDadEAut)
+
+			cPrePrd := aDadEAut[nX][nPPreP][2]
+			cUMPad := aDadEAut[nX][nPUmPad][2]
+			nUsuCst := aDadEAut[nX][nPCusUs][2]
+
+			SZA->(dbSetOrder(1))
+			SZA->(dbSeek(xFilial("SZA")+AvKey(cPrePrd,"ZA_CODIGO")))
+			
+			//-- Busca Descrição
+			cDscPrd := SZA->ZA_DESCRIC
+			cQtdUM1 := SZA->ZA_UM
+			cQtdUM2 := SZA->ZA_SEGUM
+			aIteUM	:= {cQtdUM1,cQtdUM2}
+
+			If cQtdUM1 == 'KG'
+				aIteUM	:= {cQtdUM1,cQtdUM2}	
+			Else
+				aIteUM	:= {cQtdUM2,cQtdUM1}
+			Endif
+
+			//-- Busca o custo
+			nDefCst := nUsuCst//FsBscCst(cPrePrd,2) //Custo defalt real
+			nDeDCst := FsCnvDol(nDefCst) //Custo default dolar
+			nUsuCst := nDefCst //Custo usuário real
+			nDUsCst := FsCnvDol(nUsuCst) //Custo Usuario Dolar.
+
+			//-- Busca a Margem
+			nDefMrg := FsBscMrg(cPrePrd,2)
+			nUsuMrg := nDefMrg
+
+			//-- Busca a Comissão
+			aPerCms := FsBscCom(cPrePrd,2)
+			nDefCMi := aPerCms[1]
+			nDefCom := aPerCms[2]
+			nDefCHi := aPerCms[3]
+
+			cCodTabCot := aPerCms[4]
+
+			nUsuCMi := nDefCMi
+			nUsuCom := nDefCom
+			nUsuCPd := nUsuCom
+			nUsuCHi := nDefCHi
+
+			//-- Busca a Despesa
+			nDefDes := FsBscDes(cPrePrd,2)
+			nUsuDes := nDefDes
+
+			//-- Busca Autonomia de Desconto
+			nDefAut := FsBscAut(cPrePrd,2)
+			nUsuAut := nDefAut
+
+			//--Função que atualiza array com as variaveis já recalculadas.
+			FAtuArr(nX,@aDadEAut)
+		EndIf
+	Next nX
+
+EndIf
+
+If cCampo == "ZD_QUANT1" //.And. AllTrim(cUMPad) == AllTrim(cQtdUM1)
+
+	For nX := 1 to Len(aDadEAut)
+
+		If !aDadEAut[nX][nPDelIt][2] //--Desconsidera item deletado
+			//--Reseta variavel para buscar imposto por item.
+			lBscImp := .T.
+			nDefImp := 0
+			nUsuImp := 0
+			//nImposto := 0
+
+			//Carrega variáveis que sao necessárias para o recalculo.
+			FCarVar(nX,@aDadEAut)
+
+			cCodPrd := aDadEAut[nX][nPProd][2]
+			cPrePrd := aDadEAut[nX][nPPreP][2]
+			cUMPad 	:= aDadEAut[nX][nPUmPad][2]
+			nUsuCst := aDadEAut[nX][nPCusUs][2]
+			nQtdUM1 := aDadEAut[nX][nPQtUm1][2]
+			nQtdUM2 := aDadEAut[nX][nPQtUm2][2]
+
+			If nQtdUM1 > 0 .and. Empty(nQtdUM2)		
+				If !Empty(cCodPrd)
+					SB1->(dbSetOrder(1))
+					SB1->(dbSeek(xFilial("SB1")+AvKey(cCodPrd,"B1_COD")))
+					If SB1->B1_UM == SB1->B1_SEGUM
+						nQtdUM2 := nQtdUM1
+					ElseIf SB1->B1_TIPCONV == 'D'
+						nQtdUM2 := (nQtdUM1 / SB1->B1_CONV)
+					Else
+						nQtdUM2 := (nQtdUM1 * SB1->B1_CONV)
+					EndIf
+
+					//-- Calcula o Frete
+					nDefFre := FsBscFrt(cCodPrd,cUMPad,1)
+					nDeDFre := FsCnvDol(nDefFre)
+					nUsuFre := nDefFre
+					nDUsFre := FsCnvDol(nUsuFre)
+				Else
+					SZA->(dbSetOrder(1))
+					SZA->(dbSeek(xFilial("SZA")+AvKey(cPrePrd,"ZA_CODIGO")))
+					If SZA->ZA_UM == SZA->ZA_SEGUM
+						nQtdUM2 := nQtdUM1
+					ElseIf SZA->ZA_TIPCONV == 'D'
+						nQtdUM2 := (nQtdUM1 / SZA->ZA_CONV)
+					Else
+						nQtdUM2 := (nQtdUM1 * SZA->ZA_CONV)
+					EndIf
+
+					//-- Calcula o Frete
+					nDefFre := FsBscFrt(cPrePrd,cUMPad,2)
+					nDeDFre := FsCnvDol(nDefFre)
+					nUsuFre := nDefFre
+					nDUsFre := FsCnvDol(nUsuFre)
+				EndIf
+
+				//-- Calcula o Preço de Venda Default
+				FsClcPrc(1,@nPrcRea,@nPrcDol,1,nDefCst) //-- Preço Mínimo Default		
+
+				aImposDef	:= aImpostos
+				nImposto := 0
+				For nXi := 1 To Len(aImposDef)
+					nImposto += aImpostos[nXi]
+				Next nXi
+				nDefImp := nImposto
+
+				nDefPRM := nPrcRea //-- Preco Minimo Real
+				nDeDPRM := nPrcDol //-- Preco Minimo Dolar
+
+				FsClcPrc(1,@nPrcRea,@nPrcDol,2,nDefCst) //-- Preço Sugerido Default
+
+				nDefPRE := nPrcRea //-- Preço Sugerido Real
+				nDefPUS := nPrcDol //-- Preço Sugerido Dolar
+
+				nDefTRE := nQtdUM1 * nDefPRE
+				nDefTUS := nQtdUM1 * nDefPUS
+
+				//-- Calcula o Preço de Venda Minimo Usuario
+				FsClcPrc(2,@nPrcRea,@nPrcDol,1,nUsuCst)
+
+				aImposUsu	:= aImpostos
+				nImposto := 0
+				For nXi := 1 To Len(aImposUsu)
+					nImposto += aImpostos[nXi]
+				Next nXi
+				nUsuImp := nImposto
+
+				nUsuPRM := nPrcRea //-- Preco Minimo Real
+				nUsDPRM := nPrcDol //-- Preco Minimo Dolar
+
+				//-- Calcula o Preço de Venda Sugerido Usuario
+				FsClcPrc(2,@nPrcRea,@nPrcDol,2,nUsuCst)
+
+				nUsuPRE := nPrcRea //-- Preço Sugerido Real
+				nUsuPUS := nPrcDol //-- Preço Sugerido Dolar
+
+				nUsuTRE := nQtdUM1 * nUsuPRE
+				nUsuTUS := nQtdUM1 * nUsuPUS
+
+				FClcMGS(1) //-- Calcula Margem (bruta e liquida) Default e de Usuário
+				
+				//--Função que atualiza array com as variaveis já recalculadas.
+				FAtuArr(nX,@aDadEAut)
+
+			EndIf
+		EndIf
+	Next nX
+EndIf
+
+
+If cCampo == "ZD_QUANT2" //.And. AllTrim(cUMPad) == AllTrim(cQtdUM2)
+
+	For nX := 1 to Len(aDadEAut)
+		If !aDadEAut[nX][nPDelIt][2] //--Desconsidera item deletado
+			//--Reseta variavel para buscar imposto por item.
+			lBscImp := .T.
+			nDefImp := 0
+			nUsuImp := 0			
+			//nImposto := 0
+
+			//Carrega variáveis que sao necessárias para o recalculo.
+			FCarVar(nX,@aDadEAut)
+
+			cCodPrd := aDadEAut[nX][nPProd][2]
+			cPrePrd := aDadEAut[nX][nPPreP][2]
+			cUMPad 	:= aDadEAut[nX][nPUmPad][2]
+			nUsuCst := aDadEAut[nX][nPCusUs][2]
+			nQtdUM1 := aDadEAut[nX][nPQtUm1][2]
+			nQtdUM2 := aDadEAut[nX][nPQtUm2][2]
+
+			If nQtdUM2 > 0 .and. Empty(nQtdUM1)		
+				If !Empty(cCodPrd)
+					SB1->(dbSetOrder(1))
+					SB1->(dbSeek(xFilial("SB1")+AvKey(cCodPrd,"B1_COD")))
+					If SB1->B1_UM == SB1->B1_SEGUM
+						nQtdUM1 := nQtdUM2
+					ElseIf SB1->B1_TIPCONV == 'D'
+						nQtdUM1 := (nQtdUM2 * SB1->B1_CONV)
+					Else
+						nQtdUM1 := (nQtdUM2 / SB1->B1_CONV)
+					EndIf
+
+					//-- Calcula o Frete
+					nDefFre := FsBscFrt(cCodPrd,cUMPad,1)
+					nDeDFre := FsCnvDol(nDefFre)
+					nUsuFre := nDefFre
+					nDUsFre := FsCnvDol(nUsuFre)
+				Else
+					SZA->(dbSetOrder(1))
+					SZA->(dbSeek(xFilial("SZA")+AvKey(cPrePrd,"ZA_CODIGO")))
+					If SZA->ZA_UM == SZA->ZA_SEGUM
+						nQtdUM1 := nQtdUM2
+					ElseIf SZA->ZA_TIPCONV == 'D'
+						nQtdUM1 := (nQtdUM2 * SZA->ZA_CONV)
+					Else
+						nQtdUM1 := (nQtdUM2 / SZA->ZA_CONV)
+					EndIf
+
+					//-- Calcula o Frete
+					nDefFre := FsBscFrt(cPrePrd,cUMPad,2)
+					nDeDFre := FsCnvDol(nDefFre)
+					nUsuFre := nDefFre
+					nDUsFre := FsCnvDol(nUsuFre)
+				EndIf
+
+				//-- Calcula o Preço de Venda Default
+				FsClcPrc(1,@nPrcRea,@nPrcDol,1,nDefCst) //-- Preço Mínimo Default
+
+				aImposDef	:= aImpostos
+				nImposto := 0
+				For nXi := 1 To Len(aImposDef)
+					nImposto += aImpostos[nXi]
+				Next nXi
+				nDefImp := nImposto
+
+				nDefPRM2 := nPrcRea //-- Preco Minimo Real
+				nDeDPRM2 := nPrcDol //-- Preco Minimo Dolar
+
+				FsClcPrc(1,@nPrcRea,@nPrcDol,2,nDefCst) //-- Preço Sugerido Default
+
+				nDef2PRE := nPrcRea //-- Preço Sugerido Real
+				nDef2PUS := nPrcDol //-- Preço Sugerido Dolar
+
+				nDefTRE := nQtdUM2 * nPrcRea
+				nDefTUS := nQtdUM2 * nPrcDol
+
+				//-- Calcula o Preço de Venda Usuario
+				FsClcPrc(2,@nPrcRea,@nPrcDol,1,nUsuCst)
+
+				aImposUsu	:= aImpostos
+				nImposto := 0
+				For nXi := 1 To Len(aImposUsu)
+					nImposto += aImpostos[nXi]
+				Next nXi
+				nUsuImp := nImposto
+
+				nUsuPRM2 := nPrcRea //-- Preco Minimo Real
+				nUsDPRM2 := nPrcDol //-- Preco Minimo Dolar
+
+				//-- Calcula o Preço de Venda Sugerido Usuario
+				FsClcPrc(2,@nPrcRea,@nPrcDol,2,nUsuCst)
+
+				nUsu2PRE := nPrcRea
+				nUsu2PUS := nPrcDol
+
+				nUsuTRE := nQtdUM2 * nUsu2PRE
+				nUsuTUS := nQtdUM2 * nUsu2PUS
+
+				FClcMGS(1) //-- Calcula Margem (bruta e liquida) Default e de Usuário
+
+				//--Função que atualiza array com as variaveis já recalculadas.
+				FAtuArr(nX,@aDadEAut)
+			EndIf
+		EndIf
+	Next nX
+EndIf
+
+
+If cCampo $ "ZD_CUSTUSU"
+
+	For nX := 1 to Len(aDadEAut)
+		If !aDadEAut[nX][nPDelIt][2] //--Desconsidera item deletado
+			//--Reseta variavel para buscar imposto por item.
+			lBscImp := .T.
+			nDefImp := 0
+			nUsuImp := 0			
+			//nImposto := 0
+
+			//Carrega variáveis que sao necessárias para o recalculo.
+			FCarVar(nX,@aDadEAut)
+
+			cCodPrd := aDadEAut[nX][nPProd][2]
+			cPrePrd := aDadEAut[nX][nPPreP][2]
+			cUMPad := aDadEAut[nX][nPUmPad][2]
+			nUsuCst := aDadEAut[nX][nPCusUs][2]
+			nQtdUM2 := aDadEAut[nX][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT2")})][2]
+
+			//Atualiza campos de custo;
+			nDefCst := nUsuCst //Custo defalt real
+			nDeDCst := FsCnvDol(nDefCst) //Custo default dolar
+			nDUsCst := FsCnvDol(nUsuCst) //Custo Usuario Dolar
+
+			If !Empty(cCodPrd)
+				SB1->(dbSetOrder(1))
+				SB1->(dbSeek(xFilial("SB1")+AvKey(cCodPrd,"B1_COD")))
+				nFatorConver := SB1->B1_CONV
+				cQtdUM1 := SB1->B1_UM
+			Elseif !Empty(cPrePrd)
+				SZA->(dbSetOrder(1))
+				SZA->(dbSeek(xFilial("SZA")+AvKey(cPrePrd,"ZA_CODIGO")))
+				nFatorConver := SZA->ZA_CONV
+				cQtdUM1 := SZA->ZA_UM
+			Endif 
+
+			If AllTrim(cUMPad) == AllTrim(cQtdUM1)			
+					
+				//-- Calcula o Preço de Venda Default
+				FsClcPrc(1,@nPrcRea,@nPrcDol,1,nDefCst) //-- Preço Mínimo Default
+
+				aImposDef	:= aImpostos
+				nImposto := 0
+				For nXi := 1 To Len(aImposDef)
+					nImposto += aImpostos[nXi]
+				Next nXi
+				nDefImp := nImposto
+
+				nDefPRM2 := nPrcRea //-- Preco Minimo Real
+				nDeDPRM2 := nPrcDol //-- Preco Minimo Dolar
+
+				FsClcPrc(1,@nPrcRea,@nPrcDol,2,nDefCst) //-- Preço Sugerido Default
+
+				nDef2PRE := nPrcRea //-- Preço Sugerido Real
+				nDef2PUS := nPrcDol //-- Preço Sugerido Dolar
+
+				nDefTRE := nQtdUM2 * nPrcRea
+				nDefTUS := nQtdUM2 * nPrcDol
+
+				//-- Calcula o Preço de Venda Usuario UM1
+				FsClcPrc(2,@nPrcRea,@nPrcDol,1,nUsuCst)
+
+				aImposUsu	:= aImpostos
+				nImposto := 0
+				For nXi := 1 To Len(aImposUsu)
+					nImposto += aImpostos[nXi]
+				Next nXi
+				nUsuImp := nImposto
+
+				nUsuPRM := nPrcRea //-- Preco Minimo Real UM1
+				nUsDPRM := nPrcDol //-- Preco Minimo Dolar UM1
+						
+				//-- Calcula o Preço de Venda Sugerido Usuario
+				FsClcPrc(2,@nPrcRea,@nPrcDol,2,nUsuCst)
+
+				nUsuPRE := nPrcRea  //--Preço Sugerido Real UM1
+				nUsuPUS := nPrcDol	//--Preço Sugerido Dolar UM1
+				nUsuTRE := nQtdUM1 * nUsuPRE
+				nUsuTUS := nQtdUM1 * nUsuPUS
+								
+				If nUsuCst > 0
+					//-- Calcula o Preço de Venda Usuario UM2
+					FsClcPrc(3,@nPrcRea,@nPrcDol,1,iif(cUMPad == 'KG',(nUsuCst * nFatorConver),(nUsuCst / nFatorConver)))
+
+					nUsuPRM2 := nPrcRea //-- Preco Minimo Real UM2
+					nUsDPRM2 := nPrcDol //-- Preco Minimo Dolar UM2
+
+					//-- Calcula o Preço de Venda Sugerido Usuario
+					FsClcPrc(3,@nPrcRea,@nPrcDol,2,iif(cUMPad == 'KG',(nUsuCst * nFatorConver),(nUsuCst / nFatorConver)))
+
+					nUsu2PRE := nPrcRea //--Preço Sugerido Real UM2
+					nUsu2PUS := nPrcDol //--Preço Sugerido Dolar UM2
+
+				Endif
+
+			Else
+				//-- Calcula o Preço de Venda Default
+				FsClcPrc(1,@nPrcRea,@nPrcDol,1,nDefCst) //-- Preço Mínimo Default
+
+				aImposDef	:= aImpostos
+				nImposto := 0
+				For nXi := 1 To Len(aImposDef)
+					nImposto += aImpostos[nXi]
+				Next nXi
+				nDefImp := nImposto
+
+				nDefPRM2 := nPrcRea //-- Preco Minimo Real
+				nDeDPRM2 := nPrcDol //-- Preco Minimo Dolar
+
+				FsClcPrc(1,@nPrcRea,@nPrcDol,2,nDefCst) //-- Preço Sugerido Default
+
+				nDef2PRE := nPrcRea //-- Preço Sugerido Real
+				nDef2PUS := nPrcDol //-- Preço Sugerido Dolar
+
+				nDefTRE := nQtdUM2 * nPrcRea
+				nDefTUS := nQtdUM2 * nPrcDol
+
+				//-- Calcula o Preço de Venda Usuario UM2
+				FsClcPrc(2,@nPrcRea,@nPrcDol,1,nUsuCst)
+
+				aImposUsu := aImpostos
+				nImposto := 0
+				For nXi := 1 To Len(aImposUsu)
+					nImposto += aImpostos[nXi]
+				Next nXi
+				nUsuImp := nImposto
+
+				nUsuPRM2 := nPrcRea //-- Preco Minimo Real UM2
+				nUsDPRM2 := nPrcDol //-- Preco Minimo Dolar UM2
+
+				//-- Calcula o Preço de Venda Sugerido Usuario
+				FsClcPrc(2,@nPrcRea,@nPrcDol,2,nUsuCst)
+
+				nUsu2PRE := nPrcRea //--Preço Sugerido Real UM2
+				nUsu2PUS := nPrcDol //--Preço Sugerido Dolar UM2
+				nUsuTRE := nQtdUM2 * nUsu2PRE
+				nUsuTUS := nQtdUM2 * nUsu2PUS
+
+				If nUsuCst > 0 
+						
+					//-- Calcula o Preço de Venda Usuario UM1
+					FsClcPrc(3,@nPrcRea,@nPrcDol,1,iif(cUMPad == 'KG',(nUsuCst * nFatorConver),(nUsuCst / nFatorConver)))
+
+					nUsuPRM := nPrcRea //-- Preco Minimo Real UM1
+					nUsDPRM := nPrcDol //-- Preco Minimo Dolar UM1
+
+					//-- Calcula o Preço de Venda Sugerido Usuario
+					FsClcPrc(3,@nPrcRea,@nPrcDol,2,iif(cUMPad == 'KG',(nUsuCst * nFatorConver),(nUsuCst / nFatorConver)))
+
+					nUsuPRE := nPrcRea  //--Preço Sugerido Real UM1
+					nUsuPUS := nPrcDol	//--Preço Sugerido Dolar UM1
+
+				Endif
+			Endif
+
+			//--Função que atualiza array com as variaveis já recalculadas.
+			FAtuArr(nX,@aDadEAut)
+
+		EndIf
+	Next nX
+
+EndIf
+
+Return()
+
+//-----------------------------------------------------------------------------------------------
+/*/
+{Protheus.doc} FAtuArr
+Função que atualiza array com as variaveis já recalculadas.
+@author		.iNi Sistemas
+@since     	22/02/2023
+@version  	P.12
+@param 		n_REG - Registros do array a ser calculado.
+@param 		aDadAux - Array que será calculado.
+@return    	null
+@obs        
+Alterações Realizadas desde a Estruturação Inicial
+------------+-----------------+------------------------------------------------------------------
+Data       	|Desenvolvedor    |Motivo
+------------+-----------------+------------------------------------------------------------------
+/*/
+//-----------------------------------------------------------------------------------------------
+Static Function FAtuArr(n_REG,aDadAux)
+
+
+	//-- Atualiza variáveis de quantidade
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT1")})][2] := nQtdUM1 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT2")})][2] := nQtdUM2 
+
+	//-- Atualiza variaveis de formação de preço default
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_AUTDDEF")})][2] := nDefAut  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CUSTDEF")})][2] := nDefCst  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CUSDDEF")})][2] := nDeDCst  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_FREDDEF")})][2] := nDeDFre  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MARGDEF")})][2] := nDefMrg  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PCMSDHI")})][2] := nDefCHi  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PCMSDMI")})][2] := nDefCMi  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PCMSDEF")})][2] := nDefCom  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PERCDES")})][2] := nDefDes  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_FRETDEF")})][2] := nDefFre  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RDEF")})][2] := nDefPRE  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1DDEF")})][2] := nDefPUS  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_TO1RDEF")})][2] := nDefTRE  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_TO1DDEF")})][2] := nDefTUS  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRDEF")})][2] := nDefMBR  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQDEF")})][2] := nDefMLQ  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RDEM")})][2] := nDefPRM  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1DDEM")})][2] := nDeDPRM  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRDEM")})][2] := nDefMBM  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABDDEM")})][2] := nDeDMBM  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQDEM")})][2] := nDefMLM  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALDDEM")})][2] := nDeDMLM  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABDDEF")})][2] := nDeDMBR  
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALDDEF")})][2] := nDEDMLQ  
+
+	//-- Atualiza variaveis de formação de preço de usuário
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_AUTDUSU")})][2] := nUsuAut 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CUSTUSU")})][2] := nUsuCst 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MARGUSU")})][2] := nUsuMrg 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PCMSUHI")})][2] := nUsuCHi 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PCMSUMI")})][2] := nUsuCMi 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PCOMPAD")})][2] := nUsuCPd 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PCMSUSU")})][2] := nUsuCom 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PERCDES")})][2] := nUsuDes 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_FRETUSU")})][2] := nUsuFre 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSU")})][2] := nUsuPRE 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1DUSU")})][2] := nUsuPUS 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_TO1RUSU")})][2] := nUsuTRE 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_TO1DUSU")})][2] := nUsuTUS 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSU")})][2] := nUsuMBR 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSU")})][2] := nUsuMLQ 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CUSTDUS")})][2] := nDUsCst 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_FRETDUS")})][2] := nDUsFre 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1DUSU")})][2] := nUsuPUS 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_TO1DUSU")})][2] := nUsuTUS 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRDUS")})][2] := nUsDMBR 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQDUS")})][2] := nUsDMLQ 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSM")})][2] := nUsuPRM 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1DUSM")})][2] := nUsDPRM 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSM")})][2] := nUsuMBM 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABDUSM")})][2] := nUsDMBM 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSM")})][2] := nUsuMLM 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALDUSM")})][2] := nUsDMLM 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CALCMRC")})][2] := cClcCRN 
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PROCESS")})][2] := cProcess //--23/04/2020 - Wemerson Souza - Variavel para tratar Processo de Cotação de Venda
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PROCAPV")})][2] := cProcApv //--23/04/2020 - Wemerson Souza - Variavel para tratar Processo de Cotação de Venda
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_BLODIR")})][2] := cBloDir //--AS - Aleluia - Bloqueio Diretoria
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MSGDIR")})][2] := cBloDir //--AS - Aleluia - Msg. de Bloqueio Dir
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RDEF")})][2] := nDef2PRE //--Preço Sugerido Defaut Real UM2
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSU")})][2] := nUsu2PRE //--Preço Sugerido Usuario Real UM2
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2DDEF")})][2] := nDef2PUS //--Preço Sugerido Defaut Dolar UM2
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2DUSU")})][2] := nUsu2PUS //--Preço Sugerido Usuario Dolar UM2
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2DDEM")})][2] := nDeDPRM2 // -- Preco Minimo Default Dolar UM2
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2DUSM")})][2] := nUsDPRM2 // -- Preco Minimo Usuario Dolar UM2
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RDEM")})][2] := nDefPRM2 // -- Preco Minimo Default Real UM2	
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSM")})][2] := nUsuPRM2 // -- Preco Minimo Usuario Real UM2	
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CODTABC")})][2] := cCodTabCot // -- Codigo Tabela Comissao
+	
+	//--Impostos.
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PPISDEF")})][2] := aImposDef[1] 				//-- 15 - PIS
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PPISUSU")})][2] := aImposUsu[1] 				//-- 16 - PIS
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PCOFDEF")})][2] := aImposDef[2] 				//-- 17 - COFINS
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PCOFUSU")})][2] := aImposUsu[2] 				//-- 18 - COFINS
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PICMDEF")})][2] := aImposDef[3] 				//-- 19 - ICMS
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PICMUSU")})][2] := aImposUsu[3] 				//-- 20 - ICMS
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PIPIDEF")})][2] := aImposDef[4] 				//-- 21 - IPI
+	aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PIPIUSU")})][2] := aImposUsu[4] 				//-- 22 - IPI
+
+Return()
+
