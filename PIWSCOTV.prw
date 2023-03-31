@@ -30,8 +30,8 @@ Return()
 
 //-----------------------------------------------------------------------------------------------
 /*/
-{Protheus.doc} incluiCotacao
-Web Service Rest 
+{Protheus.doc} PIWSCOTV
+Web Service Rest Cotação de vendas ( POST / PUT / DELETE )
 @author		.iNi Sistemas
 @since     	22/03/2023	
 @version  	P.12
@@ -44,68 +44,23 @@ Data       	|Desenvolvedor    |Motivo
 ------------+-----------------+--------------------------------------------------------------
 /*/
 //-----------------------------------------------------------------------------------------------
-WSRESTFUL incluiCotacao DESCRIPTION "Serviço REST - Cotação de vendas" FORMAT "application/json;charset=UTF-8,text/hml"
-		
-	WSDATA c_fil 		AS STRING OPTIONAL
-	WSMETHOD POST DESCRIPTION "Recebe dados e cadastra/altera Cotação de Vendas" WSSYNTAX "/incluiCotacao?c_fil={param}" PATH "incluiCotacao"
+WSRESTFUL PIWSCOTV DESCRIPTION "Serviço REST - Inclui Cotação de vendas" FORMAT "application/json"
 
-END WSRESTFUL
-
-
-//-----------------------------------------------------------------------------------------------
-/*/
-{Protheus.doc} alteraCotacao
-Web Service Rest 
-@author		.iNi Sistemas
-@since     	22/03/2023	
-@version  	P.12
-@param 		c_fil - Filial a ser incluido ou alterada a cotação de vendas
-@return    	Nenhum
-@obs        Serviço REST para ambiente WEB
-Alterações Realizadas desde a Estruturação Inicial
-------------+-----------------+--------------------------------------------------------------
-Data       	|Desenvolvedor    |Motivo
-------------+-----------------+--------------------------------------------------------------
-/*/
-//-----------------------------------------------------------------------------------------------
-WSRESTFUL alteraCotacao DESCRIPTION "Serviço REST - Cotação de vendas" FORMAT "application/json;charset=UTF-8,text/hml"
-		
+	
 	WSDATA c_fil 		AS STRING OPTIONAL
 	WSDATA cCotacao 	AS STRING OPTIONAL
-	WSMETHOD POST DESCRIPTION "Recebe dados e cadastra/altera Cotação de Vendas" WSSYNTAX "/alteraCotacao?c_fil={param}" PATH "alteraCotacao"
+
+	WSMETHOD POST DESCRIPTION "Recebe dados e inclui Cotação de Vendas" WSSYNTAX "/PIWSCOTV?c_fil={param}" //PATH "incluiCotacao" 
+	WSMETHOD PUT DESCRIPTION "Recebe dados e altera Cotação de Vendas" WSSYNTAX "/PIWSCOTV?c_fil={param},cCotacao={param}" //PATH "alteraCotacao"
+	WSMETHOD DELETE DESCRIPTION "Recebe dados e exclui Cotação de Vendas" WSSYNTAX "/PIWSCOTV?c_fil={param},ccotacao={param}" //PATH "excluiCotacao"
 
 END WSRESTFUL
 
 
 //-----------------------------------------------------------------------------------------------
 /*/
-{Protheus.doc} excluiCotacao
-Web Service Rest 
-@author		.iNi Sistemas
-@since     	22/03/2023	
-@version  	P.12
-@param 		c_fil - Filial a ser incluido ou alterada a cotação de vendas
-@return    	Nenhum
-@obs        Serviço REST para ambiente WEB
-Alterações Realizadas desde a Estruturação Inicial
-------------+-----------------+--------------------------------------------------------------
-Data       	|Desenvolvedor    |Motivo
-------------+-----------------+--------------------------------------------------------------
-/*/
-//-----------------------------------------------------------------------------------------------
-WSRESTFUL excluiCotacao DESCRIPTION "Serviço REST - Deleta Cotação de vendas" FORMAT "application/json;charset=UTF-8,text/hml"
-		
-	WSDATA c_fil 		AS STRING OPTIONAL
-	WSDATA cCotacao 	AS STRING OPTIONAL
-	WSMETHOD DELETE DESCRIPTION "Recebe dados e deleta Cotação de Vendas" WSSYNTAX "/excluiCotacao?c_fil={param},cCotacao={param}" PATH "excluiCotacao"
-
-END WSRESTFUL
-
-
-//-----------------------------------------------------------------------------------------------
-/*/
-{Protheus.doc} POST - incluiCotacao
-Metodo para receber dados e criar/alterar Cotação de Vendas
+{Protheus.doc} POST
+Metodo para receber dados e incluir Cotação de Vendas
 @author		.iNi Sistemas
 @since     	27/03/2023
 @version  	P.12
@@ -118,8 +73,8 @@ Data       	|Desenvolvedor    |Motivo
 ------------+-----------------+--------------------------------------------------------------
 /*/
 //----------------------------------------------------------------------------------------------
-//WSMETHOD POST WSRECEIVE c_fil WSSERVICE incluiCotacao
-User Function fIncCot()
+WSMETHOD POST WSRECEIVE c_fil WSSERVICE PIWSCOTV
+//User Function fIncCot()
 
 	Local aArea     := {}
     Local cTabela   := "SZC"
@@ -136,14 +91,9 @@ User Function fIncCot()
 	Local lRet := .T.
 	Local aRet := {}
 
-	RpcSetEnv("01","010001")
+	//RpcSetEnv("01","010001")
 
-	/*cFilAnt := self:c_fil
-	cEmpAnt	:= substr(self:c_fil,1,2)
-	SM0->(dbSetOrder(1))
-	SM0->(DbSeek(cEmpAnt+cFilAnt))*/
-
-	cBody := '{ '
+	/*cBody := '{ '
 	//cBody += '"ZC_CODIGO" : "000000052",'
 	cBody += '"ZC_CLIENTE" : "000007",'
 	cBody += '"ZC_LOJACLI" : "01",'
@@ -175,12 +125,12 @@ User Function fIncCot()
 	//cBody += '		"D_E_L_E_T_": "*"'
 	cBody += '    }'
 	cBody += ']'
-	cBody += '}'
+	cBody += '}'*/
 
 	aArea     := FWGetArea()
 
-	//cBody := ::GetContent()
-	//::SetContentType('application/json;charset=UTF-8')
+	cBody := ::GetContent()
+	::SetContentType('application/json;charset=UTF-8')
 
 	cRet := oJson:FromJson(cBody)
 	
@@ -188,14 +138,20 @@ User Function fIncCot()
 		SetRestFault(403, "Falha ao transformar texto em objeto json. Erro: " + cRet)
 		lRet := .F.
 	endif
-	/*If lRet 
+	If lRet 
 		If Empty(self:c_fil)
 			SetRestFault(403, "Parametro obrigatorio vazio. (filial)")
 			lRet := .F.
 		EndIf
-	EndIf*/
+	EndIf
 
 	If lRet 
+
+		cFilAnt := self:c_fil
+		cEmpAnt	:= substr(self:c_fil,1,2)
+		SM0->(dbSetOrder(1))
+		SM0->(DbSeek(cEmpAnt+cFilAnt))
+
 		//--Monta Array com todos os campos da SZC (CABEÇALHO)
 		aFields := FWSX3Util():GetAllFields( cTabela , .F. ) //-- Retornará todos os campos presentes na SX3 de contexto real do alias.
 		For nX := 1 to Len(aFields)
@@ -243,15 +199,15 @@ User Function fIncCot()
 		Next nX
 
 		//Chama Execauto da cotação de vendas. Par1=Cabeçalho; Par2=Itens; par3=Campos da tabela para validar; par4=Opçoes: 3-inclusão; 4-Alteração
-		aRet := U_F_ExeCotV(aCabec,aItens,aCPOS,3)
+		aRet := U_PIFATC12(aCabec,aItens,aCPOS,3)
 
 		If aRet[1]
 			//--Retorno Erro
-			//SetRestFault(403, StrTran( aRet[2], CHR(13)+CHR(10), " " ))
+			SetRestFault(403, StrTran( aRet[2], CHR(13)+CHR(10), " " ))
 			lRet := .F.
 		Else
 			//--Retorno ao json
-			//::SetResponse(aRet[3])
+			::SetResponse(aRet[3])
 			lRet := .T.
 		EndIf
 
@@ -259,15 +215,15 @@ User Function fIncCot()
 
     FWRestArea(aArea)
 
-	RpcClearEnv()
+	//RpcClearEnv()
 
 Return(lRet)
 
 
 //-----------------------------------------------------------------------------------------------
 /*/
-{Protheus.doc} POST - alteraCotacao
-Metodo para receber dados e criar/alterar Cotação de Vendas
+{Protheus.doc} PUT 
+Metodo para receber dados e alterar Cotação de Vendas
 @author		.iNi Sistemas
 @since     	27/03/2023
 @version  	P.12
@@ -281,8 +237,8 @@ Data       	|Desenvolvedor    |Motivo
 ------------+-----------------+--------------------------------------------------------------
 /*/
 //----------------------------------------------------------------------------------------------
-//WSMETHOD POST WSRECEIVE c_fil, cCotacao WSSERVICE alteraCotacao
-User Function fAltCot(c_fil,cCotacao)
+WSMETHOD PUT WSRECEIVE c_fil, cCotacao WSSERVICE PIWSCOTV
+//User Function fAltCot(c_fil,cCotacao)
 
 	Local aArea     := {}
     Local cTabela   := "SZC"
@@ -299,17 +255,15 @@ User Function fAltCot(c_fil,cCotacao)
 	Local lRet := .T.
 	Local aRet := {}
 
-	Default c_fil    := "010001"
-	Default cCotacao := "000000003"
+	//Default c_fil    := "010001"
+	//Default cCotacao := "000000013"
 
-	RpcSetEnv("01","010001")
+	//RpcSetEnv("01","010001")
+	
+	//SetRestFault(403, "bateu aqui")
+	//Return(.F.)
 
-	/*cFilAnt := self:c_fil
-	cEmpAnt	:= substr(self:c_fil,1,2)
-	SM0->(dbSetOrder(1))
-	SM0->(DbSeek(cEmpAnt+cFilAnt))*/
-
-	cBody := '{ '
+	/*cBody := '{ '
 	//cBody += '"ZC_CODIGO" : "000000052",'
 	cBody += '"ZC_CLIENTE" : "000007",'
 	cBody += '"ZC_LOJACLI" : "01",'
@@ -319,7 +273,7 @@ User Function fAltCot(c_fil,cCotacao)
 	cBody += '"ZC_DTFIMFO" : "'+dtoc(DDATABASE+2)+'",'	
 	cBody += '"ZC_CONDPAG" : "002",'
 	cBody += '"ZC_MOEDA" : "1",'
-	cBody += '"ZC_VEND1" : "000557",'		
+	cBody += '"ZC_VEND1" : "255254",'		
 	cBody += '"ZC_VEND2" : "000557",'	
 	cBody += '"itens" : ['
 	cBody += '	{'
@@ -328,7 +282,7 @@ User Function fAltCot(c_fil,cCotacao)
 	cBody += '		"ZD_UMPAD": "KG",'
 	cBody += '		"ZD_QUANT1": "8",'
 	//cBody += '		"ZD_QUANT2": "200",'
-	cBody += '		"ZD_CUSTUSU": "65"'
+	cBody += '		"ZD_CUSTUSU": "100"'
 	//cBody += '		"D_E_L_E_T_": "*"'
 	cBody += '	},'
 	cBody += '	{'
@@ -342,12 +296,12 @@ User Function fAltCot(c_fil,cCotacao)
 	//cBody += '		"D_E_L_E_T_": "*"'
 	cBody += '    }'
 	cBody += ']'
-	cBody += '}'
+	cBody += '}'*/
 
 	aArea     := FWGetArea()
 
-	//cBody := ::GetContent()
-	//::SetContentType('application/json;charset=UTF-8')
+	cBody := ::GetContent()
+	::SetContentType('application/json;charset=UTF-8')
 
 	cRet := oJson:FromJson(cBody)
 	
@@ -355,21 +309,32 @@ User Function fAltCot(c_fil,cCotacao)
 		SetRestFault(403, "Falha ao transformar texto em objeto json. Erro: " + cRet)
 		lRet := .F.
 	endif
-	/*If lRet 
+	If lRet 
 		If Empty(self:c_fil)
+		//If Empty(c_fil)
 			SetRestFault(403, "Parametro obrigatorio vazio. (Filial)")
 			lRet := .F.
 		EndIf
 
 		If Empty(self:cCotacao)
-			SetRestFault(403, "Parametro obrigatorio vazio. (Numero da cotação)")
+		//If Empty(cCotacao)
+			SetRestFault(403, "Parametro obrigatorio vazio. (Numero da cotacao)")
 			lRet := .F.
 		EndIf
-	EndIf*/
+	EndIf
 
 	If lRet 
+
+		//cFilAnt := c_fil
+		//cEmpAnt	:= substr(c_fil,1,2)		
+		cFilAnt := self:c_fil
+		cEmpAnt	:= substr(self:c_fil,1,2)
+		SM0->(dbSetOrder(1))
+		SM0->(DbSeek(cEmpAnt+cFilAnt))
+
 		//--Monta Array com todos os campos da SZC (CABEÇALHO)
-		aAdd(aCabec, {"ZC_CODIGO", cCotacao, Nil}) //Campo código é passado de acordo com parâmetro enviado.
+		aAdd(aCabec, {"ZC_CODIGO", self:cCotacao, Nil}) //Campo código é passado de acordo com parâmetro enviado.
+		//aAdd(aCabec, {"ZC_CODIGO", cCotacao, Nil}) //Campo código é passado de acordo com parâmetro enviado.
 		aFields := FWSX3Util():GetAllFields( cTabela , .F. ) //-- Retornará todos os campos presentes na SX3 de contexto real do alias.
 		For nX := 1 to Len(aFields)
 			If X3Uso(GetSx3Cache(aFields[nX],"X3_USADO"))
@@ -412,18 +377,18 @@ User Function fAltCot(c_fil,cCotacao)
 			EndIf 
 			aadd(aItens, aItAux)
 			aItAux := {}
-		Next nX
-
+		Next 
+		
 		//Chama Execauto da cotação de vendas. Par1=Cabeçalho; Par2=Itens; par3=Campos da tabela para validar; par4=Opçoes: 3-inclusão; 4-Alteração
-		aRet := U_F_ExeCotV(aCabec,aItens,aCPOS,4)
+		aRet := U_PIFATC12(aCabec,aItens,aCPOS,4)
 
 		If aRet[1]
 			//--Retorno Erro
-			//SetRestFault(403, StrTran( aRet[2], CHR(13)+CHR(10), " " ))
+			SetRestFault(403, StrTran( aRet[2], CHR(13)+CHR(10), " " ))
 			lRet := .F.
 		Else
 			//--Retorno ao json
-			//::SetResponse(aRet[3])
+			::SetResponse(aRet[3])
 			lRet := .T.
 		EndIf
 
@@ -431,15 +396,15 @@ User Function fAltCot(c_fil,cCotacao)
 
     FWRestArea(aArea)
 
-	RpcClearEnv()
+	//RpcClearEnv()
 
 Return(lRet)
 
 
 //-----------------------------------------------------------------------------------------------
 /*/
-{Protheus.doc} POST - excluiCotacao
-Metodo para receber dados e criar/alterar Cotação de Vendas
+{Protheus.doc} DELETE 
+Metodo para receber dados e excluir Cotação de Vendas
 @author		.iNi Sistemas
 @since     	27/03/2023
 @version  	P.12
@@ -453,30 +418,50 @@ Data       	|Desenvolvedor    |Motivo
 ------------+-----------------+--------------------------------------------------------------
 /*/
 //----------------------------------------------------------------------------------------------
-//WSMETHOD POST WSRECEIVE c_fil, cCotacao WSSERVICE alteraCotacao
-User Function fExcCot(c_fil,cCotacao)
+WSMETHOD DELETE WSRECEIVE c_fil, cCotacao WSSERVICE PIWSCOTV
+//User Function fExcCot(c_fil,cCotacao)
 
 Local aCabec    := {}
-Default c_fil := "010001"
-Default cCotacao := "000000005"
+Local lRet := .T.
+//Default c_fil := "010001"
+//Default cCotacao := "000000005"
 
-RpcSetEnv("01","010001")
+//RpcSetEnv("01","010001")
 
-aAdd(aCabec, {"ZC_CODIGO", cCotacao, Nil})
-
-//Chama Execauto da cotação de vendas. Par1=Cabeçalho; Par2=Itens; par3=Campos da tabela para validar; par4=Opçoes: 3-inclusão; 4-Alteração
-aRet := U_F_ExeCotV(aCabec,{},{},5)
-
-If aRet[1]
-	//--Retorno Erro
-	//SetRestFault(403, StrTran( aRet[2], CHR(13)+CHR(10), " " ))
+If Empty(self:c_fil)
+	SetRestFault(403, "Parametro obrigatorio vazio. (Filial)")
 	lRet := .F.
-Else
-	//--Retorno ao json
-	//::SetResponse(aRet[3])
-	lRet := .T.
 EndIf
 
-RpcClearEnv()
+If Empty(self:cCotacao)
+	SetRestFault(403, "Parametro obrigatorio vazio. (Numero da cotacao)")
+	lRet := .F.
+EndIf
+
+If lRet
+
+	cFilAnt := self:c_fil
+	cEmpAnt	:= substr(self:c_fil,1,2)
+	SM0->(dbSetOrder(1))
+	SM0->(DbSeek(cEmpAnt+cFilAnt))
+
+	aAdd(aCabec, {"ZC_CODIGO", self:cCotacao, Nil})
+
+	//Chama Execauto da cotação de vendas. Par1=Cabeçalho; Par2=Itens; par3=Campos da tabela para validar; par4=Opçoes: 3-inclusão; 4-Alteração
+	aRet := U_PIFATC12(aCabec,{},{},5)
+
+	If aRet[1]
+		//--Retorno Erro
+		SetRestFault(403, StrTran( aRet[2], CHR(13)+CHR(10), " " ))
+		lRet := .F.
+	Else
+		//--Retorno ao json
+		::SetResponse(aRet[3])
+		lRet := .T.
+	EndIf
+
+EndIf
+
+//RpcClearEnv()
 
 Return(lRet)

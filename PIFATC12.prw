@@ -33,9 +33,12 @@ Cadastro de Cotação de Vendas
 @history 15/03/2022, Dayvid Nogueira, Correção para buscar o custo do produto Defaut de acordo com a unidade de medida em KG, para acompanhar a correção solicitada no chamado 2022022307000248. 
 @history  03/05/2022, Wemerson Souza, Inclusão de validações ao incluir novo produto na cotação de venda.
 @history  09/02/2023, Lutchen Oliveira, Ajuste coordenadas botões da tela de cotação de vendas.
+@history  31/03/2023, Lutchen Oliveira, Imprementando rotina automatica de cotação de vendas. Função ExeCotV.
 /*/
 //-------------------------------------------------------------------
-User Function PIFATC12()
+User Function PIFATC12(aCabec,aItens,aCPOS,nOpc)
+	
+	Local xRet
 	//--Variáveis Private
 	//--Arrays
 	Private aCores	  := {}
@@ -45,28 +48,41 @@ User Function PIFATC12()
 	//--String
 	Private cCadastro := "Cadastro de Cotação de Vendas"
 	Private cFiltro := ""
+	PRIVATE lC12Auto	:= (aCabec <> Nil)
 
-	dbSelectArea("SZC")
-	aRotina := {{"Pesquisar"	,"AxPesqui"	 ,0,1},;
-				{"Visualizar"	,"U_PIFAT12A",0,2},;
-				{"Incluir"		,"U_PIFAT12A",0,3},;
-				{"Alterar"		,"U_PIFAT12A",0,4},;
-				{"Excluir"		,"U_PIFAT12A",0,5},;
-				{"Legenda"		,"U_PIFAT12A",0,6},;
-				{"Copiar "		,"U_PIFAT12A",0,7},;
-				{"Ger. Proposta","U_PIFAT12A",0,8}}
-	aCores := {{"((SZC->ZC_STATUS = 'P' .OR. SZC->ZC_STATUS = 'I' .OR. SZC->ZC_STATUS = 'A') .AND. SZC->ZC_DTVALID < DDATABASE)","BR_PRETO"},;
-			   {"(SZC->ZC_STATUS = 'I')","BR_VERDE"	  },;
-			   {"(SZC->ZC_STATUS = 'P')","BR_AMARELO" },;
-			   {"(SZC->ZC_STATUS = 'A')","BR_AZUL"	  },;
-		       {"(SZC->ZC_STATUS = 'S')","BR_LARANJA" },;
-			   {"(SZC->ZC_STATUS = 'E')","BR_VERMELHO"},;
-			   {"(SZC->ZC_STATUS = 'B')","BR_MARROM"}}		// AS - Aleluia
+	//Verifica se é rotina automática.
+	If !lC12Auto
 
-	//fMntFil() //-- Monta Filtro
+		dbSelectArea("SZC")
+		aRotina := {{"Pesquisar"	,"AxPesqui"	 ,0,1},;
+					{"Visualizar"	,"U_PIFAT12A",0,2},;
+					{"Incluir"		,"U_PIFAT12A",0,3},;
+					{"Alterar"		,"U_PIFAT12A",0,4},;
+					{"Excluir"		,"U_PIFAT12A",0,5},;
+					{"Legenda"		,"U_PIFAT12A",0,6},;
+					{"Copiar "		,"U_PIFAT12A",0,7},;
+					{"Ger. Proposta","U_PIFAT12A",0,8}}
+		aCores := {{"((SZC->ZC_STATUS = 'P' .OR. SZC->ZC_STATUS = 'I' .OR. SZC->ZC_STATUS = 'A') .AND. SZC->ZC_DTVALID < DDATABASE)","BR_PRETO"},;
+				{"(SZC->ZC_STATUS = 'I')","BR_VERDE"	  },;
+				{"(SZC->ZC_STATUS = 'P')","BR_AMARELO" },;
+				{"(SZC->ZC_STATUS = 'A')","BR_AZUL"	  },;
+				{"(SZC->ZC_STATUS = 'S')","BR_LARANJA" },;
+				{"(SZC->ZC_STATUS = 'E')","BR_VERMELHO"},;
+				{"(SZC->ZC_STATUS = 'B')","BR_MARROM"}}		// AS - Aleluia
 
-	mBrowse(6,1,22,75,"SZC",,,,,,aCores,,,,,,,,cFiltro)
-Return(Nil)
+		//fMntFil() //-- Monta Filtro
+
+		mBrowse(6,1,22,75,"SZC",,,,,,aCores,,,,,,,,cFiltro)
+
+	Else
+
+		//Rotina autimática.
+		xRet := {}
+		xRet := ExeCotV(aCabec,aItens,aCPOS,nOpc)
+
+	EndIf
+
+Return(xRet)
 
 //-------------------------------------------------------------------
 /*/{Protheus.doc} fMntFil
@@ -6070,7 +6086,7 @@ Return()
 
 //-----------------------------------------------------------------------------------------------
 /*/
-{Protheus.doc} F_ExCotV
+{Protheus.doc} ExeCotV
 Função execauto da cotação. 
 @author		.iNi Sistemas
 @since     	27/03/2023
@@ -6089,7 +6105,7 @@ Data       	|Desenvolvedor    |Motivo
 ------------+-----------------+--------------------------------------------------------------
 /*/
 //----------------------------------------------------------------------------------------------
-User Function F_ExeCotV(aCabec,aItens,aCPOS,nOpc)
+Static Function ExeCotV(aCabec,aItens,aCPOS,nOpc)
     Local cTabela   := "SZC"
 	Local nXz 		:= 0
 	Local nXi 		:= 0
@@ -6120,20 +6136,20 @@ User Function F_ExeCotV(aCabec,aItens,aCPOS,nOpc)
 			SZC->(dbSetOrder(1))
 			If !SZC->(dbSeek(xFilial("SZC")+ACABEC[aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZC_CODIGO" })][2]))
 				
-				cMsgErro += "Cotação não encontrada! Filial: "+AllTrim(xFilial("SZC"))+" Cotação: "+Alltrim(ACABEC[aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZC_CODIGO" })][2])
+				cMsgErro += "Cotacao nao encontrada! Filial: "+AllTrim(xFilial("SZC"))+" Cotacao: "+Alltrim(ACABEC[aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZC_CODIGO" })][2])
 				lRet := .F.
 
 			Else
 
 				//--Validação de alteração do registro.
 				If nOpc == 4 .And. !(SZC->ZC_STATUS $ cStaBlAlt)
-					cMsgErro += "Não é permitida a alteração da cotação para o status atual."
+					cMsgErro += "Nao e permitida a alteração da cotação para o status atual."
 					lRet := .F.
 				EndIf
 
 				//--Validação de exclusão do registro.
 				If nOpc == 5 .And. !(SZC->ZC_STATUS == 'I') .And. !(SZC->ZC_STATUS == 'B')
-					cMsgErro += "Não é permitida a exclusão da cotação para o status atual."
+					cMsgErro += "Não e permitida a exclusao da cotacao para o status atual."
 					lRet := .F.
 				EndIf
 
@@ -6142,7 +6158,7 @@ User Function F_ExeCotV(aCabec,aItens,aCPOS,nOpc)
 		Else
 			
 			If aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZC_CODIGO" }) > 0
-				cMsgErro += "Não é permitido informar o código da cotação na operação de inclusão."
+				cMsgErro += "NAo e permitido informar o codigo da cotacao na operacao de inclusao."
 				lRet := .F.
 			EndIf
 
@@ -6260,6 +6276,7 @@ User Function F_ExeCotV(aCabec,aItens,aCPOS,nOpc)
 				EndIf
 			Else            
 				//MostraErro()
+				lRet := .F.
 				cMsgErro := MemoRead(NomeAutoLog())
 				Ferase(NomeAutoLog())
 				DisarmTransaction()
@@ -6298,8 +6315,17 @@ User Function F_ExeCotV(aCabec,aItens,aCPOS,nOpc)
 						oJsonPrd := JsonObject():New()
 						oJsonPrd['ZD_ITEM'] 	:= SZD->ZD_ITEM
 						oJsonPrd['ZD_PRODUTO'] 	:= SZD->ZD_PRODUTO
+						oJsonPrd['ZD_PREPROD'] 	:= SZD->ZD_PREPROD
+						oJsonPrd['ZD_QUANT1'] 	:= SZD->ZD_QUANT1
+						oJsonPrd['ZD_QUANT2'] 	:= SZD->ZD_QUANT2
+						oJsonPrd['ZD_QUANT2'] 	:= SZD->ZD_QUANT2
+						oJsonPrd['ZD_CUSTUSU'] 	:= SZD->ZD_CUSTUSU
+						oJsonPrd['ZD_MARGUSU'] 	:= SZD->ZD_MARGUSU
 						oJsonPrd['ZD_PV1RUSU'] 	:= SZD->ZD_PV1RUSU
-
+						oJsonPrd['ZD_PV2RUSU'] 	:= SZD->ZD_PV2RUSU
+						oJsonPrd['ZD_MABRUSU'] 	:= SZD->ZD_MABRUSU
+						oJsonPrd['ZD_MALQUSU'] 	:= SZD->ZD_MALQUSU
+						oJsonPrd['ZD_CODTABC'] 	:= SZD->ZD_CODTABC
 						Aadd(oJsonCot['itens'],oJsonPrd)
 
 						SZD->(dbSkip())
@@ -6311,7 +6337,7 @@ User Function F_ExeCotV(aCabec,aItens,aCPOS,nOpc)
 			EndIf
 		Else
 			oJson1['status'] 		:= "200"
-			oJson1['mensagem'] 		:= "Sucesso na exclusão da cotação!"	
+			oJson1['mensagem'] 		:= "Sucesso na exclusao da cotacao!"	
 		EndIf
 	Else
 		lErro := .T.		
@@ -6497,7 +6523,7 @@ Private cStatus := "I"
 		EndIf
 
 		If lDelIt .and. nOpc == 3
-			cMsgErro += "Não é possivel deletar um item de uma cotação que esta sendo incluída. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+			cMsgErro += "Nao e possivel deletar um item de uma cotação que esta sendo incluida. Verifique o item "+AllTrim(str(nX))+" "+CRLF
 			lRet := .F.
 		EndIf
 
@@ -6507,18 +6533,18 @@ Private cStatus := "I"
 				cMsgErro += "Obrigatorio informar pre produto ou produto. Verifique o item "+AllTrim(str(nX))+" "+CRLF
 				lRet := .F.
 			ElseIf !EMPTY(cProd) .AND. !Empty(cPrePr)
-				cMsgErro += "Deve ser informado pré produto ou produto. Nunca os dois juntos. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+				cMsgErro += "Deve ser informado pre-produto ou produto. Nunca os dois juntos. Verifique o item "+AllTrim(str(nX))+" "+CRLF
 				lRet := .F.
 			ElseIf !Empty(cPrePr)
 				//-- Avaliar se pre-produto existe
 				SZA->(dbSetOrder(1))
 				If SZA->(dbSeek(xFilial("SZA")+AvKey(cPrePr,"ZA_CODIGO")))
 					If !(SZA->ZA_UM == 'KG' .Or. SZA->ZA_SEGUM == 'KG')
-						cMsgErro += "Não é permitido cotar pré-produto que a 1ª ou 2º unidade de medida não seja KG. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+						cMsgErro += "Nao e permitido cotar pre-produto que a 1ª ou 2º unidade de medida não seja KG. Verifique o item "+AllTrim(str(nX))+" "+CRLF
 						lRet := .F.
 					EndIf
 				Else
-					cMsgErro += "Pré produto "+AllTrim(cPrePr)+" não encontrado. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+					cMsgErro += "Pre-produto "+AllTrim(cPrePr)+" nao encontrado. Verifique o item "+AllTrim(str(nX))+" "+CRLF
 					lRet := .F.
 				EndIf
 			ElseIf !Empty(cProd)
@@ -6528,12 +6554,12 @@ Private cStatus := "I"
 					//if !RetCodUsr() $ SuperGetMv("V_USCOTPLI", .F., "000887")
 						//Valida se o Produto é customizado ou Materia-Prima
 						if !( SB1->B1_ZCTMIZA $ "C/P" .OR. SB1->B1_TIPO == "MP" )						
-							cMsgErro += "Não é permitido produto de linha na cotação. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+							cMsgErro += "Nao e permitido produto de linha na cotacao. Verifique o item "+AllTrim(str(nX))+" "+CRLF
 							lRet := .F.	
 						endif
 					//EndIf
 				Else
-					cMsgErro += "Produto "+AllTrim(cProd)+" não encontrado. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+					cMsgErro += "Produto "+AllTrim(cProd)+" nao encontrado. Verifique o item "+AllTrim(str(nX))+" "+CRLF
 					lRet := .F.		
 				EndIf
 			EndIf
@@ -6548,7 +6574,7 @@ Private cStatus := "I"
 				EndIf
 				
 				If Empty(cUM)
-					cMsgErro += "Obrigatório informar Unidade de Medida. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+					cMsgErro += "Obrigatorio informar Unidade de Medida. Verifique o item "+AllTrim(str(nX))+" "+CRLF
 					lRet := .F.
 				EndIf
 
@@ -6578,7 +6604,7 @@ Private cStatus := "I"
 
 					If lRet 
 						If Empty(cCusUsu)
-							cMsgErro += "Obrigatório informar o custo. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+							cMsgErro += "Obrigatorio informar o custo. Verifique o item "+AllTrim(str(nX))+" "+CRLF
 							lRet := .F.
 						EndIf
 					EndIf
@@ -6599,6 +6625,22 @@ Private cStatus := "I"
 		fCalcCot(@aDadEAut,"ZD_QUANT2")
 		fCalcCot(@aDadEAut,"ZD_CUSTUSU")
 	EndIf
+
+	//--Atualiza custo do produto, pré-produto.
+	For nX := 1 to Len(aDadEAut)
+		
+		cCusUsu := aDadEAut[nX][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CUSTUSU")})][2]
+		cProd := aDadEAut[nX][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PRODUTO")})][2]
+		cPrePr := aDadEAut[nX][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PREPROD")})][2]
+
+		If !Empty(cProd)
+			fsAtuCus(cProd,1,cCusUsu)
+		Else
+			fsAtuCus(cPrePr,2,cCusUsu)
+		EndIf
+
+	Next nX
+
 
 Return({lRet,cMsgErro})
 
@@ -7355,7 +7397,7 @@ Return()
 {Protheus.doc} FAtuArr
 Função que atualiza array com as variaveis já recalculadas.
 @author		.iNi Sistemas
-@since     	22/02/2023
+@since     	27/03/2023
 @version  	P.12
 @param 		n_REG - Registros do array a ser calculado.
 @param 		aDadAux - Array que será calculado.
@@ -7455,3 +7497,96 @@ Static Function FAtuArr(n_REG,aDadAux)
 
 Return()
 
+
+
+//-----------------------------------------------------------------------------------------------
+/*/
+{Protheus.doc} fsAtuCus
+Função que atualiza o custo do produto e pré-produto.
+@author		.iNi Sistemas
+@since     	30/03/2023
+@version  	P.12
+@param 		cCodigo - Codigo do produto ou pré-produto.
+@param 		nTipo - 1=produto 2=pré-produto.
+@param 		nCusto - Valor de custo a atualizar.
+@return    	null
+@obs        
+Alterações Realizadas desde a Estruturação Inicial
+------------+-----------------+------------------------------------------------------------------
+Data       	|Desenvolvedor    |Motivo
+------------+-----------------+------------------------------------------------------------------
+/*/
+//-----------------------------------------------------------------------------------------------
+Static Function fsAtuCus(cCodigo,nTipo,nCusto)
+
+	Local cQuery  := ""
+	Local aAreaB1 := SB1->(GetArea())
+	Local aAreaZA := SZA->(GetArea())
+	Local cTpPrd  := ""
+	Local cAlias  := GetNextAlias()
+	LOcal nX 	  := 0
+	Local cAtuCus := ""
+	Local aCstPrd := {}
+
+	If nTipo == 1 //--Custo para Produto
+
+		SB1->(dbSetOrder(1))
+		SB1->(dbSeek(xFilial("SB1")+cCodigo))
+		cTpPrd := SB1->B1_TIPO
+
+		If cTpPrd $ "MP/RV" // Se tipo for MP ou RV, busca custo da SZT, aplicando o percentual do campo BZ_ZESTICM
+			cQuery := "SELECT R_E_C_N_O_ NREC " + Chr(13) + Chr(10)
+			//cQuery += "BZ_ZESTICM" + Chr(13) + Chr(10)
+			cQuery += "FROM " + RetSqlName("SZT") + " ZT" + Chr(13) + Chr(10)
+			cQuery += "INNER JOIN " + RetSqlName("SBZ") + " BZ ON BZ.D_E_L_E_T_ <> '*' AND BZ_FILIAL = ZT_FILIAL AND BZ_COD = ZT_PRODUTO" + Chr(13) + Chr(10)
+			cQuery += "WHERE ZT.D_E_L_E_T_ <> '*' AND ZT_FILIAL = '" + xFilial("SZT") + "'" + Chr(13) + Chr(10) //percentual de estorno de ICMS nao tributado na entrada
+			cQuery += "AND ZT_PRODUTO = '" + cCodigo + "'" + Chr(13) + Chr(10)
+			cQuery += "AND ZT_DATA = TO_CHAR(SYSDATE,'YYYYMMDD')" + Chr(13) + Chr(10)
+		Else
+			cQuery := "SELECT R_E_C_N_O_ NREC " + Chr(13) + Chr(10)
+			//cQuery += "BZ_ZESTICM" + Chr(13) + Chr(10)
+			cQuery += "FROM " + RetSqlName("SZV") + " ZV" + Chr(13) + Chr(10)
+			cQuery += "INNER JOIN " + RetSqlName("SBZ") + " BZ ON BZ.D_E_L_E_T_ <> '*' AND BZ_FILIAL = ZV_FILIAL AND BZ_COD = ZV_PRODUTO" + Chr(13) + Chr(10)
+			cQuery += "WHERE ZV.D_E_L_E_T_ <> '*' AND ZV_FILIAL = '" + xFilial("SZT") + "'" + Chr(13) + Chr(10) //percentual de estorno de ICMS nao tributado na entrada
+			cQuery += "AND ZV_PRODUTO = '" + cCodigo + "'" + Chr(13) + Chr(10)
+			cQuery += "AND ZV_DATA = '"+ DtoS(dDataBase) +"'" + Chr(13) + Chr(10)
+		Endif
+
+		dbUseArea(.T.,"TOPCONN",TCGenQry(,,cQuery),cAlias,.T.,.T.)
+		If !(cAlias)->(EoF())
+
+			If cTpPrd $ "MP/RV" 
+				SZT->(Dbgoto((cAlias)->NREC))
+					SZT->ZT_CUSTO := nCusto
+				SZT->(MsUnLock())
+			Else
+				SZV->(Dbgoto((cAlias)->NREC))
+					SZV->ZV_CUSTO := nCusto
+				SZV->(MsUnLock())
+			EndIf
+
+		EndIf
+		(cAlias)->(dbCloseArea())
+
+	ElseIf nTipo == 2 //--Custo para Pré-Produto
+
+		SZA->(dbSetOrder(1))
+		If SZA->(dbSeek(xFilial("SZA")+cCodigo))
+			aCstPrd := StrTokArr2(SZA->ZA_ZCUSBRI,"/")		
+			aCstPrd[ASCAN(aCstPrd ,{|a| SubStr(a,1,Len(xFilial("SBZ"))) == xFilial("SBZ")})] := xFIlial("SBZ")+" - "+AllTrim(Str(nCusto))+" - "+dtos(ddatabase)//REPLACE(dtoc(YearSum(ddatabase,1)),"/","")
+
+			For nX := 1 to Len(aCstPrd)
+				cAtuCus += aCstPrd[nX]+"/"
+			Next nX
+
+			RecLock("SZA",.F.)			
+				SZA->ZA_ZCUSBRI := substring(cAtuCus,1,len(cAtuCus)-1)
+			SZA->(MsUnLock())			
+		EndIf
+
+	EndIf
+
+	RestArea(aAreaB1)
+	RestArea(aAreaZA)
+
+Return()
