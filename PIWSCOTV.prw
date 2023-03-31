@@ -140,7 +140,7 @@ WSMETHOD POST WSRECEIVE c_fil WSSERVICE PIWSCOTV
 	endif
 	If lRet 
 		If Empty(self:c_fil)
-			SetRestFault(403, "Parametro obrigatorio vazio. (filial)")
+			SetRestFault(403, "Parametro obrigatorio vazio. (Filial)")
 			lRet := .F.
 		EndIf
 	EndIf
@@ -361,24 +361,26 @@ WSMETHOD PUT WSRECEIVE c_fil, cCotacao WSSERVICE PIWSCOTV
 
 		//--Monta Array com todos os campos da SZD (ITENS)
 		aFields := FWSX3Util():GetAllFields( cTabIt , .F. ) //-- Retornará todos os campos presentes na SX3 de contexto real do alias.
-		For nX := 1 to Len(oJson['itens'])
-			For nY := 1 to Len(aFields)
-				IF VALTYPE(oJson['itens'][nX][aFields[nY]]) != "U"
-					If GetSx3Cache(aFields[nY],"X3_TIPO") == "D"
-						aAdd(aItAux, {aFields[nY], ctod(oJson['itens'][nX][aFields[nY]]), Nil})
-					Else
-						aAdd(aItAux, {aFields[nY], oJson['itens'][nX][aFields[nY]], Nil})
+		If VALTYPE(oJson['itens']) != "U"
+			For nX := 1 to Len(oJson['itens'])
+				For nY := 1 to Len(aFields)
+					IF VALTYPE(oJson['itens'][nX][aFields[nY]]) != "U"
+						If GetSx3Cache(aFields[nY],"X3_TIPO") == "D"
+							aAdd(aItAux, {aFields[nY], ctod(oJson['itens'][nX][aFields[nY]]), Nil})
+						Else
+							aAdd(aItAux, {aFields[nY], oJson['itens'][nX][aFields[nY]], Nil})
+						EndIf
 					EndIf
-				EndIf
-			Next nY
-			//--Inclui campo de deleção de item para quando na alteração se desejar deletar um item.
-			If ValType(oJson['itens'][nX]["D_E_L_E_T_"]) != "U"
-				aAdd(aItAux, {"D_E_L_E_T_", oJson['itens'][nX]["D_E_L_E_T_"], Nil})
-			EndIf 
-			aadd(aItens, aItAux)
-			aItAux := {}
-		Next 
-		
+				Next nY
+				//--Inclui campo de deleção de item para quando na alteração se desejar deletar um item.
+				If ValType(oJson['itens'][nX]["D_E_L_E_T_"]) != "U"
+					aAdd(aItAux, {"D_E_L_E_T_", oJson['itens'][nX]["D_E_L_E_T_"], Nil})
+				EndIf 
+				aadd(aItens, aItAux)
+				aItAux := {}
+			Next 
+		EndIf
+
 		//Chama Execauto da cotação de vendas. Par1=Cabeçalho; Par2=Itens; par3=Campos da tabela para validar; par4=Opçoes: 3-inclusão; 4-Alteração
 		aRet := U_PIFATC12(aCabec,aItens,aCPOS,4)
 

@@ -2011,7 +2011,7 @@ Static Function FsBscCst(cCodigo,nTipo)
 				Else
 					MsgAlert("Produto "+AllTrim(cCodigo)+" sem Custo Price e Custo Brill validos, favor acionar a equipe da Nutrição.")
 				EndIf
-			EndIf'
+			EndIf
 		EndIf
 	Else
 		SB1->(dbSeek(xFilial("SB1")+Posicione("SZA",1,xFilial("SZA")+cCodigo,"ZA_PRDSIMI")))
@@ -6149,7 +6149,7 @@ Static Function ExeCotV(aCabec,aItens,aCPOS,nOpc)
 
 				//--Validação de exclusão do registro.
 				If nOpc == 5 .And. !(SZC->ZC_STATUS == 'I') .And. !(SZC->ZC_STATUS == 'B')
-					cMsgErro += "Não e permitida a exclusao da cotacao para o status atual."
+					cMsgErro += "Nao e permitida a exclusao da cotacao para o status atual."
 					lRet := .F.
 				EndIf
 
@@ -6158,7 +6158,7 @@ Static Function ExeCotV(aCabec,aItens,aCPOS,nOpc)
 		Else
 			
 			If aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZC_CODIGO" }) > 0
-				cMsgErro += "NAo e permitido informar o codigo da cotacao na operacao de inclusao."
+				cMsgErro += "Nao e permitido informar o codigo da cotacao na operacao de inclusao."
 				lRet := .F.
 			EndIf
 
@@ -6185,7 +6185,11 @@ Static Function ExeCotV(aCabec,aItens,aCPOS,nOpc)
 
 				If nOpc != 5
 					//--Validação dos itens.
-					aRet :=  FValidIt(aItens,@aDadEAut,nOpc)
+					if (nOpc == 4 .And. !Empty(aItens)) .or. nOpc == 3
+						aRet :=  FValidIt(aItens,@aDadEAut,nOpc)
+					Else
+						aRet := {.T.,""} //--Permite alteração somente do cabeçalho.
+					EndIf
 				Else
 					aRet := {.T.,""} //--Permite exclusão pois já passou pela validação de exclusão.
 				EndIf
@@ -6203,50 +6207,52 @@ Static Function ExeCotV(aCabec,aItens,aCPOS,nOpc)
 							SZC->(recno());
 						)					
 
-						//--Aciona a efetivação da gravação dos itens.						
-						dbSelectArea("SZD")
-						nFilial := aScan(dbStruct(), {|x| "_FILIAL" $ x[1]})	//-- Procura no array a filial
-						nPDelIt := aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("DELETE")}) //--Verifica se é exclusão de item.
+						If !Empty(aItens)
+							//--Aciona a efetivação da gravação dos itens.						
+							dbSelectArea("SZD")
+							nFilial := aScan(dbStruct(), {|x| "_FILIAL" $ x[1]})	//-- Procura no array a filial
+							nPDelIt := aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("DELETE")}) //--Verifica se é exclusão de item.
 
-						For nXi := 1 to Len(aDadEAut)                  			//-- FOR de 1 ateh a quantidade do numero do aDadEAut
+							For nXi := 1 to Len(aDadEAut)                  			//-- FOR de 1 ateh a quantidade do numero do aDadEAut
 
-							nPosIte := aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_ITEM")})
+								nPosIte := aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_ITEM")})
 
-							SZD->(dbSetOrder(1))
-							SZD->(dbGoTop())
-							lAchou := SZD->(dbSeek(xFilial("SZD")+M->ZC_CODIGO+aDadEAut[nXi][nPosIte][2]))						
+								SZD->(dbSetOrder(1))
+								SZD->(dbGoTop())
+								lAchou := SZD->(dbSeek(xFilial("SZD")+M->ZC_CODIGO+aDadEAut[nXi][nPosIte][2]))						
 
-							If aDadEAut[nXi][nPDelIt][2] 	//-- Se for registro deletado
-								If lAchou					//-- Se achar o registro tem que deletar!!!
-									RecLock("SZD",.F.)      //-- Trava a tabela
-									dbDelete()
-									SZD->(MsUnlock())
+								If aDadEAut[nXi][nPDelIt][2] 	//-- Se for registro deletado
+									If lAchou					//-- Se achar o registro tem que deletar!!!
+										RecLock("SZD",.F.)      //-- Trava a tabela
+										dbDelete()
+										SZD->(MsUnlock())
+									EndIf
+									Loop         									//-- Loop da condicao For
 								EndIf
-								Loop         									//-- Loop da condicao For
-							EndIf
 
-							//-- Se achou o registro altera os dados se não inclui.
-							If lAchou
-								RecLock("SZD",.F.)
-							Else
-								RecLock("SZD",.T.)
-							EndIf
+								//-- Se achou o registro altera os dados se não inclui.
+								If lAchou
+									RecLock("SZD",.F.)
+								Else
+									RecLock("SZD",.T.)
+								EndIf
 
-							//--Grava os campos da SZD
-							For nXz := 1 to Len(aDadEAut[nXi])
-								If (nFieldPos := FieldPos(aDadEAut[nXi][nXz][1])) > 0
-									FieldPut(nFieldPos, aDadEAut[nXi][nXz][2])
+								//--Grava os campos da SZD
+								For nXz := 1 to Len(aDadEAut[nXi])
+									If (nFieldPos := FieldPos(aDadEAut[nXi][nXz][1])) > 0
+										FieldPut(nFieldPos, aDadEAut[nXi][nXz][2])
+									Endif
+								Next nXz
+
+								//--Grava o conteudo da filial
+								If nFilial > 0
+									FieldPut(nFilial, xFilial("SZD"))
 								Endif
-							Next nXz
 
-							//--Grava o conteudo da filial
-							If nFilial > 0
-								FieldPut(nFilial, xFilial("SZD"))
-							Endif
+								SZD->(MsUnlock())
 
-							SZD->(MsUnlock())
-
-						Next nXi
+							Next nXi
+						EndIf
 					Else
 
 						//--Realiza exclusão da cotação.
