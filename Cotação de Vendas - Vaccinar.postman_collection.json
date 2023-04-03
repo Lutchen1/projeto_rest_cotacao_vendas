@@ -1,0 +1,189 @@
+{
+	"info": {
+		"_postman_id": "f2042664-0b9e-4044-bb55-f831af2aed1f",
+		"name": "Cotação de Vendas - Vaccinar",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "10255219"
+	},
+	"item": [
+		{
+			"name": "Altera Cotação",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "Vaccinar@1",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "pontoini",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \t\r\n\t\"ZC_CLIENTE\" : \"000007\",\r\n\t\"ZC_LOJACLI\" : \"01\",\r\n\t\"ZC_TIPFRET\" : \"C\",\r\n\t\"ZC_DTVALID\" : \"21/03/2024\",\r\n\t\"ZC_DTINIFO\" : \"31/03/2023\",\r\n\t\"ZC_DTFIMFO\" : \"31/03/2023\",\r\n\t\"ZC_CONDPAG\" : \"002\",\r\n\t\"ZC_MOEDA\" : \"1\",\r\n\t\"ZC_VEND1\" : \"000557\",\t\t\r\n\t\"ZC_VEND2\" : \"000557\",\r\n\t\"itens\" : [\r\n\t\t{\r\n\t\t\t\"ZD_PREPROD\": \"15779\",\r\n\t\t\t\"ZD_UMPAD\": \"KG\",\r\n\t\t\t\"ZD_QUANT1\": \"8\",\t\r\n\t\t\t\"ZD_CUSTUSU\": \"100\"\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"ZD_PRODUTO\": \"\",\r\n\t\t\t\"ZD_PREPROD\": \"115000\",\r\n\t\t\t\"ZD_UMPAD\": \"KG\",\r\n\t\t\t\"ZD_QUANT1\": \"0\",\r\n\t        \"ZD_QUANT2\": \"50.00\",\r\n\t\t\t\"ZD_CUSTUSU\": \"100.00\"\r\n\t    }\r\n\t]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://192.168.4.192:8074/rest/PIWSCOTV?c_Fil=010001&ccotacao=000000013",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"4",
+						"192"
+					],
+					"port": "8074",
+					"path": [
+						"rest",
+						"PIWSCOTV"
+					],
+					"query": [
+						{
+							"key": "c_Fil",
+							"value": "010001"
+						},
+						{
+							"key": "ccotacao",
+							"value": "000000013"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Inclui Cotação",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "Vaccinar@1",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "pontoini",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \r\n    \"ZC_CLIENTE\" : \"000007\",\r\n    \"ZC_LOJACLI\" : \"01\",\r\n    \"ZC_TIPFRET\" : \"C\",\r\n    \"ZC_DTVALID\" : \"31/03/2024\",\r\n    \"ZC_DTINIFO\" : \"31/03/2023\",\r\n    \"ZC_DTFIMFO\" : \"31/03/2023\",\r\n    \"ZC_CONDPAG\" : \"002\",\r\n    \"ZC_MOEDA\" : \"1\",\r\n    \"ZC_VEND1\" : \"000557\",\r\n    \"ZC_VEND2\" : \"000557\",\r\n    \"itens\" : [\r\n        {\r\n            \"ZD_PREPROD\": \"15779\",\r\n            \"ZD_UMPAD\": \"KG\",\r\n            \"ZD_QUANT1\": \"8\",\r\n            \"ZD_CUSTUSU\": \"65\"\r\n        },\r\n        {\r\n            \"ZD_PRODUTO\": \"\",\r\n            \"ZD_PREPROD\": \"115000\",\r\n            \"ZD_UMPAD\": \"KG\",\r\n            \"ZD_QUANT1\": \"0\",\r\n            \"ZD_QUANT2\": \"125.00\",\r\n            \"ZD_CUSTUSU\": \"120.00\"\r\n\r\n        }\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://192.168.4.192:8074/rest/PIWSCOTV?c_Fil=010001",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"4",
+						"192"
+					],
+					"port": "8074",
+					"path": [
+						"rest",
+						"PIWSCOTV"
+					],
+					"query": [
+						{
+							"key": "c_Fil",
+							"value": "010001"
+						},
+						{
+							"key": "",
+							"value": "",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Exclui Cotação",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "Vaccinar@1",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "pontoini",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://192.168.4.192:8074/rest/PIWSCOTV?c_Fil=010001&ccotacao=000000012",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"4",
+						"192"
+					],
+					"port": "8074",
+					"path": [
+						"rest",
+						"PIWSCOTV"
+					],
+					"query": [
+						{
+							"key": "c_Fil",
+							"value": "010001"
+						},
+						{
+							"key": "ccotacao",
+							"value": "000000012"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
