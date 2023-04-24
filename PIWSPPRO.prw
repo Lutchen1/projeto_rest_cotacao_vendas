@@ -13,7 +13,7 @@
 Fonte reservado rest.
 
 @author		.iNi Sistemas - LTN
-@since     	20/04/2023	
+@since     	24/04/2023	
 @version  	P.12
 @return    	Nenhum
 @obs        Nenhum
@@ -30,10 +30,10 @@ Return()
 
 //-----------------------------------------------------------------------------------------------
 /*/
-{Protheus.doc} PIWSCOTV
+{Protheus.doc} PIWSPPRO
 Web Service Rest Pré-Produto ( POST / PUT / DELETE )
 @author		.iNi Sistemas
-@since     	22/03/2023	
+@since     	24/04/2023	
 @version  	P.12
 @param 		c_fil - Filial a ser incluido ou alterada a cotação de vendas
 @return    	Nenhum
@@ -44,22 +44,36 @@ Data       	|Desenvolvedor    |Motivo
 ------------+-----------------+--------------------------------------------------------------
 /*/
 //-----------------------------------------------------------------------------------------------
-WSRESTFUL PIWSCOTV DESCRIPTION "Serviço REST - Pré-Produto" FORMAT "application/json"
+WSRESTFUL PIWSPPRO DESCRIPTION "Serviço REST - Pré-Produto" FORMAT "application/json"
 
-	
-	WSDATA c_fil 		AS STRING OPTIONAL
-	WSDATA cCotacao 	AS STRING OPTIONAL
+	WSDATA cCodPreP 	AS STRING OPTIONAL
 
-	WSMETHOD POST DESCRIPTION "Recebe dados e inclui pré-produto" WSSYNTAX "/PIWSPPRO?c_fil={param}" //PATH "incluiCotacao" 
-	WSMETHOD PUT DESCRIPTION "Recebe dados e altera pré-produto" WSSYNTAX "/PIWSPPRO?c_fil={param},cCotacao={param}" //PATH "alteraCotacao"
-	WSMETHOD DELETE DESCRIPTION "Recebe dados e exclui pré-produto" WSSYNTAX "/PIWSPPRO?c_fil={param},ccotacao={param}" //PATH "excluiCotacao"
+	WSMETHOD POST DESCRIPTION "Recebe dados e inclui pré-produto" WSSYNTAX "/PIWSPPRO?cCodPreP={param}" //PATH "incluiCotacao" 
+	WSMETHOD PUT DESCRIPTION "Recebe dados e altera pré-produto" WSSYNTAX "/PIWSPPRO?cCodPreP={param}" //PATH "alteraCotacao"
+	WSMETHOD DELETE DESCRIPTION "Recebe dados e exclui pré-produto" WSSYNTAX "/PIWSPPRO?cCodPreP={param}" //PATH "excluiCotacao"
 
 END WSRESTFUL
 
+//-----------------------------------------------------------------------------------------------
+/*/
+{Protheus.doc} PIWSPPRO
+Web Service Rest inclusão Pré-Produto ( POST )
+@author		.iNi Sistemas
+@since     	24/04/2023	
+@version  	P.12
+@param 		cCodPreP - Código do pré produto
+@return    	Nenhum
+@obs        Serviço REST para ambiente WEB
+Alterações Realizadas desde a Estruturação Inicial
+------------+-----------------+--------------------------------------------------------------
+Data       	|Desenvolvedor    |Motivo
+------------+-----------------+--------------------------------------------------------------
+/*/
+//-----------------------------------------------------------------------------------------------
+WSMETHOD POST WSRECEIVE cCodPreP WSSERVICE PIWSPPRO
+//User Function fIncPrePro()
 
-
-User Function fIncPrePro()
-
+Local lRet := .T.
 Local cBody := ""
 Local nX := 0
 Local cRet := ""
@@ -67,61 +81,286 @@ Local aCabec := {}
 Local aFields := {}
 Local cTabela := "SZA"
 Local nOpc := 3
+Local aCPOS := {}
+Local cCusBri := "" 
+Private oJson 	:= JsonObject():New()
 
-
-	RpcSetEnv("01","010001")
+	/*RpcSetEnv("01","010001")
 
 	cBody := '{ '
-	//cBody += '"ZA_CODIGO" : "000007",'
-	cBody += '"ZA_DESCRIC" : "01",'
-	cBody += '"ZA_UM" : "C",'
-	cBody += '"ZA_SEGUM" : "'+dtoc(DDATABASE+20)+'"'
-	cBody += '}'
+	//cBody += '"ZA_CODIGO" : "995565",'
+	cBody += '"ZA_DESCRIC" : "TESTELTN",'
+	cBody += '"ZA_UM" : "SC",'
+	cBody += '"ZA_SEGUM" : "KG",'
+	cBody += '"ZA_PRDSIMI" : "1688620",'     
+	cBody += '"custo" : ['
+	cBody += '	{'
+	cBody += '		"FILIAL": "010050",'
+	cBody += '		"CUSTO": "125.00",'
+	cBody += '		"VALIDADE": "24/05/2023"'
+	cBody += '  },'
+	cBody += '	{'
+	cBody += '		"FILIAL": "010085",'
+	cBody += '		"CUSTO": "129.00",'
+	cBody += '		"VALIDADE": "24/05/2023"'
+	cBody += '  }'
+	cBody += ']'   
+	cBody += '}'*/
+
+	cBody := ::GetContent()
+	::SetContentType('application/json;charset=UTF-8')
 
 	cRet := oJson:FromJson(cBody)
 	
 	If ValType(cRet) == "C"
-		//SetRestFault(403, "Falha ao transformar texto em objeto json. Erro: " + cRet)
+		SetRestFault(403, "Falha ao transformar texto em objeto json. Erro: " + cRet)
 		lRet := .F.
 	endif
-
+	If lRet 
+		If Empty(self:cCodPreP)
+			SetRestFault(403, "Parametro obrigatorio vazio. (Código do pré-Produto)")
+			lRet := .F.
+		EndIf
+	EndIf
 
 	If lRet 
+
+		cCusBri := ""
+		if ValType(oJson['custo']) != "U"
+			For nX := 1 to Len (oJson['custo'])		
+				cCusBri += oJson['custo'][nX]:FILIAL+" - "+oJson['custo'][nX]:CUSTO+" - "+dtos(ctod(oJson['custo'][nX]:VALIDADE))+"/"
+			Next nX
+		EndIf
+		cCusBri := substring(cCusBri,1,len(cCusBri)-1)
 
 		//--Monta Array com todos os campos da SZA (Pré-produto)
 		aFields := FWSX3Util():GetAllFields( cTabela , .F. ) //-- Retornará todos os campos presentes na SX3 de contexto real do alias.
 		For nX := 1 to Len(aFields)
-			If X3Uso(GetSx3Cache(aFields[nX],"X3_USADO"))
+			If aFields[nX] == "ZA_CODIGO"
+				aAdd(aCabec, {aFields[nX], self:cCodPreP, Nil})
+			Else		
+				If X3Uso(GetSx3Cache(aFields[nX],"X3_USADO"))
 
-				AADD(aCPOS,AllTrim(aFields[nX]))
+					AADD(aCPOS,AllTrim(aFields[nX]))
 
-				//Adiciona os campos para o ExecAuto de acordo com json passado.
-				IF VALTYPE(oJson[aFields[nX]]) != "U"
-					If GetSx3Cache(aFields[nX],"X3_TIPO") == "D"
-						aAdd(aCabec, {aFields[nX], ctod(oJson[aFields[nX]]), Nil})
-					Else
-						aAdd(aCabec, {aFields[nX], oJson[aFields[nX]], Nil})
+					//Adiciona os campos para o ExecAuto de acordo com json passado.
+					IF VALTYPE(oJson[aFields[nX]]) != "U"
+						If GetSx3Cache(aFields[nX],"X3_TIPO") == "D"
+							aAdd(aCabec, {aFields[nX], ctod(oJson[aFields[nX]]), Nil})
+						Else
+							aAdd(aCabec, {aFields[nX], oJson[aFields[nX]], Nil})
+						EndIf
 					EndIf
+
 				EndIf
 
+				If aFields[nX] == "ZA_ZCUSBRI" .And. !Empty(cCusBri)
+					aAdd(aCabec, {aFields[nX], cCusBri, Nil})
+				EndIf
 			EndIf
 		Next nX
 
-
-
-		ExePrePro(aCabec,aCPOS,nOpc)
-
+		//Chama Execauto de pre-produto. Par1=Cabeçalho; par2=Campos da tabela para validar; par3=Opçoes: 3-inclusão; 4-Alteração; 5-Exclusão
+		aRet := ExePrePro(aCabec,aCPOS,nOpc)
+		
+		If aRet[1]
+			//--Retorno Erro
+			SetRestFault(403, StrTran( aRet[2], CHR(13)+CHR(10), " " ))
+			lRet := .F.
+		Else
+			//--Retorno ao json
+			::SetResponse(aRet[3])
+			lRet := .T.
+		EndIf
 
 	EndIf
 
-
-	RpcClearEnv()
+	//RpcClearEnv()
 
 Return()
 
+//-----------------------------------------------------------------------------------------------
+/*/
+{Protheus.doc} PIWSPPRO
+Web Service Rest alteração Pré-Produto ( PUT )
+@author		.iNi Sistemas
+@since     	24/04/2023	
+@version  	P.12
+@param 		cCodPreP - Código do pré produto
+@return    	Nenhum
+@obs        Serviço REST para ambiente WEB
+Alterações Realizadas desde a Estruturação Inicial
+------------+-----------------+--------------------------------------------------------------
+Data       	|Desenvolvedor    |Motivo
+------------+-----------------+--------------------------------------------------------------
+/*/
+//-----------------------------------------------------------------------------------------------
+WSMETHOD PUT WSRECEIVE cCodPreP WSSERVICE PIWSPPRO
+//User Function fAltPrePro()
+
+Local lRet := .T.
+Local cBody := ""
+Local nX := 0
+Local cRet := ""
+Local aCabec := {}
+Local aFields := {}
+Local cTabela := "SZA"
+Local nOpc := 4
+Local aCPOS := {}
+Local cCusBri := "" 
+Private oJson 	:= JsonObject():New()
 
 
+	/*RpcSetEnv("01","010001")
 
+	cBody := '{ '
+	cBody += '"ZA_CODIGO" : "995565",'
+	cBody += '"ZA_DESCRIC" : "TESTELTN2",'
+	cBody += '"ZA_UM" : "SC",'
+	cBody += '"ZA_SEGUM" : "KG",'
+	cBody += '"ZA_PRDSIMI" : "1688620",'     
+	cBody += '"custo" : ['
+	cBody += '	{'
+	cBody += '		"FILIAL": "010050",'
+	cBody += '		"CUSTO": "125.00",'
+	cBody += '		"VALIDADE": "24/05/2023"'
+	cBody += '  },'
+	cBody += '	{'
+	cBody += '		"FILIAL": "010085",'
+	cBody += '		"CUSTO": "129.00",'
+	cBody += '		"VALIDADE": "24/05/2023"'
+	cBody += '  }'
+	cBody += ']'   
+	cBody += '}'*/
+
+	cBody := ::GetContent()
+	::SetContentType('application/json;charset=UTF-8')
+
+	cRet := oJson:FromJson(cBody)
+	
+	If ValType(cRet) == "C"
+		SetRestFault(403, "Falha ao transformar texto em objeto json. Erro: " + cRet)
+		lRet := .F.
+	Endif
+	If lRet 
+		If Empty(self:cCodPreP)
+			SetRestFault(403, "Parametro obrigatorio vazio. (Código do pré-Produto)")
+			lRet := .F.
+		EndIf
+	EndIf
+
+	If lRet 
+
+		cCusBri := ""
+		if ValType(oJson['custo']) != "U"
+			For nX := 1 to Len (oJson['custo'])		
+				cCusBri += oJson['custo'][nX]:FILIAL+" - "+oJson['custo'][nX]:CUSTO+" - "+dtos(ctod(oJson['custo'][nX]:VALIDADE))+"/"
+			Next nX
+		EndIf
+		cCusBri := substring(cCusBri,1,len(cCusBri)-1)	
+
+		//--Monta Array com todos os campos da SZA (Pré-produto)
+		aFields := FWSX3Util():GetAllFields( cTabela , .F. ) //-- Retornará todos os campos presentes na SX3 de contexto real do alias.
+		For nX := 1 to Len(aFields)
+			If aFields[nX] == "ZA_CODIGO"
+				aAdd(aCabec, {aFields[nX], self:cCodPreP, Nil})
+			Else
+				If X3Uso(GetSx3Cache(aFields[nX],"X3_USADO"))
+
+					AADD(aCPOS,AllTrim(aFields[nX]))
+
+					//Adiciona os campos para o ExecAuto de acordo com json passado.
+					IF VALTYPE(oJson[aFields[nX]]) != "U"
+						If GetSx3Cache(aFields[nX],"X3_TIPO") == "D"
+							aAdd(aCabec, {aFields[nX], ctod(oJson[aFields[nX]]), Nil})
+						Else
+							aAdd(aCabec, {aFields[nX], oJson[aFields[nX]], Nil})
+						EndIf
+					EndIf
+
+				EndIf
+
+				If aFields[nX] == "ZA_ZCUSBRI" .And. !Empty(cCusBri)
+					aAdd(aCabec, {aFields[nX], cCusBri, Nil})
+				EndIf
+			EndIf
+
+		Next nX
+
+		//Chama Execauto de pre-produto. Par1=Cabeçalho; par2=Campos da tabela para validar; par3=Opçoes: 3-inclusão; 4-Alteração; 5-Exclusão
+		aRet := ExePrePro(aCabec,aCPOS,nOpc)
+		
+		If aRet[1]
+			//--Retorno Erro
+			SetRestFault(403, StrTran( aRet[2], CHR(13)+CHR(10), " " ))
+			lRet := .F.
+		Else
+			//--Retorno ao json
+			::SetResponse(aRet[3])
+			lRet := .T.
+		EndIf
+
+	EndIf
+
+	//RpcClearEnv()
+
+Return()
+
+//-----------------------------------------------------------------------------------------------
+/*/
+{Protheus.doc} PIWSPPRO
+Web Service Rest exclusão Pré-Produto ( DELETE )
+@author		.iNi Sistemas
+@since     	24/04/2023	
+@version  	P.12
+@param 		cCodPreP - Código do pré produto
+@return    	Nenhum
+@obs        Serviço REST para ambiente WEB
+Alterações Realizadas desde a Estruturação Inicial
+------------+-----------------+--------------------------------------------------------------
+Data       	|Desenvolvedor    |Motivo
+------------+-----------------+--------------------------------------------------------------
+/*/
+//-----------------------------------------------------------------------------------------------
+WSMETHOD DELETE WSRECEIVE cCodPreP WSSERVICE PIWSPPRO
+//User Function fExPrePro()
+
+Local lRet := .T.
+Local aCabec := {}
+Local nOpc := 5
+Local aCPOS := {}
+
+//Local cCodPreP := "995565"
+
+	//RpcSetEnv("01","010001")
+
+	If Empty(self:cCodPreP)
+		SetRestFault(403, "Parametro obrigatorio vazio. (Código do pré-Produto)")
+		lRet := .F.
+	EndIf
+
+	aAdd(aCabec, {"ZA_CODIGO", self:cCodPreP, Nil})
+
+	If lRet 
+
+		//Chama Execauto de pre-produto. Par1=Cabeçalho; par2=Campos da tabela para validar; par3=Opçoes: 3-inclusão; 4-Alteração; 5-Exclusão
+		aRet := ExePrePro(aCabec,aCPOS,nOpc)
+		
+		If aRet[1]
+			//--Retorno Erro
+			SetRestFault(403, StrTran( aRet[2], CHR(13)+CHR(10), " " ))
+			lRet := .F.
+		Else
+			//--Retorno ao json
+			::SetResponse(aRet[3])
+			lRet := .T.
+		EndIf
+
+	EndIf
+
+	//RpcClearEnv()
+
+Return()
 
 
 Static Function ExePrePro(aCabec,aCPOS,nOpc)
@@ -129,9 +368,14 @@ Static Function ExePrePro(aCabec,aCPOS,nOpc)
 Local lErro := .F.
 Local cMsgErro := ""
 Local lRet := .T.
+Local cTabela := "SZA"
+Local cTransact := ""
 
-Private oJson 	:= JsonObject():New()
+Private oJson1 	:= JsonObject():New()
 Private oJson2	:= JsonObject():New()
+Private lMsErroAuto := .F.
+Private aTELA[0][0],aGETS[0]
+
 
     //--Inicializa a transação
     Begin Transaction
@@ -154,19 +398,23 @@ Private oJson2	:= JsonObject():New()
 				EndIf
 
 				//--Validação de exclusão do registro.
-				If nOpc == 5 //.And. !(SZC->ZC_STATUS == 'I') .And. !(SZC->ZC_STATUS == 'B')
-					//cMsgErro += "Nao e permitida a exclusao da cotacao para o status atual."
-					//lRet := .F.
+				If nOpc == 5 
+
+					If fValExc()
+						cMsgErro += "Existe cotacao de venda para o pre-produto! Nao sera possivel excluir."
+						lRet := .f.
+					EndIf
+
 				EndIf
 
 			EndIf
 
 		Else
 			
-			If aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZA_CODIGO" }) > 0
-				cMsgErro += "Nao e permitido informar o codigo da cotacao na operacao de inclusao."
+			/*If aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZA_CODIGO" }) > 0
+				cMsgErro += "Nao e permitido informar o codigo da pré-produto na operacao de inclusao."
 				lRet := .F.
-			EndIf
+			EndIf*/
 
 		EndIf
 
@@ -230,21 +478,21 @@ Private oJson2	:= JsonObject():New()
 				SZA->(dbSetOrder(1))
 				If SZA->(dbSeek(xFilial("SZA")+M->ZA_CODIGO))
 
-					oJson['status'] 		:= "200"
-					oJson['mensagem'] 		:= "Sucesso!"	
-					oJson['conteudo'] 		:= {}			
+					oJson1['status'] 		:= "200"
+					oJson1['mensagem'] 		:= "Sucesso!"	
+					oJson1['conteudo'] 		:= {}			
 					
 					oJson2['ZA_FILIAL'] 	= SZA->ZA_FILIAL
 					oJson2['ZA_CODIGO'] 	:= SZA->ZA_CODIGO
 					oJson2['ZA_DESCRIC'] 	:= SZA->ZA_DESCRIC
 
-					Aadd(oJson['conteudo'],oJson2)
+					Aadd(oJson1['conteudo'],oJson2)
 
 				EndIf
 
 			Else
-				oJson['status'] 		:= "200"
-				oJson['mensagem'] 		:= "Sucesso na exclusao da cotacao!"	
+				oJson1['status'] 		:= "200"
+				oJson1['mensagem'] 		:= "Sucesso na exclusao do pre-produto!"	
 			EndIf
 
 		Else
@@ -256,3 +504,32 @@ Private oJson2	:= JsonObject():New()
 
 
 Return({lErro,cMsgErro,oJson1})
+
+
+
+
+
+Static Function fValExc()
+
+Local lExist := .F.
+Local cQuery := ""
+
+If Select("QRYTMP")>0
+	QRYTMP->(DbCloseArea())
+EndIf
+
+cQuery := " SELECT ZD_PREPROD "
+cQuery += " FROM "+RetSqlName("SZD")
+cQuery += " WHERE ZD_PREPROD = '"+SZA->ZA_CODIGO+"'"
+cQuery += " AND D_E_L_E_T_ <> '*' "
+cQuery += " AND ROWNUM = 1 "
+
+dbUseArea(.T., "TOPCONN", TCGenQry(,,cQuery), "QRYTMP", .T., .T.)		
+
+If !QRYTMP->(Eof())
+	lExist := .T.
+EndIf
+
+QRYTMP->(dbCloseArea())
+
+Return(lOk)
