@@ -362,7 +362,24 @@ Local aCPOS := {}
 
 Return()
 
-
+//-----------------------------------------------------------------------------------------------
+/*/
+{Protheus.doc} ExePrePro
+Função que executa inclusão, alteração e exclusão de pré-produto.
+@author		.iNi Sistemas
+@since     	24/04/2023	
+@version  	P.12
+@param 		aCabec - Campos com as informações.
+@param 		aCPOS - Campos para validação.
+@param 		nOpc - Indica se inclusão alteração ou exclusão.
+@return    	{lErro-Se deu erro ou não, cMsgErro-Mensagem de erro, oJson1-Json de retorno}
+@obs        Serviço REST para ambiente WEB
+Alterações Realizadas desde a Estruturação Inicial
+------------+-----------------+--------------------------------------------------------------
+Data       	|Desenvolvedor    |Motivo
+------------+-----------------+--------------------------------------------------------------
+/*/
+//-----------------------------------------------------------------------------------------------
 Static Function ExePrePro(aCabec,aCPOS,nOpc)
 
 Local lErro := .F.
@@ -374,8 +391,7 @@ Local cTransact := ""
 Private oJson1 	:= JsonObject():New()
 Private oJson2	:= JsonObject():New()
 Private lMsErroAuto := .F.
-Private aTELA[0][0],aGETS[0]
-
+Private aTELA[0][0],aGETS[0]					
 
     //--Inicializa a transação
     Begin Transaction
@@ -386,19 +402,19 @@ Private aTELA[0][0],aGETS[0]
 			SZA->(dbSetOrder(1))
 			If !SZA->(dbSeek(xFilial("SZA")+ACABEC[aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZA_CODIGO" })][2]))
 				
-				cMsgErro += "Pre-produto "+Alltrim(ACABEC[aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZA_CODIGO" })][2])+" nao encontrado! 
+				cMsgErro += "Pre-produto "+Alltrim(ACABEC[aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZA_CODIGO" })][2])+" nao encontrado!" 
 				lRet := .F.
 
 			Else
 
 				//--Validação de alteração do registro.
-				If nOpc == 4 //.And. !(SZC->ZC_STATUS $ cStaBlAlt)
-					//cMsgErro += "Nao e permitida a alteração da cotação para o status atual."
+				If nOpc == 4 
+					//cMsgErro += ""
 					//lRet := .F.
 				EndIf
 
 				//--Validação de exclusão do registro.
-				If nOpc == 5 
+				If nOpc == 5 					
 
 					If fValExc()
 						cMsgErro += "Existe cotacao de venda para o pre-produto! Nao sera possivel excluir."
@@ -411,6 +427,12 @@ Private aTELA[0][0],aGETS[0]
 
 		Else
 			
+			SZA->(dbSetOrder(1))
+			If SZA->(dbSeek(xFilial("SZA")+ACABEC[aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZA_CODIGO" })][2]))
+				cMsgErro += "Pre-produto "+AllTrim(ACABEC[aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZA_CODIGO" })][2])+" ja existe! Nao e possivel incluir o mesmo codigo!"
+				lRet := .f.
+			EndIf
+
 			/*If aScan(aCabec,{ |x| ALLTRIM(x[1]) == "ZA_CODIGO" }) > 0
 				cMsgErro += "Nao e permitido informar o codigo da pré-produto na operacao de inclusao."
 				lRet := .F.
@@ -508,7 +530,21 @@ Return({lErro,cMsgErro,oJson1})
 
 
 
-
+//-----------------------------------------------------------------------------------------------
+/*/
+{Protheus.doc} fValExc
+Valida exclusão do pré-produto.
+@author		.iNi Sistemas
+@since     	25/04/2023	
+@version  	P.12
+@return    	lExist - Se existe ou não cotação.
+@obs        Serviço REST para ambiente WEB
+Alterações Realizadas desde a Estruturação Inicial
+------------+-----------------+--------------------------------------------------------------
+Data       	|Desenvolvedor    |Motivo
+------------+-----------------+--------------------------------------------------------------
+/*/
+//-----------------------------------------------------------------------------------------------
 Static Function fValExc()
 
 Local lExist := .F.
@@ -532,4 +568,4 @@ EndIf
 
 QRYTMP->(dbCloseArea())
 
-Return(lOk)
+Return(lExist)
