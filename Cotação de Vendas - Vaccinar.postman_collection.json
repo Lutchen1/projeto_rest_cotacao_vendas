@@ -184,6 +184,216 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Inclui Pré-Produto",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "Mudar.2024",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "pontoini",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \r\n    \"ZA_DESCRIC\" : \"TESTE PRE-PRODUTO\",\r\n\t\"ZA_UM\" : \"SC\",\r\n\t\"ZA_SEGUM\" : \"KG\",\r\n\t\"ZA_PRDSIMI\" : \"1688620\",\r\n\t\"custo\" : [\r\n\t\t{\r\n\t\t\t\"FILIAL\": \"010050\",\r\n\t\t\t\"CUSTO\": \"125.00\",\r\n\t\t\t\"VALIDADE\": \"24/05/2023\"\r\n\t  },\r\n\t\t{\r\n\t\t\t\"FILIAL\": \"010085\",\r\n\t\t\t\"CUSTO\": \"129.00\",\r\n\t\t\t\"VALIDADE\": \"24/05/2023\"\r\n\t  }\r\n\t]   \r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://192.168.4.192:8074/rest/PIWSPPRO?cCodPreP=123456",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"4",
+						"192"
+					],
+					"port": "8074",
+					"path": [
+						"rest",
+						"PIWSPPRO"
+					],
+					"query": [
+						{
+							"key": "cCodPreP",
+							"value": "123456"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Altera Pré-Produto",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "Mudar.2024",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "pontoini",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \r\n    \"ZA_DESCRIC\" : \"TESTELTN\",\r\n\t\"ZA_UM\" : \"SC\",\r\n\t\"ZA_SEGUM\" : \"KG\",\r\n\t\"ZA_PRDSIMI\" : \"1688620\",\r\n\t\"custo\" : [\r\n\t\t{\r\n\t\t\t\"FILIAL\": \"010050\",\r\n\t\t\t\"CUSTO\": \"126.00\",\r\n\t\t\t\"VALIDADE\": \"24/05/2023\"\r\n\t  },\r\n\t\t{\r\n\t\t\t\"FILIAL\": \"010085\",\r\n\t\t\t\"CUSTO\": \"130.00\",\r\n\t\t\t\"VALIDADE\": \"24/05/2023\"\r\n\t  }\r\n\t]   \r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://192.168.4.192:8074/rest/PIWSPPRO?cCodPreP=123456",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"4",
+						"192"
+					],
+					"port": "8074",
+					"path": [
+						"rest",
+						"PIWSPPRO"
+					],
+					"query": [
+						{
+							"key": "cCodPreP",
+							"value": "123456"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Exclui Pré-Produto",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "Mudar.2024",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "pontoini",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://192.168.4.192:8074/rest/PIWSPPRO?cCodPreP=123456",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"4",
+						"192"
+					],
+					"port": "8074",
+					"path": [
+						"rest",
+						"PIWSPPRO"
+					],
+					"query": [
+						{
+							"key": "cCodPreP",
+							"value": "123456"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Atualiza Custo Produto/Pre-Produto",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "Mudar.2024",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "pontoini",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "http://192.168.4.192:8074/rest/PIWSACUS?c_fil=010080&c_cod=61383&n_cust=10&c_Valid=20231022&c_tipo=2",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"4",
+						"192"
+					],
+					"port": "8074",
+					"path": [
+						"rest",
+						"PIWSACUS"
+					],
+					"query": [
+						{
+							"key": "c_fil",
+							"value": "010080"
+						},
+						{
+							"key": "c_cod",
+							"value": "61383"
+						},
+						{
+							"key": "n_cust",
+							"value": "10"
+						},
+						{
+							"key": "c_Valid",
+							"value": "20231022"
+						},
+						{
+							"key": "c_tipo",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
 		}
 	]
 }

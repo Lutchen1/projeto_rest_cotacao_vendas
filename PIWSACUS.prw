@@ -12,7 +12,7 @@
 {Protheus.doc} PIWSACUS
 Fonte reservado rest.
 
-@author		.iNi Sistemas - LTN
+@author		.iNi Sistemas (LTN)
 @since     	21/06/2023	
 @version  	P.12
 @return    	Nenhum
@@ -32,7 +32,7 @@ Return()
 /*/
 {Protheus.doc} PIWSACUS
 Web Service Rest atualização de custo de produto e pré-produto (PUT)
-@author		.iNi Sistemas
+@author		.iNi Sistemas (LTN)
 @since     	22/06/2023	
 @version  	P.12
 @param 		c_fil - Filial
@@ -57,7 +57,7 @@ WSRESTFUL PIWSACUS DESCRIPTION "Serviço REST - Atualiza Custo Produto/Pré-Produt
     WSDATA c_Valid 	    AS STRING OPTIONAL
 	WSDATA c_Tipo 	    AS STRING OPTIONAL
 
-	WSMETHOD PUT DESCRIPTION "Recebe de atualização de custo" WSSYNTAX "/PIWSACUS?c_fil={param},c_Cod={param},n_Cust={param},c_Valid={param},c_Tipo={param}" //PATH "alteraCotacao"
+	WSMETHOD PUT DESCRIPTION "Recebe de atualização de custo" WSSYNTAX "/PIWSACUS?c_fil={param},c_Cod={param},n_Cust={param},c_Valid={param},c_Tipo={param}" 
 	
 
 END WSRESTFUL
@@ -66,8 +66,8 @@ END WSRESTFUL
 //-----------------------------------------------------------------------------------------------
 /*/
 {Protheus.doc} PUT 
-Metodo para receber dados e realizar atualizaçãod e custo.
-@author		.iNi Sistemas
+Metodo para receber dados e realizar atualização de custo.
+@author		.iNi Sistemas (LTN)
 @since     	21/06/2023
 @version  	P.12
 @param 		c_fil - Filial
@@ -169,7 +169,7 @@ Return(lRet)
 {Protheus.doc} _CustProd
 Função que atualiza custo do produto no indicador de produtos (SBZ).
 
-@author		.iNi Sistemas
+@author		.iNi Sistemas (LTN)
 @since     	22/06/2023	
 @version  	P.12
 @param 		cFil,cCodPa,nCust,dValid
@@ -284,9 +284,9 @@ Return({lErro,cMsg,oJson1})
 //-----------------------------------------------------------------------------------------------
 /*/
 {Protheus.doc} _CustPreP
-Função que atualiza custo do pré-produto no indicador de produtos (SZA - ZA_ZCUSBRI).
+Função que atualiza custo do pré-produto (SZA - ZA_ZCUSBRI).
 
-@author		.iNi Sistemas
+@author		.iNi Sistemas (LTN)
 @since     	22/06/2023	
 @version  	P.12
 @param 		cFil,cCodPa,nCust,dValid
