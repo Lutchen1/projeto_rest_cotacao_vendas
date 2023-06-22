@@ -24,7 +24,16 @@
 		},
 		{
 			"label": "U_FALTPREPRO"
+		},
+		{
+			"args": [],
+			"label": "u__CustProd"
+		},
+		{
+			"args": [],
+			"label": "u__CustPreP"
 		}
 	],
-	"lastProgramExecuted": "sigaadv"
+	"lastProgramExecuted": "<cancel>",
+	"lastProgramArguments": []
 }
