@@ -49,20 +49,17 @@ Data       	|Desenvolvedor    |Motivo
 /*/
 //-----------------------------------------------------------------------------------------------
 WSRESTFUL PIWSACUS DESCRIPTION "Serviço REST - Atualiza Custo Produto/Pré-Produto" FORMAT "application/json"
-
 	
-	WSDATA c_filPrd 		AS STRING OPTIONAL
-	WSDATA c_filVen 		AS STRING OPTIONAL
+	WSDATA c_filPrd 	AS STRING OPTIONAL
+	WSDATA c_filVen 	AS STRING OPTIONAL
 	WSDATA c_Cod 	    AS STRING OPTIONAL
     WSDATA n_Cust 	    AS INTEGER
     WSDATA c_Valid 	    AS STRING OPTIONAL
 	WSDATA c_Tipo 	    AS STRING OPTIONAL
 
-	WSMETHOD PUT DESCRIPTION "Recebe de atualização de custo" WSSYNTAX "/PIWSACUS?c_filPrd={param},c_filVen={param},c_Cod={param},n_Cust={param},c_Valid={param},c_Tipo={param}" 
-	
+	WSMETHOD PUT DESCRIPTION "Recebe de atualização de custo" WSSYNTAX "/PIWSACUS?c_filPrd={param},c_filVen={param},c_Cod={param},n_Cust={param},c_Valid={param},c_Tipo={param}" 	
 
 END WSRESTFUL
-
 
 //-----------------------------------------------------------------------------------------------
 /*/
@@ -101,13 +98,13 @@ WSMETHOD PUT WSRECEIVE c_filPrd,c_filVen, c_Cod, n_Cust, c_Valid, c_Tipo WSSERVI
 	If lRet 
 		If Empty(cFilPrd)
 		//If Empty(c_fil)
-			SetRestFault(403, "Parametro obrigatorio vazio. (Filial Origem)")
+			SetRestFault(403, "Parametro obrigatorio vazio. (Filial Produção)")
 			lRet := .F.
 		EndIf
 
 		If Empty(cFilVen)
 		//If Empty(c_fil)
-			SetRestFault(403, "Parametro obrigatorio vazio. (Filial Origem)")
+			SetRestFault(403, "Parametro obrigatorio vazio. (Filial Venda)")
 			lRet := .F.
 		EndIf
 
@@ -201,6 +198,7 @@ Static Function _CustProd(cFilPrd,cFilVen,cCodPa,nCust,dValid)
     Local nX     := 0
 	Local lErro := .F.
 	Local cMsg := ""
+	Local lContinua := .F.
 	Private oJson1 	:= JsonObject():New()
 
 	/*default cFilPrd := "010025"
@@ -240,7 +238,7 @@ Static Function _CustProd(cFilPrd,cFilVen,cCodPa,nCust,dValid)
 			//--Agora preciso ir na tabela SZX e calcular o custo pricing com o frete de transferência e estorno do icms no destino.
 			cAlias := GetNextAlias()
 			cQuery := "SELECT ZX_FILIAL FROM "+RetSqlName("SZX")+" SZX "
-			cQuery += " WHERE ZX_FILORI = '"+cFilPrd+"' " 
+			cQuery += " WHERE ZX_FILORI = '"+cFilPrd+"' "
 			cQuery += " AND ZX_PRODUTO = '"+cCodPa+"' "
 			cQuery += " AND ZX_ATIVO = '1' "
 			cQuery += " AND SZX.D_E_L_E_T_ <> '*' "
@@ -264,12 +262,12 @@ Static Function _CustProd(cFilPrd,cFilVen,cCodPa,nCust,dValid)
 					//--Agora faço o calculo do custo, e gravo no produto da filial corrente, e das filiais De/Para
 					nFEICMDe := SBZ->BZ_ZCARTRB
 					
-					if nFEICMDe == 0
+					If nFEICMDe == 0
 						SBM->(dbSetOrder(1))
-						if SBM->(dbSeek(xFilial('SBM')+SB1->B1_GRUPO))
+						If SBM->(dbSeek(xFilial('SBM')+SB1->B1_GRUPO))
 							nFEICMDe := SBM->BM_ZCARTRB
-						endif
-					endif        
+						Endif
+					Endif        
 
 					nCalCusD :=  u_FCalcEstICMS(nCalCus+nCusTran,nFEICMDe)
 
@@ -298,7 +296,7 @@ Static Function _CustProd(cFilPrd,cFilVen,cCodPa,nCust,dValid)
 
 		//--Protheus verifica se existe cadastro de Origem/Destino (De/Para) para a filial de venda e se a filial de produção é a origem.
 		cAlias := GetNextAlias()
-		cQuery := "SELECT ZX_FILIAL FROM "+RetSqlName("SZX")+" SZX "
+		cQuery := "SELECT ZX_FILORI FROM "+RetSqlName("SZX")+" SZX "
 		cQuery += " WHERE ZX_FILIAL = '"+cFilVen+"' " 
 		cQuery += " AND ZX_FILORI = '"+cFilPrd+"' " 
 		cQuery += " AND ZX_PRODUTO = '"+cCodPa+"' "
@@ -367,12 +365,12 @@ Static Function _CustProd(cFilPrd,cFilVen,cCodPa,nCust,dValid)
 						//--Agora faço o calculo do custo, e gravo no produto da filial corrente, e das filiais De/Para
 						nFEICMDe := SBZ->BZ_ZCARTRB
 						
-						if nFEICMDe == 0
+						If nFEICMDe == 0
 							SBM->(dbSetOrder(1))
-							if SBM->(dbSeek(xFilial('SBM')+SB1->B1_GRUPO))
+							If SBM->(dbSeek(xFilial('SBM')+SB1->B1_GRUPO))
 								nFEICMDe := SBM->BM_ZCARTRB
-							endif
-						endif        
+							Endif
+						Endif        
 
 						nCalCusD :=  u_FCalcEstICMS(nCalCus+nCusTran,nFEICMDe)
 
@@ -398,7 +396,7 @@ Static Function _CustProd(cFilPrd,cFilVen,cCodPa,nCust,dValid)
 
 		Else
 			lErro := .T.
-			cMsg := "Não há unidade de produção cadastrada para a filial de venda solicitada."
+			cMsg := "Nao ha unidade de producao cadastrada para a filial de venda solicitada."
 		EndIf
 
 
@@ -486,10 +484,10 @@ Static Function _CustPreP(cFilPrd,cFilVen,cCodPre,nCust,dValid)
 			
 			If nFatEICMOr == 0
 				SBM->(dbSetOrder(1))
-				if SBM->(dbSeek(xFilial('SBM')+SB1->B1_GRUPO))
+				If SBM->(dbSeek(xFilial('SBM')+SB1->B1_GRUPO))
 					nFatEICMOr := SBM->BM_ZCARTRB
-				endif
-			endif
+				Endif
+			Endif
 
 			nCalCus :=  u_FCalcPerBril(u_FCalcEstICMS(nCust,nFatEICMOr))
 
