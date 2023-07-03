@@ -188,6 +188,10 @@
 |Descrição: Ao alterar o cadastro do produto alterar também o campo B5_CONVDIP.
 |		    Este deve ter o peso do produto de acordo com a conversão em KG.
 |			No campo B5_UMDIPI deve conter 'KG'.	
+|-------------------------------------------------------------------------------->
+|Alterado por: Lutchen Oliveira		Data: 30/06/2023
+|Descrição: Ajuste para incluir registro entre filiais quando vem do rest de 
+|			efetivação de pre-produto.
 \*------------------------------------------------------------------------------*/
 User Function ITEM()
 	Local aFiliais := {} //Array que recebera o codigo das filiais cadastradas na SM0 (Empresas)
