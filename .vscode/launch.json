@@ -43,8 +43,10 @@
 		},
 		{
 			"label": "SIGAMDI"
+		},
+		{
+			"label": "u_fsimcot"
 		}
 	],
-	"lastProgramExecuted": "u_fincpre",
-	"lastProgramArguments": []
+	"lastProgramExecuted": "u_fsimcot"
 }

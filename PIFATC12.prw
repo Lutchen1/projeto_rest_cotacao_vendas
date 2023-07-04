@@ -76,9 +76,15 @@ User Function PIFATC12(aCabec,aItens,aCPOS,nOpc)
 
 	Else
 
-		//Rotina autimática.
-		xRet := {}
-		xRet := ExeCotV(aCabec,aItens,aCPOS,nOpc)
+		If nOpc != 6
+			//Rotina autimática.
+			xRet := {}
+			xRet := ExeCotV(aCabec,aItens,aCPOS,nOpc)
+		Else
+			//Simulação
+			xRet := {}
+			xRet := SimCotV(aCabec,aItens,aCPOS,nOpc)
+		EndIf
 
 	EndIf
 
@@ -6061,6 +6067,7 @@ Local nXi := 0
 	cCodTabCot := aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CODTABC")})][2] // -- Codigo Tabela Comissao
 	
 	aImposDef	:= {}
+	nDefImp := 0
 	aAdd(aImposDef,aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PPISDEF")})][2])
 	aAdd(aImposDef,aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PCOFDEF")})][2])
 	aAdd(aImposDef,aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PICMDEF")})][2])
@@ -6071,6 +6078,7 @@ Local nXi := 0
 	Next nXi
 
 	aImposUsu	:= {}
+	nUsuImp := 0
 	aAdd(aImposUsu,aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PPISUSU")})][2])
 	aAdd(aImposUsu,aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PCOFUSU")})][2])
 	aAdd(aImposUsu,aDadAux[n_REG][aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PICMUSU")})][2])
@@ -6300,7 +6308,7 @@ Static Function ExeCotV(aCabec,aItens,aCPOS,nOpc)
 				oJson1['mensagem'] 		:= "Sucesso!"	
 				oJson1['conteudo'] 		:= {}			
 				
-				oJsonCot['ZC_FILIAL'] 	= SZC->ZC_FILIAL
+				oJsonCot['ZC_FILIAL'] 	:= SZC->ZC_FILIAL
 				oJsonCot['ZC_CODIGO'] 	:= SZC->ZC_CODIGO
 				oJsonCot['ZC_CLIENTE'] 	:= SZC->ZC_CLIENTE
 				oJsonCot['ZC_LOJACLI'] 	:= SZC->ZC_LOJACLI
@@ -6345,6 +6353,137 @@ Static Function ExeCotV(aCabec,aItens,aCPOS,nOpc)
 			oJson1['status'] 		:= "200"
 			oJson1['mensagem'] 		:= "Sucesso na exclusao da cotacao!"	
 		EndIf
+	Else
+		lErro := .T.		
+	EndIf
+
+Return({lErro,cMsgErro,oJson1})
+
+//-----------------------------------------------------------------------------------------------
+/*/
+{Protheus.doc} SimCotV
+Função simulação de valores da cotação. 
+@author		.iNi Sistemas
+@since     	04/07/2023
+@version  	P.12
+@param 		aCabec - Cabeçalho da cotação.
+@param 		aItens - Itens da cotação
+@param 		aCPOS - campos a serem validados no Enchauto
+@param 		nOpc - Opção 3=Incluir; 4=Alterar
+@return    	array[1] lErro - Se deu erro ou não de execução do execauto.
+@return    	array[2] cMsgErro - Mensagem de erro caso tenha ocorrido erro de execução.
+@return    	array[3] oJson1 - Objeto json gerado em caso de sucesso.
+@obs        
+Alterações Realizadas desde a Estruturação Inicial
+------------+-----------------+--------------------------------------------------------------
+Data       	|Desenvolvedor    |Motivo
+------------+-----------------+--------------------------------------------------------------
+/*/
+//----------------------------------------------------------------------------------------------
+Static Function SimCotV(aCabec,aItens,aCPOS,nOpc)
+    Local cTabela   := "SZC"
+	Local nXz 		:= 0
+	Local nXi 		:= 0
+	Local lAchou	:= .F.
+	Local cMsgErro 	:= ""
+	Local aRet 		:= {}
+	Local nFilial 	:= 0
+	Local aDadEAut 	:= {}
+	Local nPosIte 	:= 0
+	Local cTransact := ""
+    Local nRetorno  := 0
+	Local lRet 		:= .T.
+	Local lErro 	:= .F.
+	Local nPDelIt 	:= 0
+	//Local cStaBlAlt := 'I,P,A,S'	// Status bloqueio de alteração de cotação
+	Private oJson1 	:= JsonObject():New()
+	Private oJsonCot:= JsonObject():New()
+	Private oJsonPrd:= JsonObject():New()
+	Private lMsErroAuto := .F.
+	Private aTELA[0][0],aGETS[0]
+
+    //--Inicializa a transação
+    Begin Transaction
+
+
+		If lRet
+
+			//Joga a tabela para a memória (M->)
+			RegToMemory(;
+				cTabela,; // cAlias - Alias da Tabela
+				.T.,;     // lInc   - Define se é uma operação de inclusão ou atualização
+				.F.;      // lDic   - Define se irá inicilizar os campos conforme o dicionário
+			)
+			
+		
+			//--Se conseguir fazer a execução automática - Validação do cabeçalho.
+			If EnchAuto(;
+				cTabela,; // cAlias  - Alias da Tabela
+				aCabec,;  // aField  - Array com os campos e valores
+				{ || Obrigatorio( aGets, aTela ) },; // uTUDOOK - Validação do botão confirmar
+				nOpc,;        // nOPC    - Operação do Menu (3=inclusão, 4=alteração, 5=exclusão)
+				aCPOS;
+			)
+
+				aRet :=  FValidIt(aItens,@aDadEAut,nOpc)
+
+				If aRet[1]
+			
+					lRet := .T.
+
+				Else
+					lRet := .F.
+					cMsgErro := aRet[2]
+				EndIf
+			Else            
+				//MostraErro()
+				lRet := .F.
+				cMsgErro := MemoRead(NomeAutoLog())
+				Ferase(NomeAutoLog())
+				DisarmTransaction()
+			EndIf
+		EndIf
+    End Transaction  
+
+	If lRet
+
+
+		oJson1['status'] 		:= "200"
+		oJson1['mensagem'] 		:= "Sucesso!"	
+		oJson1['conteudo'] 		:= {}			
+				
+		/*oJsonCot['ZC_FILIAL'] 	:= SZC->ZC_FILIAL
+		oJsonCot['ZC_CODIGO'] 	:= SZC->ZC_CODIGO
+		oJsonCot['ZC_CLIENTE'] 	:= SZC->ZC_CLIENTE
+		oJsonCot['ZC_LOJACLI'] 	:= SZC->ZC_LOJACLI
+		oJsonCot['ZC_TIPFRET'] 	:= SZC->ZC_TIPFRET
+		oJsonCot['ZC_DTVALID'] 	:= SZC->ZC_DTVALID
+		oJsonCot['ZC_DTINIFO'] 	:= SZC->ZC_DTINIFO
+		oJsonCot['ZC_DTFIMFO'] 	:= SZC->ZC_DTFIMFO
+		oJsonCot['ZC_CONDPAG'] 	:= SZC->ZC_CONDPAG
+		oJsonCot['ZC_VEND1'] 	:= SZC->ZC_VEND1
+		oJsonCot['ZC_VEND2'] 	:= SZC->ZC_VEND2*/
+		oJsonCot['item'] 		:= {}		
+
+		oJsonPrd := JsonObject():New()
+		//oJsonPrd['ZD_ITEM'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_ITEM")})][2]
+		oJsonPrd['ZD_PRODUTO'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PRODUTO")})][2]
+		oJsonPrd['ZD_PREPROD'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PREPROD")})][2]
+		oJsonPrd['ZD_QUANT1'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT1")})][2]
+		oJsonPrd['ZD_QUANT2'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT2")})][2]
+		oJsonPrd['ZD_QUANT2'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT2")})][2]
+		oJsonPrd['ZD_CUSTUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CUSTUSU")})][2]
+		oJsonPrd['ZD_MARGUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MARGUSU")})][2]
+		oJsonPrd['ZD_PV1RUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSU")})][2]
+		oJsonPrd['ZD_PV2RUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSU")})][2]
+		oJsonPrd['ZD_MABRUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSU")})][2]
+		oJsonPrd['ZD_MALQUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSU")})][2]
+		oJsonPrd['ZD_CODTABC'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CODTABC")})][2]
+		Aadd(oJsonCot['item'],oJsonPrd)
+
+		Aadd(oJson1['conteudo'],oJsonCot)
+
+
 	Else
 		lErro := .T.		
 	EndIf
@@ -6630,29 +6769,37 @@ Private cStatus := "I"
 		fCalcCot(@aDadEAut,"ZD_QUANT1")
 		fCalcCot(@aDadEAut,"ZD_QUANT2")
 		fCalcCot(@aDadEAut,"ZD_CUSTUSU")
+
+		fCalcCot(@aDadEAut,"ZD_MALQUSU")
+		fCalcCot(@aDadEAut,"ZD_PV1RUSU")
+		fCalcCot(@aDadEAut,"ZD_CUSTUSU")
 	EndIf
 
-	//--Atualiza custo do produto, pré-produto.
-	For nX := 1 to Len(aDadEAut)
-		
-		cCusUsu := aDadEAut[nX][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CUSTUSU")})][2]
-		cProd := aDadEAut[nX][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PRODUTO")})][2]
-		cPrePr := aDadEAut[nX][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PREPROD")})][2]
+	IF nOpc != 6 //Se não for simulação
 
-		If !Empty(cProd)
-			fsAtuCus(cProd,1,cCusUsu)
-		Else
-			fsAtuCus(cPrePr,2,cCusUsu)
-		EndIf
+		//--Atualiza custo do produto, pré-produto.
+		For nX := 1 to Len(aDadEAut)
+			
+			cCusUsu := aDadEAut[nX][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CUSTUSU")})][2]
+			cProd := aDadEAut[nX][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PRODUTO")})][2]
+			cPrePr := aDadEAut[nX][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PREPROD")})][2]
 
-	Next nX
+			If !Empty(cProd)
+				fsAtuCus(cProd,1,cCusUsu)
+			Else
+				fsAtuCus(cPrePr,2,cCusUsu)
+			EndIf
+
+		Next nX
+
+	EndIf
 
 
 Return({lRet,cMsgErro})
 
 
 //-----------------------------------------------------------------------------------------------
-/*/
+/*
 {Protheus.doc} FMonRegIt
 Função para montar aDadEAut para posteriormente atualiza-lo com os cálculos.
 @author		.iNi Sistemas
@@ -7395,6 +7542,178 @@ If cCampo $ "ZD_CUSTUSU"
 	Next nX
 
 EndIf
+
+If cCampo $ ("ZD_MABRUSM,ZD_MABDUSM") //-- Margem Bruta Prc. Minimo
+
+	For nX := 1 to Len(aDadEAut)
+		
+		If !aDadEAut[nX][nPDelIt][2] //--Desconsidera item deletado
+
+			//Carrega variáveis que sao necessárias para o recalculo.
+			FCarVar(nX,@aDadEAut)
+
+			//-- Iguala percentuais em Real e Dolar
+			If cCampo == "ZD_MABRUSM"
+				nUsDMBM := nUsuMBM
+			ElseIf cCampo == "ZD_MABDUSM"
+				nUsuMBM := nUsDMBM
+			EndIf
+
+			nTxEnca := (1 - (iIf(M->ZC_ENCARGO>0,M->ZC_ENCARGO,0)/100)) //-- Acha o encargo
+			if AllTrim(cUMPad) == AllTrim(cQtdUM1)
+				//-- Ao alterar a Margem Bruta, recalcula o preço minimo.
+				//-- Formula: (([CUSTO]/(1-[MARGEM BRUTA]))/(1-[ENCARGOS]))
+				nUsuPRM := Round(((nUsuCst / (1 - (nUsuMBM/100)))/nTxEnca),4)
+			else
+				//-- Ao alterar a Margem Bruta, recalcula o preço minimo.
+				//-- Formula: (([CUSTO]/(1-[MARGEM BRUTA]))/(1-[ENCARGOS]))
+				nUsuPRM2 := Round(((nUsuCst / (1 - (nUsuMBM/100)))/nTxEnca),4)
+			endif
+
+		EndIf
+
+		//--Função que atualiza array com as variaveis já recalculadas.
+		FAtuArr(nX,@aDadEAut)
+
+	Next nX
+EndIf
+
+If cCampo $ ("ZD_MALQUSM,ZD_MALDUSM") //-- Margem Liquida Prc. Minimo
+
+	For nX := 1 to Len(aDadEAut)
+		
+		If !aDadEAut[nX][nPDelIt][2] //--Desconsidera item deletado
+
+			//Carrega variáveis que sao necessárias para o recalculo.
+			FCarVar(nX,@aDadEAut)
+
+			//-- Iguala percentuais em Real e Dolar
+			If cCampo == "ZD_MALQUSM"
+				nUsDMLM := nUsuMLM
+			ElseIf cCampo == "ZD_MALDUSM"
+				nUsuMLM := nUsDMLM
+			EndIf
+
+			nTxEnca := (1 - (iIf(M->ZC_ENCARGO>0,M->ZC_ENCARGO,0)/100)) //-- Acha o encargo
+			if AllTrim(cUMPad) == AllTrim(cQtdUM1)
+				//-- Ao alterar a Margem Liquida, recalcula o preço minimo.
+				//-- Formula: (([CUSTO]+[FRETE])/((1-[MARGEM])-(([COMISSAO HIERARQUIA]+[COMISSAO RC]+[DESPESAS]+[IMPOSTOS])/(1-[ENCARGOS]))))/(1-[ENCARGOS])
+				nUsuPRM := Round((((nUsuCst + nUsuFre) / ((1 - (nUsuMLM/100)) - (((nUsuImp + (nUsuCMi + nUsuCHi) + nUsuDes)/100)/nTxEnca)))/nTxEnca),4)
+			else
+					//-- Ao alterar a Margem Liquida, recalcula o preço minimo.
+				//-- Formula: (([CUSTO]+[FRETE])/((1-[MARGEM])-(([COMISSAO HIERARQUIA]+[COMISSAO RC]+[DESPESAS]+[IMPOSTOS])/(1-[ENCARGOS]))))/(1-[ENCARGOS])
+				nUsuPRM2 := Round((((nUsuCst + nUsuFre) / ((1 - (nUsuMLM/100)) - (((nUsuImp + (nUsuCMi + nUsuCHi) + nUsuDes)/100)/nTxEnca)))/nTxEnca),4)
+			endif
+
+		EndIf
+
+		//--Função que atualiza array com as variaveis já recalculadas.
+		FAtuArr(nX,@aDadEAut)
+
+	Next nX
+
+EndIf
+
+If cCampo $ ("ZD_MABRUSU,ZD_MABRDUS") //-- Margem Bruta Prc. Sugerido
+
+	For nX := 1 to Len(aDadEAut)
+		
+		If !aDadEAut[nX][nPDelIt][2] //--Desconsidera item deletado
+
+			//Carrega variáveis que sao necessárias para o recalculo.
+			FCarVar(nX,@aDadEAut)
+
+			//-- Iguala percentuais em Real e Dolar
+			If cCampo == "ZD_MABRUSU"
+				nUsDMBR := nUsuMBR
+			ElseIf cCampo == "ZD_MABRDUS"
+				nUsuMBR := nUsDMBR
+			EndIf
+
+			nTxEnca := (1 - (iIf(M->ZC_ENCARGO>0,M->ZC_ENCARGO,0)/100)) //-- Acha o encargo
+			if AllTrim(cUMPad) == AllTrim(cQtdUM1)
+				//-- Ao alterar a Margem Bruta, recalcula o preço sugerido.
+				//-- Formula: (([CUSTO]/(1-[MARGEM BRUTA]))/(1-[ENCARGOS]))
+				nUsuPRE := Round(((nUsuCst / (1 - (nUsuMBR/100)))/nTxEnca),4)
+			else	
+				//-- Ao alterar a Margem Bruta, recalcula o preço sugerido.
+				//-- Formula: (([CUSTO]/(1-[MARGEM BRUTA]))/(1-[ENCARGOS]))
+				nUsu2PRE := Round(((nUsuCst / (1 - (nUsuMBR/100)))/nTxEnca),4)
+			endif
+
+		EndIf
+
+		//--Função que atualiza array com as variaveis já recalculadas.
+		FAtuArr(nX,@aDadEAut)
+
+	Next nX
+
+EndIf
+
+If cCampo $ ("ZD_MALQUSU,ZD_MALQDUS") //-- Margem Liquida Prc. Sugerido
+	For nX := 1 to Len(aDadEAut)
+		
+		If !aDadEAut[nX][nPDelIt][2] //--Desconsidera item deletado
+
+			//Carrega variáveis que sao necessárias para o recalculo.
+			FCarVar(nX,@aDadEAut)
+
+			/*nUsuMLQ := aDadEAut[nX][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSU")})][2]
+			nUsDMLQ := aDadEAut[nX][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQDUS")})][2]
+			cUMPad := aDadEAut[nX][nPUmPad][2]
+			nUsuCst := aDadEAut[nX][nPCusUs][2]*/
+			
+			//-- Iguala percentuais em Real e Dolar
+			If cCampo == "ZD_MALQUSU"
+				nUsDMLQ := nUsuMLQ
+			ElseIf cCampo == "ZD_MALQDUS"
+				nUsuMLQ := nUsDMLQ
+			EndIf
+
+			nTxEnca := (1 - (iIf(M->ZC_ENCARGO>0,M->ZC_ENCARGO,0)/100)) //-- Acha o encargo
+			if AllTrim(cUMPad) == AllTrim(cQtdUM1)
+				//-- Ao alterar a Margem Bruta, recalcula o preço sugerido.
+				//-- Formula: (([CUSTO]+[FRETE])/((1-[MARGEM])-(([COMISSAO HIERARQUIA]+[COMISSAO RC]+[DESPESAS]+[IMPOSTOS])/(1-[ENCARGOS]))))/(1-[ENCARGOS])
+				nUsuPRE := Round((((nUsuCst + nUsuFre) / ((1 - (nUsuMLQ/100)) - (((nUsuImp + (nUsuCPd + nUsuCHi) + nUsuDes)/100)/nTxEnca)))/nTxEnca),4)
+			else
+				//-- Ao alterar a Margem Bruta, recalcula o preço sugerido.
+				//-- Formula: (([CUSTO]+[FRETE])/((1-[MARGEM])-(([COMISSAO HIERARQUIA]+[COMISSAO RC]+[DESPESAS]+[IMPOSTOS])/(1-[ENCARGOS]))))/(1-[ENCARGOS])
+				nUsu2PRE := Round((((nUsuCst + nUsuFre) / ((1 - (nUsuMLQ/100)) - (((nUsuImp + (nUsuCPd + nUsuCHi) + nUsuDes)/100)/nTxEnca)))/nTxEnca),4)
+			endif
+		EndIf
+
+		FClcMGS(2)
+
+		//--Função que atualiza array com as variaveis já recalculadas.
+		FAtuArr(nX,@aDadEAut)
+
+	Next nX
+EndIf
+
+If cCampo == "ZD_PV1RUSU" //-- Preço Sugerido Real
+
+	For nX := 1 to Len(aDadEAut)
+		
+		If !aDadEAut[nX][nPDelIt][2] //--Desconsidera item deletado
+
+			//Carrega variáveis que sao necessárias para o recalculo.
+			FCarVar(nX,@aDadEAut)
+
+			if AllTrim(cUMPad) == AllTrim(cQtdUM1)
+				//-- Encontra a nova Margem
+				nUsuMrg := FsClcMrg(nUsuPRE,2)		
+			else
+				//-- Encontra a nova Margem
+				nUsuMrg := FsClcMrg(nUsu2PRE,2)
+			endif
+		EndIf
+		
+		//--Função que atualiza array com as variaveis já recalculadas.
+		FAtuArr(nX,@aDadEAut)
+
+	Next nX
+EndIf
+
 
 Return()
 

@@ -421,7 +421,12 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{ \r\n\"B1_GRUPO\" : \"0002\",   \r\n\"ZB1_PRDCUS\" : \"05\" \r\n}"
+					"raw": "{ \r\n\"B1_GRUPO\" : \"0002\",   \r\n\"ZB1_PRDCUS\" : \"05\" \r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
 				},
 				"url": {
 					"raw": "http://192.168.4.192:8064/rest/PIWSEPRE?c_CodPre=123456&c_CodPro=TESTELT",
