@@ -6470,18 +6470,22 @@ Static Function SimCotV(aCabec,aItens,aCPOS,nOpc)
 		oJsonPrd['ZD_PRODUTO'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PRODUTO")})][2]
 		oJsonPrd['ZD_PREPROD'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PREPROD")})][2]
 		oJsonPrd['ZD_QUANT1'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT1")})][2]
-		oJsonPrd['ZD_QUANT2'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT2")})][2]
-		oJsonPrd['ZD_QUANT2'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT2")})][2]
-		oJsonPrd['ZD_CUSTUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CUSTUSU")})][2]
-		oJsonPrd['ZD_MARGUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MARGUSU")})][2]
-		oJsonPrd['ZD_PV1RUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSU")})][2]
-		oJsonPrd['ZD_PV2RUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSU")})][2]
-		oJsonPrd['ZD_MABRUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSU")})][2]
-		oJsonPrd['ZD_MALQUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSU")})][2]
-		oJsonPrd['ZD_CODTABC'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CODTABC")})][2]
-		Aadd(oJsonCot['item'],oJsonPrd)
+		oJsonPrd['ZD_QUANT2'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT2")})][2]		
+		oJsonPrd['ZD_CUSTUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CUSTUSU")})][2]//--Custo
+		//oJsonPrd['ZD_FRETUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_FRETUSU")})][2]//--Frete
+		oJsonPrd['ZD_PV1RUSM'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSM")})][2]//--Preço Mínimo 1 Um
+		oJsonPrd['ZD_PV2RUSM'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSM")})][2]//--Preço Mínimo 2 Um		
+		oJsonPrd['ZD_MABRUSM'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSM")})][2]//--Margem Bruta Prc Min
+		oJsonPrd['ZD_MALQUSM'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSM")})][2]//--Margem Liquida Prc Min
+		oJsonPrd['ZD_PV1RUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSU")})][2]//--Preço Sugerido 1 Um
+		oJsonPrd['ZD_PV2RUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSU")})][2]//--Preço Sugerido 2 Um
+		oJsonPrd['ZD_MABRUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSU")})][2]//--Margem Bruta Prc Sug
+		oJsonPrd['ZD_MALQUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSU")})][2]//--Margem Liquida Prc Sug
+				
+		//Aadd(oJsonCot['item'],oJsonPrd)
+		//Aadd(oJson1['conteudo'],oJsonCot)
 
-		Aadd(oJson1['conteudo'],oJsonCot)
+		Aadd(oJson1['conteudo'],oJsonPrd)
 
 
 	Else
@@ -6765,14 +6769,111 @@ Private cStatus := "I"
 
 	//--Realiza calculo com base no array dos campos de itens.
 	If !Empty(aDadEAut)
+
 		fCalcCot(@aDadEAut,"ZD_PREPROD")
 		fCalcCot(@aDadEAut,"ZD_QUANT1")
 		fCalcCot(@aDadEAut,"ZD_QUANT2")
 		fCalcCot(@aDadEAut,"ZD_CUSTUSU")
 
-		fCalcCot(@aDadEAut,"ZD_MALQUSU")
-		fCalcCot(@aDadEAut,"ZD_PV1RUSU")
-		fCalcCot(@aDadEAut,"ZD_CUSTUSU")
+		If nOpc == 6
+
+			/*If aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_FRETUSU")}) > 0 //Frete
+				
+				nUsuFre := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_FRETUSU")})][2])
+				aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_FRETUSU")})][2] := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_FRETUSU")})][2])
+		
+				fCalcCot(@aDadEAut,"ZD_FRETUSU")
+				//fCalcCot(@aDadEAut,"ZD_PV1RUSU")
+				fCalcCot(@aDadEAut,"ZD_CUSTUSU")
+			
+			EndIf*/
+
+			If aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSM")}) > 0 //Preço Mínimo 1 um
+				
+				nUsuPRM := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSM")})][2])
+				aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSM")})][2] := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSM")})][2])
+			
+				fCalcCot(@aDadEAut,"ZD_PV1RUSM")
+				fCalcCot(@aDadEAut,"ZD_CUSTUSU")
+
+			EndIf
+
+			If aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSM")}) > 0 //Preço Mínimo 2 um
+				
+				nUsuPRM2 := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSM")})][2])
+				aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSM")})][2] := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSM")})][2])
+
+				fCalcCot(@aDadEAut,"ZD_PV2RUSM")
+				fCalcCot(@aDadEAut,"ZD_CUSTUSU")		
+
+			EndIf
+
+			If aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSM")}) > 0 //Margem Bruta Prc Min
+				
+				nUsuMBM := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSM")})][2])
+				aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSM")})][2] := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSM")})][2])
+
+				fCalcCot(@aDadEAut,"ZD_MABRUSM")
+				fCalcCot(@aDadEAut,"ZD_PV1RUSM")
+				fCalcCot(@aDadEAut,"ZD_CUSTUSU")
+
+			EndIf
+
+			If aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSM")}) > 0 //Margem Liquida Prc Min
+				
+				nUsuMLM := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSM")})][2])
+				aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSM")})][2] := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSM")})][2])
+
+				fCalcCot(@aDadEAut,"ZD_MALQUSM")
+				fCalcCot(@aDadEAut,"ZD_PV1RUSM")
+				fCalcCot(@aDadEAut,"ZD_CUSTUSU")	
+
+			EndIf
+
+			If aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSU")}) > 0 //Preço Sugerido 1 um
+				
+				nUsuPRE := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSU")})][2])
+				aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSU")})][2] := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSU")})][2])
+
+				fCalcCot(@aDadEAut,"ZD_PV1RUSU")
+				fCalcCot(@aDadEAut,"ZD_CUSTUSU")	
+			
+			EndIf
+
+			If aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSU")}) > 0 //Preço Sugerido 2 um
+				
+				nUsu2PRE := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSU")})][2])
+				aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSU")})][2] := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSU")})][2])
+
+				fCalcCot(@aDadEAut,"ZD_PV2RUSU")
+				fCalcCot(@aDadEAut,"ZD_CUSTUSU")
+
+			EndIf
+
+			If aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSU")}) > 0 //Margem Bruta Prc Sug
+				
+				nUsuMBR := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSU")})][2])
+				aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSU")})][2] := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSU")})][2])
+
+				fCalcCot(@aDadEAut,"ZD_MABRUSU")
+				fCalcCot(@aDadEAut,"ZD_PV1RUSU")
+				fCalcCot(@aDadEAut,"ZD_CUSTUSU")	
+
+			EndIf																
+
+			If aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSU")}) > 0 //Margem Liquida Prc Sug
+				
+				nUsuMLQ := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSU")})][2])
+				aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSU")})][2] := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSU")})][2])
+
+				fCalcCot(@aDadEAut,"ZD_MALQUSU")
+				fCalcCot(@aDadEAut,"ZD_PV1RUSU")
+				fCalcCot(@aDadEAut,"ZD_CUSTUSU")
+
+			EndIf
+
+		EndIf
+
 	EndIf
 
 	IF nOpc != 6 //Se não for simulação
@@ -7535,6 +7636,8 @@ If cCampo $ "ZD_CUSTUSU"
 				Endif
 			Endif
 
+			FClcMGS(2) //-- Calcula Margem (bruta e liquida) de Usuário
+
 			//--Função que atualiza array com as variaveis já recalculadas.
 			FAtuArr(nX,@aDadEAut)
 
@@ -7542,6 +7645,29 @@ If cCampo $ "ZD_CUSTUSU"
 	Next nX
 
 EndIf
+
+
+If cCampo $ ("ZD_PV1RUSM,ZD_PV2RUSM") //-- Preço Minimo Real
+
+	For nX := 1 to Len(aDadEAut)
+		
+		If !aDadEAut[nX][nPDelIt][2] //--Desconsidera item deletado
+
+			if AllTrim(cUMPad) == AllTrim(cQtdUM1)
+				//-- Encontra a nova Margem
+				nUsuMrg := FsClcMrg(nUsuPRM,1)			
+			else
+				nUsuMrg := FsClcMrg(nUsuPRM2,1)			
+			endif
+
+		EndIf
+
+		//--Função que atualiza array com as variaveis já recalculadas.
+		FAtuArr(nX,@aDadEAut)
+
+	Next nX
+EndIf
+
 
 If cCampo $ ("ZD_MABRUSM,ZD_MABDUSM") //-- Margem Bruta Prc. Minimo
 
@@ -7578,7 +7704,7 @@ If cCampo $ ("ZD_MABRUSM,ZD_MABDUSM") //-- Margem Bruta Prc. Minimo
 	Next nX
 EndIf
 
-If cCampo $ ("ZD_MALQUSM,ZD_MALDUSM") //-- Margem Liquida Prc. Minimo
+If cCampo $ ("ZD_MALQUSM,ZD_MALDUSM") //-- Margem Liquida Prc. MinimoZD_MALQUSM
 
 	For nX := 1 to Len(aDadEAut)
 		
@@ -7606,6 +7732,8 @@ If cCampo $ ("ZD_MALQUSM,ZD_MALDUSM") //-- Margem Liquida Prc. Minimo
 			endif
 
 		EndIf
+
+		FClcMGS(2) 
 
 		//--Função que atualiza array com as variaveis já recalculadas.
 		FAtuArr(nX,@aDadEAut)
@@ -7690,7 +7818,7 @@ If cCampo $ ("ZD_MALQUSU,ZD_MALQDUS") //-- Margem Liquida Prc. Sugerido
 	Next nX
 EndIf
 
-If cCampo == "ZD_PV1RUSU" //-- Preço Sugerido Real
+If cCampo $ ("ZD_PV1RUSU,ZD_PV2RUSU") //-- Preço Sugerido Real
 
 	For nX := 1 to Len(aDadEAut)
 		

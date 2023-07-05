@@ -486,8 +486,8 @@ Data       	|Desenvolvedor    |Motivo
 ------------+-----------------+--------------------------------------------------------------
 /*/
 //----------------------------------------------------------------------------------------------
-//WSMETHOD GET WSRECEIVE c_fil WSSERVICE PIWSCOTV
-User Function fSimCot()
+WSMETHOD GET WSRECEIVE c_fil WSSERVICE PIWSCOTV
+//User Function fSimCot()
 
 	Local aArea     := {}
     Local cTabela   := "SZC"
@@ -504,11 +504,11 @@ User Function fSimCot()
 	Local lRet := .T.
 	Local aRet := {}
 
-	Default c_fil := "010001"
+	//Default c_fil := "010001"
 
-	RpcSetEnv("01","010001")
+	//RpcSetEnv("01","010001")
 
-	cBody := '{ 
+	/*cBody := '{ 
     cBody += '"ZC_CLIENTE" : "000007",
     cBody += '"ZC_LOJACLI" : "01",
     cBody += '"ZC_TIPFRET" : "C",
@@ -519,33 +519,43 @@ User Function fSimCot()
     cBody += '"ZC_MOEDA" : "1",
     cBody += '"ZC_VEND1" : "000557",
     cBody += '"ZC_VEND2" : "000557",
-    cBody += '"itens" : [
+    cBody += '"item" : [
     cBody += '    {
     cBody += '        "ZD_PRODUTO": "",
     cBody += '        "ZD_PREPROD": "115000",
-    cBody += '        "ZD_UMPAD": "KG",
+    //cBody += '        "ZD_UMPAD": "SC",
+    //cBody += '        "ZD_QUANT1": "5",
+    //cBody += '        "ZD_QUANT2": "0",
+	cBody += '        "ZD_UMPAD": "KG",
     cBody += '        "ZD_QUANT1": "0",
     cBody += '        "ZD_QUANT2": "125.00",
-    cBody += '        "ZD_CUSTUSU": "120.00",
-	cBody += '        "ZD_MALQUSU": "10"
+    cBody += '        "ZD_CUSTUSU": "120.00",	
+    //cBody += '        "ZD_MABRUSU": "82.999"	
+	//cBody += '        "ZD_PV1RUSU": "5882.6600"
+	//cBody += '        "ZD_PV2RUSU": "705.8290"
+	//cBody += '        "ZD_MALQUSM": "56.248"
+	//cBody += '        "ZD_MABRUSM": "80"
+	//cBody += '        "ZD_PV1RUSM": "5000.0000"
+	cBody += '        "ZD_PV2RUSM": "300"
+	//cBody += '        "ZD_MALQUSU": "10"
     cBody += '    }
     cBody += ']
-	cBody += '}'
+	cBody += '}'*/
 
 	aArea     := FWGetArea()
 
-	//cBody := ::GetContent()
-	//::SetContentType('application/json;charset=UTF-8')
+	cBody := ::GetContent()
+	::SetContentType('application/json;charset=UTF-8')
 
 	cRet := oJson:FromJson(cBody)
 	
 	If ValType(cRet) == "C"
-		//SetRestFault(403, "Falha ao transformar texto em objeto json. Erro: " + cRet)
+		SetRestFault(403, "Falha ao transformar texto em objeto json. Erro: " + cRet)
 		lRet := .F.
 	endif
 	If lRet 
-		//If Empty(self:c_fil)
-		If Empty(c_fil)
+		If Empty(self:c_fil)
+		//If Empty(c_fil)
 			SetRestFault(403, "Parametro obrigatorio vazio. (Filial)")
 			lRet := .F.
 		EndIf
@@ -553,10 +563,10 @@ User Function fSimCot()
 
 	If lRet 
 
-		//cFilAnt := self:c_fil
-		//cEmpAnt	:= substr(self:c_fil,1,2)
-		cFilAnt := c_fil
-		cEmpAnt	:= substr(c_fil,1,2)
+		cFilAnt := self:c_fil
+		cEmpAnt	:= substr(self:c_fil,1,2)
+		//cFilAnt := c_fil
+		//cEmpAnt	:= substr(c_fil,1,2)
 		SM0->(dbSetOrder(1))
 		SM0->(DbSeek(cEmpAnt+cFilAnt))
 
@@ -584,19 +594,19 @@ User Function fSimCot()
 
 		//--Monta Array com todos os campos da SZD (ITENS)
 		aFields := FWSX3Util():GetAllFields( cTabIt , .F. ) //-- Retornará todos os campos presentes na SX3 de contexto real do alias.
-		For nX := 1 to Len(oJson['itens'])
+		For nX := 1 to Len(oJson['item'])
 			For nY := 1 to Len(aFields)
-				IF VALTYPE(oJson['itens'][nX][aFields[nY]]) != "U"
+				IF VALTYPE(oJson['item'][nX][aFields[nY]]) != "U"
 					If GetSx3Cache(aFields[nY],"X3_TIPO") == "D"
-						aAdd(aItAux, {aFields[nY], ctod(oJson['itens'][nX][aFields[nY]]), Nil})
+						aAdd(aItAux, {aFields[nY], ctod(oJson['item'][nX][aFields[nY]]), Nil})
 					Else
-						aAdd(aItAux, {aFields[nY], oJson['itens'][nX][aFields[nY]], Nil})
+						aAdd(aItAux, {aFields[nY], oJson['item'][nX][aFields[nY]], Nil})
 					EndIf
 				EndIf
 			Next nY
 			//--Inclui campo de deleção de item para quando na alteração se desejar deletar um item.
-			If ValType(oJson['itens'][nX]["D_E_L_E_T_"]) != "U"
-				aAdd(aItAux, {"D_E_L_E_T_", oJson['itens'][nX]["D_E_L_E_T_"], Nil})
+			If ValType(oJson['item'][nX]["D_E_L_E_T_"]) != "U"
+				aAdd(aItAux, {"D_E_L_E_T_", oJson['item'][nX]["D_E_L_E_T_"], Nil})
 			EndIf 
 			aadd(aItens, aItAux)
 			aItAux := {}
@@ -619,6 +629,6 @@ User Function fSimCot()
 
     FWRestArea(aArea)
 
-	RpcClearEnv()
+	//RpcClearEnv()
 
 Return(lRet)
