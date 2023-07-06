@@ -46,7 +46,10 @@
 		},
 		{
 			"label": "u_fsimcot"
+		},
+		{
+			"label": "u_fAltCot"
 		}
 	],
-	"lastProgramExecuted": "u_fsimcot"
+	"lastProgramExecuted": "u_fAltCot"
 }

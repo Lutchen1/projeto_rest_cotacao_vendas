@@ -48,7 +48,8 @@ WSRESTFUL PIWSCOTV DESCRIPTION "Serviço REST - Inclui Cotação de vendas" FORMAT 
 
 	
 	WSDATA c_fil 		AS STRING OPTIONAL
-	WSDATA cCotacao 	AS STRING OPTIONAL
+	WSDATA cCotacao 	AS STRING 
+	WSDATA cIdFlui	 	AS STRING OPTIONAL
 
 	WSMETHOD POST DESCRIPTION "Recebe dados e inclui Cotação de Vendas" WSSYNTAX "/PIWSCOTV?c_fil={param}" //PATH "incluiCotacao" 
 	WSMETHOD PUT DESCRIPTION "Recebe dados e altera Cotação de Vendas" WSSYNTAX "/PIWSCOTV?c_fil={param},cCotacao={param}" //PATH "alteraCotacao"
@@ -257,7 +258,7 @@ WSMETHOD PUT WSRECEIVE c_fil, cCotacao WSSERVICE PIWSCOTV
 	Local aRet := {}
 
 	//Default c_fil    := "010001"
-	//Default cCotacao := "000000013"
+	//Default cCotacao := "000000123"
 
 	//RpcSetEnv("01","010001")
 	
@@ -274,7 +275,7 @@ WSMETHOD PUT WSRECEIVE c_fil, cCotacao WSSERVICE PIWSCOTV
 	cBody += '"ZC_DTFIMFO" : "'+dtoc(DDATABASE+2)+'",'	
 	cBody += '"ZC_CONDPAG" : "002",'
 	cBody += '"ZC_MOEDA" : "1",'
-	cBody += '"ZC_VEND1" : "255254",'		
+	cBody += '"ZC_VEND1" : "000557",'		
 	cBody += '"ZC_VEND2" : "000557",'	
 	cBody += '"itens" : ['
 	cBody += '	{'
@@ -293,7 +294,14 @@ WSMETHOD PUT WSRECEIVE c_fil, cCotacao WSSERVICE PIWSCOTV
 	cBody += '		"ZD_QUANT1": "0",'
 	cBody += '		"ZD_QUANT2": "125.00",'
 	cBody += '		"ZD_CUSTUSU": "120.00",
-	cBody += '		"ZD_STATUS": "I"
+	//cBody += '        "ZD_MABRUSU": "82.999",	
+	//cBody += '        "ZD_PV1RUSU": "5882.6600"
+	//cBody += '        "ZD_PV2RUSU": "705.8290"
+	//cBody += '        "ZD_MALQUSM": "56.248"
+	//cBody += '        "ZD_MABRUSM": "80"
+	//cBody += '        "ZD_PV1RUSM": "5000.0000"
+	//cBody += '        "ZD_PV2RUSM": "300"
+	cBody += '        "ZD_MALQUSU": "10"
 	//cBody += '		"D_E_L_E_T_": "*"'
 	cBody += '    }'
 	cBody += ']'
@@ -512,13 +520,13 @@ WSMETHOD GET WSRECEIVE c_fil WSSERVICE PIWSCOTV
     cBody += '"ZC_CLIENTE" : "000007",
     cBody += '"ZC_LOJACLI" : "01",
     cBody += '"ZC_TIPFRET" : "C",
-    cBody += '"ZC_DTVALID" : "31/03/2024",
-    cBody += '"ZC_DTINIFO" : "20/07/2023",
-    cBody += '"ZC_DTFIMFO" : "20/09/2023",
+    //cBody += '"ZC_DTVALID" : "31/03/2024",
+    //cBody += '"ZC_DTINIFO" : "20/07/2023",
+    //cBody += '"ZC_DTFIMFO" : "20/09/2023",
     cBody += '"ZC_CONDPAG" : "002",
-    cBody += '"ZC_MOEDA" : "1",
-    cBody += '"ZC_VEND1" : "000557",
-    cBody += '"ZC_VEND2" : "000557",
+    //cBody += '"ZC_MOEDA" : "1",
+    //cBody += '"ZC_VEND1" : "000557",
+    //cBody += '"ZC_VEND2" : "000557",
     cBody += '"item" : [
     cBody += '    {
     cBody += '        "ZD_PRODUTO": "",
@@ -526,11 +534,11 @@ WSMETHOD GET WSRECEIVE c_fil WSSERVICE PIWSCOTV
     //cBody += '        "ZD_UMPAD": "SC",
     //cBody += '        "ZD_QUANT1": "5",
     //cBody += '        "ZD_QUANT2": "0",
-	cBody += '        "ZD_UMPAD": "KG",
-    cBody += '        "ZD_QUANT1": "0",
-    cBody += '        "ZD_QUANT2": "125.00",
-    cBody += '        "ZD_CUSTUSU": "120.00",	
-    //cBody += '        "ZD_MABRUSU": "82.999"	
+	//cBody += '        "ZD_UMPAD": "KG",
+    //cBody += '        "ZD_QUANT1": "0",
+    //cBody += '        "ZD_QUANT2": "125.00",
+    //cBody += '        "ZD_CUSTUSU": "125.00"
+    cBody += '        "ZD_MABRUSU": "82.999",	
 	//cBody += '        "ZD_PV1RUSU": "5882.6600"
 	//cBody += '        "ZD_PV2RUSU": "705.8290"
 	//cBody += '        "ZD_MALQUSM": "56.248"

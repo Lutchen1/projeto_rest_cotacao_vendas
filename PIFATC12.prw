@@ -31,9 +31,10 @@ Cadastro de Cotação de Vendas
 @history 25/02/2022, Dayvid Nogueira, Comentada chamada da função FsRetDis() para retorna a distancia pela APi da Google, pois o frete é calculado pela classe TIVCL008.
 @history 25/02/2022, Dayvid Nogueira, Alteração para deixar a unidade padrão do produto como KG, conforme chamado 2022022307000248.
 @history 15/03/2022, Dayvid Nogueira, Correção para buscar o custo do produto Defaut de acordo com a unidade de medida em KG, para acompanhar a correção solicitada no chamado 2022022307000248. 
-@history  03/05/2022, Wemerson Souza, Inclusão de validações ao incluir novo produto na cotação de venda.
-@history  09/02/2023, Lutchen Oliveira, Ajuste coordenadas botões da tela de cotação de vendas.
-@history  31/03/2023, Lutchen Oliveira, Imprementando rotina automatica de cotação de vendas. Função ExeCotV.
+@history 03/05/2022, Wemerson Souza, Inclusão de validações ao incluir novo produto na cotação de venda.
+@history 09/02/2023, Lutchen Oliveira, Ajuste coordenadas botões da tela de cotação de vendas.
+@history 31/03/2023, Lutchen Oliveira, Implementando rotina automatica de cotação de vendas. Função ExeCotV.
+@history 27/04/2023, Lutchen Oliveira, Validação se cotação da moeda2 existe na inclusão da cotação de vendas.
 /*/
 //-------------------------------------------------------------------
 User Function PIFATC12(aCabec,aItens,aCPOS,nOpc)
@@ -199,6 +200,28 @@ else
 	cStaBlAlt := 'I,P,A,S'
 endif
 // <<- Bloqueia alteração de cotação com bloqueio de margem e desconto
+
+//-- LTN - 27/04/2023 - Valicação se cotação da moeda2 existe na inclusão da cotação de vendas.
+If nOpc == 3
+
+	//--LTN - 27/04/2023 - Verifico se moeda2 existe
+	If Posicione("SM2",1,dDataBase,"M2_MOEDA2") == 0
+
+		//--LTN - 27/04/2023 - Rodo atualização das moedas.
+		U_TIVRO029()
+
+		//--LTN - 27/04/2023 - Verifico se conseguiu criar moeda
+		If Posicione("SM2",1,dDataBase,"M2_MOEDA2") == 0
+
+			Alert("Não existe moedas cadastradas (SM2) na data atual. Verifique!")
+			lContinua := .F.
+
+		EndIf
+
+	EndIf
+
+EndIf
+
 
 // If nOpc == 4 .And. !(SZC->ZC_STATUS $ 'I,P,A,S')
 If nOpc == 4 .And. !(SZC->ZC_STATUS $ cStaBlAlt)
@@ -602,7 +625,7 @@ Next nXi
 oBrowse1:nScrollType:= 1 //-- Define a barra de rolagem VCR
 
 //oBrowse1:bChange := {|x| FSCrgMnt()}
-oBrowse1:bLDblClick	:= {|| MsgRun("Carregando Item...","Aguarde...",{|| FSCrgMnt()})}
+oBrowse1:bLDblClick	:= {|| MsgRun("Carregando Item...","Aguarde...",{|| FSCrgMnt(nOpc)})}
 //-- Define cores do registro deletado.
 bColor := &("{|| if(aDadIt1[oBrowse1:nAt,Len(aDadIt1[oBrowse1:nAt])],"+Str(CLR_WHITE)+","+Str(CLR_BLACK)+")}")
 oBrowse1:SetBlkColor(bColor)
@@ -967,6 +990,10 @@ Função para validar preenchimento dos campos dos itens
 @version	P11
 
 @history 29/06/2018, Igor Rabelo, Valida informações de UM para pré-produto
+@history 09/05/2023, Lutchen Oliveira, Criado parametro para inserir pa's que vão permitir alterar o campo de custo 
+									   na cotação de vendas e deixa inserir na cotação mesmo sendo produto de linha.
+@history 11/05/2023, Lutchen Olivera,  Ajustando problema na digitação do frete. Alterado para diferenciar quando a digitação vem do 
+									   campo de frete. Validar para somente recalcular o frete quando vem do campo quantidade.									   
 /*/
 //-------------------------------------------------------------------
 Static Function FsVldCmp(cCampo)
@@ -979,6 +1006,8 @@ Local cCodSTrib := ''
 Local nCTirbEIcm  := 0
 Local nBCustPiCo  := 0
 Local nXi := 0
+Local cPAltCus := GetNewPar("PI_PAALCUS","1106103;1106104;1106105;1106106;1106107;1106108;1106109") //PA's que permitem alterar o campo de custo na cotação de vendas e deixa entrar na cotação mesmo sendo produto de linha.
+
 If cCampo == "ZD_PRODUTO"
 	//-- Primeira coisa é avaliar se informou o Cliente e ou Prospect
 	If (Empty(M->ZC_CLIENTE) .And. Empty(M->ZC_PROSPEC)) .Or. (Empty(M->ZC_LOJACLI) .And. Empty(M->ZC_LOJAPRO)) .Or. !obrigatorio(aGets,aTela)
@@ -993,7 +1022,7 @@ If cCampo == "ZD_PRODUTO"
 		If SB1->(dbSeek(xFilial("SB1")+AvKey(cCodPrd,"B1_COD")))
 			if !RetCodUsr() $ SuperGetMv("V_USCOTPLI", .F., "000887")
 				//Valida se o Produto é customizado ou Materia-Prima
-				if !( SB1->B1_ZCTMIZA $ "C/P" .OR. SB1->B1_TIPO == "MP" )
+				if !( SB1->B1_ZCTMIZA $ "C/P" .OR. SB1->B1_TIPO == "MP" ) .and. !(AllTrim(SB1->B1_COD) $ cPAltCus) //LTN - 09/05/2023 - PA's que permitem alterar o campo de custo.
 					Alert("Não é permitido produto de linha na cotação.")
 					Return .F.	
 				endif
@@ -1181,7 +1210,7 @@ ElseIf cCampo == "ZD_PREPROD"
 			EndIf
 		EndIf
 	EndIf
-ElseIf cCampo == "ZD_QUANT1" .And. AllTrim(cUMPad) == AllTrim(cQtdUM1)
+ElseIf (cCampo == "ZD_QUANT1" .or. cCampo == "ZD_QUANT1_") .And. AllTrim(cUMPad) == AllTrim(cQtdUM1) //LTN - 11/05/2023 - Ajustando problema na digitação do frete. Alterado para diferenciar quando a digitação vem do campo de frete. Validar para somente recalcular o frete quando vem do campo quantidade.
 	//-- Se não informou produto não deixa informar a quantidade
 	If Empty(cPrePrd) .And. Empty(cCodPrd)
 		If nQtdUM1 > 0
@@ -1203,11 +1232,13 @@ ElseIf cCampo == "ZD_QUANT1" .And. AllTrim(cUMPad) == AllTrim(cQtdUM1)
 				nQtdUM2 := (nQtdUM1 * SB1->B1_CONV)
 			EndIf
 
-			//-- Calcula o Frete
-			nDefFre := FsBscFrt(cCodPrd,cUMPad,1)
-			nDeDFre := FsCnvDol(nDefFre)
-			nUsuFre := nDefFre
-			nDUsFre := FsCnvDol(nUsuFre)
+			If cCampo == "ZD_QUANT1" //LTN - 11/05/2023 - Ajustando problema na digitação do frete. Alterado para diferenciar quando a digitação vem do campo de frete. Validar para somente recalcular o frete quando vem do campo quantidade.
+				//-- Calcula o Frete
+				nDefFre := FsBscFrt(cCodPrd,cUMPad,1)
+				nDeDFre := FsCnvDol(nDefFre)
+				nUsuFre := nDefFre
+				nDUsFre := FsCnvDol(nUsuFre)
+			EndIf
 		Else
 			SZA->(dbSetOrder(1))
 			SZA->(dbSeek(xFilial("SZA")+AvKey(cPrePrd,"ZA_CODIGO")))
@@ -1218,12 +1249,13 @@ ElseIf cCampo == "ZD_QUANT1" .And. AllTrim(cUMPad) == AllTrim(cQtdUM1)
 			Else
 				nQtdUM2 := (nQtdUM1 * SZA->ZA_CONV)
 			EndIf
-
-			//-- Calcula o Frete
-			nDefFre := FsBscFrt(cPrePrd,cUMPad,2)
-			nDeDFre := FsCnvDol(nDefFre)
-			nUsuFre := nDefFre
-			nDUsFre := FsCnvDol(nUsuFre)
+			If cCampo == "ZD_QUANT1" //LTN - 11/05/2023 - Ajustando problema na digitação do frete. Alterado para diferenciar quando a digitação vem do campo de frete. Validar para somente recalcular o frete quando vem do campo quantidade.
+				//-- Calcula o Frete
+				nDefFre := FsBscFrt(cPrePrd,cUMPad,2)
+				nDeDFre := FsCnvDol(nDefFre)
+				nUsuFre := nDefFre
+				nDUsFre := FsCnvDol(nUsuFre)
+			EndIf
 		EndIf
 
 		//-- Calcula o Preço de Venda Default
@@ -1279,7 +1311,7 @@ ElseIf cCampo == "ZD_QUANT1" .And. AllTrim(cUMPad) == AllTrim(cQtdUM1)
 
 		FClcMGS(1) //-- Calcula Margem (bruta e liquida) Default e de Usuário
 	EndIf
-ElseIf cCampo == "ZD_QUANT2" .And. AllTrim(cUMPad) == AllTrim(cQtdUM2)
+ElseIf (cCampo == "ZD_QUANT2" .or. cCampo == "ZD_QUANT2_") .And. AllTrim(cUMPad) == AllTrim(cQtdUM2)//LTN - 11/05/2023 - Ajustando problema na digitação do frete. Alterado para diferenciar quando a digitação vem do campo de frete. Validar para somente recalcular o frete quando vem do campo quantidade.
 	//-- Se não informou produto não deixa informar a quantidade
 	If Empty(cPrePrd) .And. Empty(cCodPrd)
 		If nQtdUM2 > 0
@@ -1301,11 +1333,13 @@ ElseIf cCampo == "ZD_QUANT2" .And. AllTrim(cUMPad) == AllTrim(cQtdUM2)
 				nQtdUM1 := (nQtdUM2 / SB1->B1_CONV)
 			EndIf
 
-			//-- Calcula o Frete
-			nDefFre := FsBscFrt(cCodPrd,cUMPad,1)
-			nDeDFre := FsCnvDol(nDefFre)
-			nUsuFre := nDefFre
-			nDUsFre := FsCnvDol(nUsuFre)
+			If cCampo == "ZD_QUANT2" //LTN - 11/05/2023 - Ajustando problema na digitação do frete. Alterado para diferenciar quando a digitação vem do campo de frete. Validar para somente recalcular o frete quando vem do campo quantidade.
+				//-- Calcula o Frete
+				nDefFre := FsBscFrt(cCodPrd,cUMPad,1)
+				nDeDFre := FsCnvDol(nDefFre)
+				nUsuFre := nDefFre
+				nDUsFre := FsCnvDol(nUsuFre)
+			EndIf
 		Else
 			SZA->(dbSetOrder(1))
 			SZA->(dbSeek(xFilial("SZA")+AvKey(cPrePrd,"ZA_CODIGO")))
@@ -1316,12 +1350,13 @@ ElseIf cCampo == "ZD_QUANT2" .And. AllTrim(cUMPad) == AllTrim(cQtdUM2)
 			Else
 				nQtdUM1 := (nQtdUM2 / SZA->ZA_CONV)
 			EndIf
-
-			//-- Calcula o Frete
-			nDefFre := FsBscFrt(cPrePrd,cUMPad,2)
-			nDeDFre := FsCnvDol(nDefFre)
-			nUsuFre := nDefFre
-			nDUsFre := FsCnvDol(nUsuFre)
+			If cCampo == "ZD_QUANT2" //LTN - 11/05/2023 - Ajustando problema na digitação do frete. Alterado para diferenciar quando a digitação vem do campo de frete. Validar para somente recalcular o frete quando vem do campo quantidade.
+				//-- Calcula o Frete
+				nDefFre := FsBscFrt(cPrePrd,cUMPad,2)
+				nDeDFre := FsCnvDol(nDefFre)
+				nUsuFre := nDefFre
+				nDUsFre := FsCnvDol(nUsuFre)
+			EndIf
 		EndIf
 
 		//-- Calcula o Preço de Venda Default
@@ -1526,11 +1561,11 @@ ElseIf cCampo $ ("ZD_CUSTUSU,ZD_FRETUSU,GERAL")
 
 	If AllTrim(cUMPad) == AllTrim(cQtdUM1) .And. !Empty(cQtdUM1)
 		If nQtdUM1 > 0			
-			FsVldCmp("ZD_QUANT1")
+			FsVldCmp("ZD_QUANT1_")//LTN - 11/05/2023 - Ajustando problema na digitação do frete. Alterado para diferenciar quando a digitação vem do campo de frete. Validar para somente recalcular o frete quando vem do campo quantidade.
 		EndIf
 	ElseIf AllTrim(cUMPad) == AllTrim(cQtdUM2) .And. !Empty(cQtdUM2)
 		If nQtdUM2 > 0
-			FsVldCmp("ZD_QUANT2")
+			FsVldCmp("ZD_QUANT2_")//LTN - 11/05/2023 - Ajustando problema na digitação do frete. Alterado para diferenciar quando a digitação vem do campo de frete. Validar para somente recalcular o frete quando vem do campo quantidade.
 		EndIf
 	EndIf
 
@@ -1775,36 +1810,38 @@ ElseIf cCampo $ ("UMPAD") //-- Unidade de Medida Padrão
 	EndIf
 EndIf
 
-//--Desabilita campo custo quando não for MP.
-If !Empty(cCodPrd)
-
-	SB1->(dbSetOrder(1))
-	SB1->(dbSeek(xFilial("SB1")+AvKey(cCodPrd,"B1_COD")))
-
+If procname(1) <> 'FSCRGCPY'
 	//--Desabilita campo custo quando não for MP.
-	If SB1->B1_TIPO != "MP"
-		lDesUsuCst := .T.
-		oGetUsCstR:Disable()
-		oGetUsCstD:Disable()
-	EndIf
-
-elseif !Empty(cPrePrd)
-
-	//-- Avaliar se pre-produto existe
-	SZA->(dbSetOrder(1))
-	If SZA->(dbSeek(xFilial("SZA")+AvKey(cPrePrd,"ZA_CODIGO")))
+	If !Empty(cCodPrd)
 
 		SB1->(dbSetOrder(1))
-		if SB1->(DBSEEK(xFilial("SB1")+SZA->ZA_PRDSIMI))
-			//--Desabilita campo custo quando não for MP.
-			If SB1->B1_TIPO != "MP"
-				lDesUsuCst := .T.
-				oGetUsCstR:Disable()
-				oGetUsCstD:Disable()
+		SB1->(dbSeek(xFilial("SB1")+AvKey(cCodPrd,"B1_COD")))
+
+		//--Desabilita campo custo quando não for MP.
+		If SB1->B1_TIPO != "MP" .and. !(AllTrim(SB1->B1_COD) $ cPAltCus) //LTN - 09/05/2023 - PA's que permitem alterar o campo de custo.
+			lDesUsuCst := .T.
+			oGetUsCstR:Disable()
+			oGetUsCstD:Disable()
+		EndIf
+
+	elseif !Empty(cPrePrd)
+
+		//-- Avaliar se pre-produto existe
+		SZA->(dbSetOrder(1))
+		If SZA->(dbSeek(xFilial("SZA")+AvKey(cPrePrd,"ZA_CODIGO")))
+
+			SB1->(dbSetOrder(1))
+			if SB1->(DBSEEK(xFilial("SB1")+SZA->ZA_PRDSIMI))
+				//--Desabilita campo custo quando não for MP.
+				If SB1->B1_TIPO != "MP" .and. !(AllTrim(SB1->B1_COD) $ cPAltCus) //LTN - 09/05/2023 - PA's que permitem alterar o campo de custo.
+					lDesUsuCst := .T.
+					oGetUsCstR:Disable()
+					oGetUsCstD:Disable()
+				EndIf
 			EndIf
 		EndIf
-	EndIf
 
+	EndIf
 EndIf
 
 //-- Executa refresh de todos objetos
@@ -1923,6 +1960,7 @@ Função para buscar o custo do produto e ou pre-produto
 @history 08/10/2020, Lucas MAIS, Tratativa soliciada por Marlon, se o tipo do produto for MP ou RV, busca os dados da SZT, (Anteriormente era SZV), se o tipo nao for RV ou MP, o custo é zero.
 @history 15/03/2022, Dayvid Nogueira, Correção para buscar o custo do produto Defaut de acordo com a unidade de medida em KG, para acompanhar a correção solicitada no chamado 2022022307000248. 
 @history 27/09/2022, .iNi Wemerson, Inclusão de regra consulta do custo pricing/brill para produtos/pre-produtos tipo PA.
+@history 09/05/2023, Lutchen Oliveira, Criado parametro para inserir pa's que vão permitir alterar o campo de custo na cotação de vendas e deixa inserir na cotação mesmo sendo produto de linha.
 /*/
 //-------------------------------------------------------------------
 Static Function FsBscCst(cCodigo,nTipo)
@@ -1935,6 +1973,7 @@ Static Function FsBscCst(cCodigo,nTipo)
 	Local cGrpPrd := ''
 	Local dDtValid:= CTOD("//")
 	Local aCusFil := {}
+	Local cPAltCus := GetNewPar("PI_PAALCUS","1106103;1106104;1106105;1106106;1106107;1106108;1106109") //PA's que permitem alterar o campo de custo na cotação de vendas e deixa entrar mesmo sendo produto de linha.
 
 	// ---- > Lucas - MAIS : 08/10/2020 - Posiciona no cadastro do produto para avaliar o tipo.
 	SB1->(dbSetOrder(1))
@@ -2005,15 +2044,15 @@ Static Function FsBscCst(cCodigo,nTipo)
 		SB1->(dbSeek(xFilial("SB1")+cCodigo))
 		cTpPrd := SB1->B1_TIPO
 		cGrpPrd:= SB1->B1_GRUPO
-		If cTpPrd == "PA" .And. !(cGrpPrd $ cGrpOleo)
+		If cTpPrd == "PA" .And. !(cGrpPrd $ cGrpOleo) .and. !(AllTrim(SB1->B1_COD) $ cPAltCus) //LTN - 09/05/2023 - PA's que permitem alterar o campo de custo.
 			SBZ->(dbSetOrder(1))
 			If SBZ->(dbSeek(xFilial("SBZ")+cCodigo))
 				lDesUsuCst := .T.
 				nCstPrd := 0
 				If SBZ->BZ_ZCUSPRI > 0 .And. (!Empty(SBZ->BZ_ZDTCUSP) .And. ( DDATABASE <= SBZ->BZ_ZDTCUSP ))
 					nCstPrd := SBZ->BZ_ZCUSPRI
-				ElseIf SBZ->BZ_ZCUSBRI > 0
-					nCstPrd := SBZ->BZ_ZCUSBRI
+				//ElseIf SBZ->BZ_ZCUSBRI > 0
+				//	nCstPrd := SBZ->BZ_ZCUSBRI
 				Else
 					MsgAlert("Produto "+AllTrim(cCodigo)+" sem Custo Price e Custo Brill validos, favor acionar a equipe da Nutrição.")
 				EndIf
@@ -2023,7 +2062,7 @@ Static Function FsBscCst(cCodigo,nTipo)
 		SB1->(dbSeek(xFilial("SB1")+Posicione("SZA",1,xFilial("SZA")+cCodigo,"ZA_PRDSIMI")))
 		cTpPrd := SB1->B1_TIPO
 		cGrpPrd:= SB1->B1_GRUPO
-		If cTpPrd == "PA" .And. !(cGrpPrd $ cGrpOleo)
+		If cTpPrd == "PA" .And. !(cGrpPrd $ cGrpOleo) .and. !(AllTrim(SB1->B1_COD) $ cPAltCus) //LTN - 09/05/2023 - PA's que permitem alterar o campo de custo.
 			lDesUsuCst := .T.
 			If Empty(dDtValid) .Or. DDATABASE > dDtValid
 				nCstPrd := 0
@@ -2789,6 +2828,8 @@ Função para carregar itens do grid quando cópia.
 @since		16/03/2018
 @version	P11
 @obs
+
+@history 12/05/2023, .iNi Lutchen, Na copia preenche os campos de unidade de medida padrão e quantidade 2 também.	
 /*/
 //-------------------------------------------------------------------
 Static Function FsCrgCpy(nOpc)
@@ -2805,8 +2846,12 @@ Static Function FsCrgCpy(nOpc)
 		Else
 			FsVldCmp("ZD_PREPROD")
 		EndIf
+					
+		cUMPad	:= SZD->ZD_UMPAD //--LTN - 12/05/2023 - Preenche o campo de unidade de medida da cotação que foi copiada.	
 		nQtdUM1 := SZD->ZD_QUANT1
+		nQtdUM2 := SZD->ZD_QUANT2//--LTN - 12/05/2023 - Preenche o campo de quantidade 2 da cotação que foi copiada.	
 		FsVldCmp("ZD_QUANT1")
+		FsVldCmp("ZD_QUANT2")//--LTN - 15/05/2023 - Chama quantidade 2ºUM para calcular frete.	
 
 		FsSlvIte()
 
@@ -3369,13 +3414,16 @@ Função para carregar tela de manutenção de itens.
 @history 23/02/2023, .iNi Lutchen, Comparo custo da cotação com o custo do item, se o custo 
 								   Tiver sido alterado sobreponho o custo na cotação.
 @history 02/03/2023, .iNi Lutchen, Converção do custo de acordo com a UM e preencho a variavel 
-								   nUsuCstA para comparação caso a cotação tenha gravado em outra UM.								  						   
+								   nUsuCstA para comparação caso a cotação tenha gravado em outra UM.	
+@history 10/05/2023, .iNi Lutchen, Não recalcula o custo quando MP ou produtos definidos no parametro PI_PAALCUS.								   							  						   
 /*/
 //-------------------------------------------------------------------------------------------
-Static Function FSCrgMnt()
+Static Function FSCrgMnt(nOpc)
 	Local nXi := 0
 	Local nRecCus := 0
 	Local nUsuCstA := 0 //-- custo auxiliar para comparação.
+	Local cPAltCus := GetNewPar("PI_PAALCUS","1106103;1106104;1106105;1106106;1106107;1106108;1106109") //PA's que não recalculam itens da cotação.
+	Local lPosSB1 := .F.
 	Private lAtuDef := .F.
 
 	//-- Se vazio.
@@ -3504,7 +3552,7 @@ Static Function FSCrgMnt()
 	Next nXi
 
 	//--LTN - 23/02/2023 - Comparando custo definido com o custo da cotação.	
-	If !Empty(nUsuCst)
+	If !Empty(nUsuCst) .and. nOpc != 2
 		
 		nUsuCstA := nUsuCst
 
@@ -3520,13 +3568,15 @@ Static Function FSCrgMnt()
 			//--LTN - 02/03/2023 - Converto custo de acordo com a UM e preencho a variavel nUsuCstA para comparação caso a cotação tenha gravado em outra UM.
 			If !Empty(cCodPrd) //--Produto
 				SB1->(dbSetOrder(1))
-				SB1->(dbSeek(xFilial("SB1")+AvKey(cCodPrd,"B1_COD")))
+				If SB1->(dbSeek(xFilial("SB1")+AvKey(cCodPrd,"B1_COD")))
+					lPosSB1 := .T.
+				EndIf
 				If AllTrim(cUMPad) != AllTrim(cQtdUM2) .And. !Empty(cQtdUM2)
 					If SB1->B1_TIPCONV == 'D'
 						nUsuCstA  := (nUsuCst * SB1->B1_CONV)
 					Else
 						nUsuCstA  := (nUsuCst / SB1->B1_CONV)
-					EndIf
+					EndIf					
 				Else
 					
 				EndIf
@@ -3539,17 +3589,26 @@ Static Function FSCrgMnt()
 					Else
 						nUsuCstA  := (nUsuCst / SZA->ZA_CONV)
 					EndIf			
+					SB1->(dbSetOrder(1))
+					If SB1->(DBSEEK(xFilial("SB1")+SZA->ZA_PRDSIMI))
+						lPosSB1 := .T.
+					EndIf
 				EndIf			
 			EndIf
 
-			If nRecCus != nUsuCstA
-				Aviso("Atenção","Custo do item mudou! Cotação seré recalculada de acordo com novo custo!",{"ok"})
-				nUsuCst := nRecCus
-				nDefCst := nRecCus 
-				nDUsCst := FsCnvDol(nUsuCst)
-				lAtuDef := .T.
-			EndIf
+			IF lPosSB1
+				If AllTrim(SB1->B1_TIPO) != "MP" .and. !(AllTrim(SB1->B1_COD) $ cPAltCus) //LTN - 10/05/2023 - Não recalcula o custo quando MP ou produtos definidos no parametro PI_PAALCUS.
 
+					If nRecCus != nUsuCstA
+						Aviso("Atenção","Custo do item mudou! Cotação seré recalculada de acordo com novo custo!",{"ok"})
+						nUsuCst := nRecCus
+						nDefCst := nRecCus 
+						nDUsCst := FsCnvDol(nUsuCst)
+						lAtuDef := .T.
+					EndIf
+
+				EndIf
+			EndIf
 		EndIf
 	EndIf
 
@@ -5482,6 +5541,7 @@ Função para validar as previsões de remessas.
 @author dayvid.nogueira
 @since 11/11/2021
 @return logical, Retorna Verdadeiro se as remessas foram validadas.
+@history 09/07/2023, Lutchen Oliveira, Não validar previsão de remessa por eliminação de resíduo, cancelamento ou Perdeu Cotação
 /*/
 Static Function FVldPrv
 
@@ -5493,6 +5553,7 @@ Local nPosIte :=  aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_ITEM")})
 Local nPosQtd :=  aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT1")})
 Local nPosQtd2 :=  aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT2")})
 Local nPosDel :=  aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("DELETE")})
+Local nPosSts := aScan(aDadAux[1],{|b| AllTrim(b[1]) == AllTrim("ZD_STATUS")}) //LTN - 09/07/2023 - não validar previsão de remessa por eliminação de resíduo, cancelamento ou Perdeu Cotação
 Local nQtdGrd := 0
 
 
@@ -5569,16 +5630,19 @@ If lRet
 				ElseIf cUMPadrao == cQtdUM2
 					nQtdGrd := aDadAux[nX][nPosQtd2][2]
 				EndIf				
-
+				
                 If nTotQtd <> nQtdGrd
-                    lFalhou := .T.
-					If !Empty(cCodPrd)
-                    	MsgInfo("Existem itens com quantidades diferentes entre previsão de remessa, e a quantidade informada. Verifique!"+CRLF+"Item:"+AllTrim(aDadAux[nX][nPosIte][2])+" Produto:"+AllTrim(aDadAux[nX][nPosPrd][2]),"Atenção")
-					Else
-						MsgInfo("Existem itens com quantidades diferentes entre previsão de remessa, e a quantidade informada. Verifique!"+CRLF+"Item:"+AllTrim(aDadAux[nX][nPosIte][2])+" Pré-Produto:"+AllTrim(cPrePrd),"Atenção")
+					//LTN - 09/07/2023 - não validar previsão de remessa por eliminação de resíduo, cancelamento ou Perdeu Cotação
+					if !(aDadAux[nX][nPossts][2] $ 'E,D,C')
+						lFalhou := .T.
+						If !Empty(cCodPrd)
+							MsgInfo("Existem itens com quantidades diferentes entre previsão de remessa, e a quantidade informada. Verifique!"+CRLF+"Item:"+AllTrim(aDadAux[nX][nPosIte][2])+" Produto:"+AllTrim(aDadAux[nX][nPosPrd][2]),"Atenção")
+						Else
+							MsgInfo("Existem itens com quantidades diferentes entre previsão de remessa, e a quantidade informada. Verifique!"+CRLF+"Item:"+AllTrim(aDadAux[nX][nPosIte][2])+" Pré-Produto:"+AllTrim(cPrePrd),"Atenção")
+						EndIf
+						lRet := .F.
+						Exit
 					EndIf
-                    lRet := .F.
-                    Exit
 				Else
 					//--LTN - 17/02/2023 - Sempre gravo na primeira unidade de medida.
 				    For nY := 1 To Len(aXaColsPublicaTelaCotacaoVenda)
@@ -6395,6 +6459,7 @@ Static Function SimCotV(aCabec,aItens,aCPOS,nOpc)
 	Local lRet 		:= .T.
 	Local lErro 	:= .F.
 	Local nPDelIt 	:= 0
+	Local aRetCab := {}
 	//Local cStaBlAlt := 'I,P,A,S'	// Status bloqueio de alteração de cotação
 	Private oJson1 	:= JsonObject():New()
 	Private oJsonCot:= JsonObject():New()
@@ -6417,13 +6482,15 @@ Static Function SimCotV(aCabec,aItens,aCPOS,nOpc)
 			
 		
 			//--Se conseguir fazer a execução automática - Validação do cabeçalho.
-			If EnchAuto(;
+			aRetCab := fVldCabS(aCabec)
+			If aRetCab[1]
+			/*If EnchAuto(;
 				cTabela,; // cAlias  - Alias da Tabela
 				aCabec,;  // aField  - Array com os campos e valores
 				{ || Obrigatorio( aGets, aTela ) },; // uTUDOOK - Validação do botão confirmar
 				nOpc,;        // nOPC    - Operação do Menu (3=inclusão, 4=alteração, 5=exclusão)
 				aCPOS;
-			)
+			)*/
 
 				aRet :=  FValidIt(aItens,@aDadEAut,nOpc)
 
@@ -6438,8 +6505,7 @@ Static Function SimCotV(aCabec,aItens,aCPOS,nOpc)
 			Else            
 				//MostraErro()
 				lRet := .F.
-				cMsgErro := MemoRead(NomeAutoLog())
-				Ferase(NomeAutoLog())
+				cMsgErro := aRetCab[2]
 				DisarmTransaction()
 			EndIf
 		EndIf
@@ -6472,7 +6538,7 @@ Static Function SimCotV(aCabec,aItens,aCPOS,nOpc)
 		oJsonPrd['ZD_QUANT1'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT1")})][2]
 		oJsonPrd['ZD_QUANT2'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_QUANT2")})][2]		
 		oJsonPrd['ZD_CUSTUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_CUSTUSU")})][2]//--Custo
-		//oJsonPrd['ZD_FRETUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_FRETUSU")})][2]//--Frete
+		oJsonPrd['ZD_FRETUSU'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_FRETUSU")})][2]//--Frete
 		oJsonPrd['ZD_PV1RUSM'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSM")})][2]//--Preço Mínimo 1 Um
 		oJsonPrd['ZD_PV2RUSM'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSM")})][2]//--Preço Mínimo 2 Um		
 		oJsonPrd['ZD_MABRUSM'] 	:= aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSM")})][2]//--Margem Bruta Prc Min
@@ -6494,6 +6560,42 @@ Static Function SimCotV(aCabec,aItens,aCPOS,nOpc)
 
 Return({lErro,cMsgErro,oJson1})
 
+
+//-----------------------------------------------------------------------------------------------
+/*/
+{Protheus.doc} fVldCabS
+Função do cabeçalho na simulação da cotação. 
+@author		.iNi Sistemas
+@since     	06/07/2023
+@version  	P.12
+@param 		aCabec - Cabeçalho para simulação da cotação.
+@return    	array[1] lRet - Se apresenta erro ou não na validação.
+@return    	array[2] cMsgErro - Mensagem de erro caso tenha ocorrido na validação.
+@obs        
+Alterações Realizadas desde a Estruturação Inicial
+------------+-----------------+------------------------------------------------------------------
+Data       	|Desenvolvedor    |Motivo
+------------+-----------------+------------------------------------------------------------------
+/*/
+//-----------------------------------------------------------------------------------------------
+Static function fVldCabS(aCabec)
+
+Local aObrigat := {"ZC_CLIENTE","ZC_LOJACLI","ZC_TIPFRET","ZC_CONDPAG"}
+Local cMsg := ""
+Local lRet := .T.
+Local nX := 0
+
+For nX := 1 to Len(aObrigat)
+	
+	IF Ascan(ACABEC,{|x|Alltrim(x[1]) == AllTrim(aObrigat[nX])}) > 0
+	Else
+		cMsg += "Campo obrigatorio nao preenchido no cabecalho: "+AllTrim(aObrigat[nX])+" "+CHR(13)+CHR(10)
+		lRet := .F.
+	EndIf
+
+Next nX
+
+Return({lRet,cMsg})
 
 //-----------------------------------------------------------------------------------------------
 /*/
@@ -6535,6 +6637,10 @@ Local cMsgErro 	:= ""
 Local lRet 		:= .T.
 Local cUm1P 	:= "" //-- 1º unidade de medida no cadastro do produto ou pré-produto
 Local cUm2P 	:= "" //-- 2º unidade de medida no cadastro do produto ou pré-produto
+Local aCposNJ := {"ZD_PV1RUSM","ZD_PV2RUSM","ZD_MABRUSM","ZD_MALQUSM","ZD_PV1RUSU","ZD_PV2RUSU","ZD_MABRUSU","ZD_MALQUSU"}
+Local nY := 0
+Local cCamInf := ""
+Local nCont := 0
 
 Private lBscImp 	:= .T.
 Private lDesUsuCst	:= .F.
@@ -6712,53 +6818,112 @@ Private cStatus := "I"
 					lRet := .F.		
 				EndIf
 			EndIf
-			If lRet
 
-				If !Empty(cProd)
-					cUm1P := SB1->B1_UM
-					cUm2P := SB1->B1_SEGUM
-				Else
-					cUm1P := SZA->ZA_UM
-					cUm2P := SZA->ZA_SEGUM
-				EndIf
-				
-				If Empty(cUM)
-					cMsgErro += "Obrigatorio informar Unidade de Medida. Verifique o item "+AllTrim(str(nX))+" "+CRLF
-					lRet := .F.
-				EndIf
+			If nOpc != 6 //--Essas validações não devem ser feitas na simulação.
+				If lRet
 
-				If lRet 
-
-					If EMPTY(nQtd1) .AND. Empty(nQtd2)
-						cMsgErro += "Obrigatorio informar quantidade. Verifique o item "+AllTrim(str(nX))+" "+CRLF
-						lRet := .F.
-					ElseIf !Empty(nQtd1) .AND. !Empty(nQtd2)
-						cMsgErro += "Deve ser informado apenas um campo de quantidade. Nunca os dois juntos. Verifique o item "+AllTrim(str(nX))+" "+CRLF
-						lRet := .F.
+					If !Empty(cProd)
+						cUm1P := SB1->B1_UM
+						cUm2P := SB1->B1_SEGUM
+					Else
+						cUm1P := SZA->ZA_UM
+						cUm2P := SZA->ZA_SEGUM
 					EndIf
 					
-					If lRet
-
-						//--Se unidade de medida enviada for a mesma da 1º unidade de medida obrigatório informar quantidade 1.
-						If cUm == cUm1P .and. Empty(nQtd1) 
-							cMsgErro += "Obrigatorio informar quantidade 1. Verifique o item "+AllTrim(str(nX))+" "+CRLF
-							lRet := .F.
-						//--Se unidade de medida enviada for a diferente da 1º unidade de medida obrigatório informar quantidade 2.
-						ElseIf cUm != cUm1P .and. Empty(nQtd2) 
-							cMsgErro += "Obrigatorio informar quantidade 2. Verifique o item "+AllTrim(str(nX))+" "+CRLF
-							lRet := .F.					
-						EndIf
-
+					If Empty(cUM)
+						cMsgErro += "Obrigatorio informar Unidade de Medida. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+						lRet := .F.
 					EndIf
 
 					If lRet 
-						If Empty(cCusUsu)
-							cMsgErro += "Obrigatorio informar o custo. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+
+						If EMPTY(nQtd1) .AND. Empty(nQtd2)
+							cMsgErro += "Obrigatorio informar quantidade. Verifique o item "+AllTrim(str(nX))+" "+CRLF
 							lRet := .F.
+						ElseIf !Empty(nQtd1) .AND. !Empty(nQtd2)
+							cMsgErro += "Deve ser informado apenas um campo de quantidade. Nunca os dois juntos. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+							lRet := .F.
+						EndIf
+						
+						If lRet
+
+							//--Se unidade de medida enviada for a mesma da 1º unidade de medida obrigatório informar quantidade 1.
+							If cUm == cUm1P .and. Empty(nQtd1) 
+								cMsgErro += "Obrigatorio informar quantidade 1. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+								lRet := .F.
+							//--Se unidade de medida enviada for a diferente da 1º unidade de medida obrigatório informar quantidade 2.
+							ElseIf cUm != cUm1P .and. Empty(nQtd2) 
+								cMsgErro += "Obrigatorio informar quantidade 2. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+								lRet := .F.					
+							EndIf
+
+						EndIf
+
+						If lRet 
+							If Empty(cCusUsu)
+								cMsgErro += "Obrigatorio informar o custo. Verifique o item "+AllTrim(str(nX))+" "+CRLF
+								lRet := .F.
+							EndIf
 						EndIf
 					EndIf
 				EndIf
 			EndIf
+
+			
+			if lRet
+
+				//--06/07/2023 - Lutchen Oliveira - Novas validações solicitadas.
+				If !Empty(nQtd1) .and. aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "ZD_PV2RUSM" }) > 0 
+					cMsgErro += "Como foi digitada a quantidade na primeira unidade de medida deve ser informado o preco minimo da primeira unidade de medida (ZD_PV1RUSM).	
+					lRet := .F.
+				EndIf
+
+				If !Empty(nQtd2) .and. aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "ZD_PV1RUSM" }) > 0 
+					cMsgErro += "Como foi digitada a quantidade na segunda unidade de medida deve ser informado o preco minimo da segunda unidade de medida (ZD_PV2RUSM).	
+					lRet := .F.
+				EndIf
+
+				If !Empty(nQtd1) .and. aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "ZD_PV2RUSU" }) > 0 
+					cMsgErro += "Como foi digitada a quantidade na primeira unidade de medida deve ser informado o preco sugerido da primeira unidade de medida (ZD_PV1RUSM).	
+					lRet := .F.
+				EndIf
+
+				If !Empty(nQtd2) .and. aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "ZD_PV1RUSU" }) > 0 
+					cMsgErro += "Como foi digitada a quantidade na segunda unidade de medida deve ser informado o preco sugerido da segunda unidade de medida (ZD_PV2RUSM).	
+					lRet := .F.
+				EndIf
+
+				If aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "ZD_PV1RUSM" }) > 0 .AND. aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "ZD_PV2RUSM" }) > 0 
+					cMsgErro += "Deve-se enviar ou preco minimo na primeira unidade de medida (ZD_PV1RUSM) ou o preco minimo na segunda unidade de medida (ZD_PV2RUSM). Nunca deve ser informados os dois juntos. "
+					lRet := .F.				
+				EndIf
+
+				If aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "ZD_PV1RUSU" }) > 0 .AND. aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "ZD_PV2RUSU" }) > 0 
+					cMsgErro += "Deve-se enviar ou preco sugerido na primeira unidade de medida (ZD_PV1RUSM) ou o preco sugerido na segunda unidade de medida (ZD_PV2RUSM). Nunca deve ser informados os dois juntos. 
+					lRet := .F.				
+				EndIf
+					
+				if lRet
+					for nY := 1 to Len(aCposNJ)
+						if aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == AllTrim(aCposNJ[nY]) }) > 0
+							cCamInf += aCposNJ[nY]+","
+							nCont++
+						EndIf
+					Next nY
+					If !Empty(cCamInf)
+						cCamInf := Substr(cCamInf,1,len(cCamInf)-1)
+					EndIf
+
+					If nCont > 1
+						cMsgErro+= "Os campos preco minimo (ZD_PV1RUSM / ZD_PV2RUSM), Margem Bruta Prc Min (ZD_MABRUSM), Margem Liquida Prc Min (ZD_MALQUSM), Preco Sugerido (ZD_PV1RUSU/ZD_PV2RUSU), Margem Bruta Prc Sug (ZD_MABRUSU) e Margem Liquida Prc Sug (ZD_MALQUSU) nao devem ser informados juntos!"+chr(13)+chr(10)
+						cMsgErro+= "Foram informados os campos:"+cCamInf
+						lRet := .F.		
+					EndIf
+					
+				EndIf
+
+			EndIf
+
 		EndIf
 	Next nX
 
@@ -6775,104 +6940,112 @@ Private cStatus := "I"
 		fCalcCot(@aDadEAut,"ZD_QUANT2")
 		fCalcCot(@aDadEAut,"ZD_CUSTUSU")
 
-		If nOpc == 6
+		//If nOpc == 6
+		For nX := 1 to Len(aItens)
 
-			/*If aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_FRETUSU")}) > 0 //Frete
-				
-				nUsuFre := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_FRETUSU")})][2])
-				aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_FRETUSU")})][2] := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_FRETUSU")})][2])
-		
-				fCalcCot(@aDadEAut,"ZD_FRETUSU")
-				//fCalcCot(@aDadEAut,"ZD_PV1RUSU")
-				fCalcCot(@aDadEAut,"ZD_CUSTUSU")
+			If Empty(aScan(aItens[nX],{ |x| ALLTRIM(x[1]) == "D_E_L_E_T_" })) //--Não calcula deletados.
+
+				If aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_FRETUSU")}) > 0 //Frete
+					
+					nUsuFre := Val(aItens[nX][aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_FRETUSU")})][2])
+					aDadEAut[nX][aScan(aDadEAut[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_FRETUSU")})][2] := Val(aItens[nX][aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_FRETUSU")})][2])
 			
-			EndIf*/
+					nDUsFre := FsCnvDol(nUsuFre)
 
-			If aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSM")}) > 0 //Preço Mínimo 1 um
+					//fCalcCot(@aDadEAut,"ZD_FRETUSU")
+					//fCalcCot(@aDadEAut,"ZD_PV1RUSU")
+					fCalcCot(@aDadEAut,"ZD_CUSTUSU")
 				
-				nUsuPRM := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSM")})][2])
-				aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSM")})][2] := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSM")})][2])
-			
-				fCalcCot(@aDadEAut,"ZD_PV1RUSM")
-				fCalcCot(@aDadEAut,"ZD_CUSTUSU")
+				EndIf
+
+				If aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSM")}) > 0 //Preço Mínimo 1 um
+					
+					nUsuPRM := Val(aItens[nX][aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSM")})][2])
+					aDadEAut[nX][aScan(aDadEAut[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSM")})][2] := Val(aItens[nX][aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSM")})][2])
+				
+					fCalcCot(@aDadEAut,"ZD_PV1RUSM")
+					fCalcCot(@aDadEAut,"ZD_CUSTUSU")
+
+				EndIf
+
+				If aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSM")}) > 0 //Preço Mínimo 2 um
+					
+					nUsuPRM2 := Val(aItens[nX][aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSM")})][2])
+					aDadEAut[nX][aScan(aDadEAut[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSM")})][2] := Val(aItens[nX][aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSM")})][2])
+
+					fCalcCot(@aDadEAut,"ZD_PV2RUSM")
+					fCalcCot(@aDadEAut,"ZD_CUSTUSU")		
+
+				EndIf
+
+				If aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSM")}) > 0 //Margem Bruta Prc Min
+					
+					nUsuMBM := Val(aItens[nX][aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSM")})][2])
+					aDadEAut[nX][aScan(aDadEAut[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSM")})][2] := Val(aItens[nX][aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSM")})][2])
+
+					fCalcCot(@aDadEAut,"ZD_MABRUSM")
+					fCalcCot(@aDadEAut,"ZD_PV1RUSM")
+					fCalcCot(@aDadEAut,"ZD_CUSTUSU")
+
+				EndIf
+
+				If aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSM")}) > 0 //Margem Liquida Prc Min
+					
+					nUsuMLM := Val(aItens[nX][aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSM")})][2])
+					aDadEAut[nX][aScan(aDadEAut[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSM")})][2] := Val(aItens[nX][aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSM")})][2])
+
+					fCalcCot(@aDadEAut,"ZD_MALQUSM")
+					fCalcCot(@aDadEAut,"ZD_PV1RUSM")
+					fCalcCot(@aDadEAut,"ZD_CUSTUSU")	
+
+				EndIf
+
+				If aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSU")}) > 0 //Preço Sugerido 1 um
+					
+					nUsuPRE := Val(aItens[nX][aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSU")})][2])
+					aDadEAut[nX][aScan(aDadEAut[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSU")})][2] := Val(aItens[nX][aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSU")})][2])
+
+					fCalcCot(@aDadEAut,"ZD_PV1RUSU")
+					fCalcCot(@aDadEAut,"ZD_CUSTUSU")	
+				
+				EndIf
+
+				If aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSU")}) > 0 //Preço Sugerido 2 um
+					
+					nUsu2PRE := Val(aItens[nX][aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSU")})][2])
+					aDadEAut[nX][aScan(aDadEAut[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSU")})][2] := Val(aItens[nX][aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSU")})][2])
+
+					fCalcCot(@aDadEAut,"ZD_PV2RUSU")
+					fCalcCot(@aDadEAut,"ZD_CUSTUSU")
+
+				EndIf
+
+				If aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSU")}) > 0 //Margem Bruta Prc Sug
+					
+					nUsuMBR := Val(aItens[nX][aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSU")})][2])
+					aDadEAut[nX][aScan(aDadEAut[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSU")})][2] := Val(aItens[nX][aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSU")})][2])
+
+					fCalcCot(@aDadEAut,"ZD_MABRUSU")
+					fCalcCot(@aDadEAut,"ZD_PV1RUSU")
+					fCalcCot(@aDadEAut,"ZD_CUSTUSU")	
+
+				EndIf																
+
+				If aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSU")}) > 0 //Margem Liquida Prc Sug
+					
+					nUsuMLQ := Val(aItens[nX][aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSU")})][2])
+					aDadEAut[nX][aScan(aDadEAut[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSU")})][2] := Val(aItens[nX][aScan(aItens[nX],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSU")})][2])
+
+					fCalcCot(@aDadEAut,"ZD_MALQUSU")
+					fCalcCot(@aDadEAut,"ZD_PV1RUSU")
+					fCalcCot(@aDadEAut,"ZD_CUSTUSU")
+
+				EndIf
 
 			EndIf
 
-			If aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSM")}) > 0 //Preço Mínimo 2 um
-				
-				nUsuPRM2 := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSM")})][2])
-				aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSM")})][2] := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSM")})][2])
-
-				fCalcCot(@aDadEAut,"ZD_PV2RUSM")
-				fCalcCot(@aDadEAut,"ZD_CUSTUSU")		
-
-			EndIf
-
-			If aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSM")}) > 0 //Margem Bruta Prc Min
-				
-				nUsuMBM := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSM")})][2])
-				aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSM")})][2] := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSM")})][2])
-
-				fCalcCot(@aDadEAut,"ZD_MABRUSM")
-				fCalcCot(@aDadEAut,"ZD_PV1RUSM")
-				fCalcCot(@aDadEAut,"ZD_CUSTUSU")
-
-			EndIf
-
-			If aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSM")}) > 0 //Margem Liquida Prc Min
-				
-				nUsuMLM := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSM")})][2])
-				aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSM")})][2] := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSM")})][2])
-
-				fCalcCot(@aDadEAut,"ZD_MALQUSM")
-				fCalcCot(@aDadEAut,"ZD_PV1RUSM")
-				fCalcCot(@aDadEAut,"ZD_CUSTUSU")	
-
-			EndIf
-
-			If aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSU")}) > 0 //Preço Sugerido 1 um
-				
-				nUsuPRE := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSU")})][2])
-				aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSU")})][2] := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV1RUSU")})][2])
-
-				fCalcCot(@aDadEAut,"ZD_PV1RUSU")
-				fCalcCot(@aDadEAut,"ZD_CUSTUSU")	
-			
-			EndIf
-
-			If aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSU")}) > 0 //Preço Sugerido 2 um
-				
-				nUsu2PRE := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSU")})][2])
-				aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSU")})][2] := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_PV2RUSU")})][2])
-
-				fCalcCot(@aDadEAut,"ZD_PV2RUSU")
-				fCalcCot(@aDadEAut,"ZD_CUSTUSU")
-
-			EndIf
-
-			If aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSU")}) > 0 //Margem Bruta Prc Sug
-				
-				nUsuMBR := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSU")})][2])
-				aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSU")})][2] := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MABRUSU")})][2])
-
-				fCalcCot(@aDadEAut,"ZD_MABRUSU")
-				fCalcCot(@aDadEAut,"ZD_PV1RUSU")
-				fCalcCot(@aDadEAut,"ZD_CUSTUSU")	
-
-			EndIf																
-
-			If aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSU")}) > 0 //Margem Liquida Prc Sug
-				
-				nUsuMLQ := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSU")})][2])
-				aDadEAut[1][aScan(aDadEAut[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSU")})][2] := Val(aItens[1][aScan(aItens[1],{|b| AllTrim(b[1]) == AllTrim("ZD_MALQUSU")})][2])
-
-				fCalcCot(@aDadEAut,"ZD_MALQUSU")
-				fCalcCot(@aDadEAut,"ZD_PV1RUSU")
-				fCalcCot(@aDadEAut,"ZD_CUSTUSU")
-
-			EndIf
-
-		EndIf
+		Next nX
+		//EndIf
 
 	EndIf
 
@@ -7226,6 +7399,9 @@ If cCampo == "ZD_PREPROD"
 			Endif
 
 			//-- Busca o custo
+			if Empty(nUsuCst)
+				nUsuCst := FsBscCst(cPrePrd,2) //Custo defalt real			
+			EndIf
 			nDefCst := nUsuCst//FsBscCst(cPrePrd,2) //Custo defalt real
 			nDeDCst := FsCnvDol(nDefCst) //Custo default dolar
 			nUsuCst := nDefCst //Custo usuário real
