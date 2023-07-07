@@ -49,9 +49,9 @@ WSRESTFUL PIWSCOTV DESCRIPTION "Serviço REST - Inclui Cotação de vendas" FORMAT 
 	
 	WSDATA c_fil 		AS STRING OPTIONAL
 	WSDATA cCotacao 	AS STRING 
-	WSDATA cIdFlui	 	AS STRING OPTIONAL
+	WSDATA c_IdFlui	 	AS STRING OPTIONAL
 
-	WSMETHOD POST DESCRIPTION "Recebe dados e inclui Cotação de Vendas" WSSYNTAX "/PIWSCOTV?c_fil={param}" //PATH "incluiCotacao" 
+	WSMETHOD POST DESCRIPTION "Recebe dados e inclui Cotação de Vendas" WSSYNTAX "/PIWSCOTV?c_fil={param},c_IdFlui={param}" //PATH "incluiCotacao" 
 	WSMETHOD PUT DESCRIPTION "Recebe dados e altera Cotação de Vendas" WSSYNTAX "/PIWSCOTV?c_fil={param},cCotacao={param}" //PATH "alteraCotacao"
 	WSMETHOD DELETE DESCRIPTION "Recebe dados e exclui Cotação de Vendas" WSSYNTAX "/PIWSCOTV?c_fil={param},ccotacao={param}" //PATH "excluiCotacao"
 	WSMETHOD GET DESCRIPTION "Recebe dados e retorna simulação de calculo" WSSYNTAX "/PIWSCOTV?c_fil={param}" //PATH "incluiCotacao" 
@@ -75,7 +75,7 @@ Data       	|Desenvolvedor    |Motivo
 ------------+-----------------+--------------------------------------------------------------
 /*/
 //----------------------------------------------------------------------------------------------
-WSMETHOD POST WSRECEIVE c_fil WSSERVICE PIWSCOTV
+WSMETHOD POST WSRECEIVE c_fil, c_IdFlui WSSERVICE PIWSCOTV
 //User Function fIncCot()
 
 	Local aArea     := {}
@@ -146,6 +146,12 @@ WSMETHOD POST WSRECEIVE c_fil WSSERVICE PIWSCOTV
 			lRet := .F.
 		EndIf
 	EndIf
+		If lRet 
+		If Empty(self:c_IdFlui)
+			SetRestFault(403, "Parametro obrigatorio vazio. (Id do Fluig)")
+			lRet := .F.
+		EndIf
+	EndIf
 
 	If lRet 
 
@@ -178,6 +184,7 @@ WSMETHOD POST WSRECEIVE c_fil WSSERVICE PIWSCOTV
 
 			EndIf
 		Next nX
+		aAdd(aCabec, {"ZC_IDFLUIG", self:c_IdFlui, Nil})
 		aAdd(aCabec, {"ZC_STATUS", "I", Nil})
 
 		//--Monta Array com todos os campos da SZD (ITENS)

@@ -47,8 +47,9 @@ Data       	|Desenvolvedor    |Motivo
 WSRESTFUL PIWSPPRO DESCRIPTION "Serviço REST - Pré-Produto" FORMAT "application/json"
 
 	WSDATA cCodPreP 	AS STRING OPTIONAL
+	WSDATA c_IdFlui	 	AS STRING OPTIONAL
 
-	WSMETHOD POST DESCRIPTION "Recebe dados e inclui pré-produto" WSSYNTAX "/PIWSPPRO?cCodPreP={param}" //PATH "incluiCotacao" 
+	WSMETHOD POST DESCRIPTION "Recebe dados e inclui pré-produto" WSSYNTAX "/PIWSPPRO?cCodPreP={param},c_IdFlui={param}" //PATH "incluiCotacao" 
 	WSMETHOD PUT DESCRIPTION "Recebe dados e altera pré-produto" WSSYNTAX "/PIWSPPRO?cCodPreP={param}" //PATH "alteraCotacao"
 	WSMETHOD DELETE DESCRIPTION "Recebe dados e exclui pré-produto" WSSYNTAX "/PIWSPPRO?cCodPreP={param}" //PATH "excluiCotacao"
 
@@ -70,7 +71,7 @@ Data       	|Desenvolvedor    |Motivo
 ------------+-----------------+--------------------------------------------------------------
 /*/
 //-----------------------------------------------------------------------------------------------
-WSMETHOD POST WSRECEIVE cCodPreP WSSERVICE PIWSPPRO
+WSMETHOD POST WSRECEIVE cCodPreP, c_IdFlui WSSERVICE PIWSPPRO
 //User Function fIncPrePro()
 
 Local lRet := .T.
@@ -124,6 +125,13 @@ Private oJson 	:= JsonObject():New()
 	EndIf
 
 	If lRet 
+		If Empty(self:c_IdFlui)
+			SetRestFault(403, "Parametro obrigatorio vazio. (Id do Fluig)")
+			lRet := .F.
+		EndIf
+	EndIf
+
+	If lRet 
 
 		cCusBri := ""
 		if ValType(oJson['custo']) != "U"
@@ -138,6 +146,8 @@ Private oJson 	:= JsonObject():New()
 		For nX := 1 to Len(aFields)
 			If aFields[nX] == "ZA_CODIGO"
 				aAdd(aCabec, {aFields[nX], self:cCodPreP, Nil})
+			ElseIf aFields[nX] == "ZA_IDFLUIG"
+				aAdd(aCabec, {aFields[nX], self:c_IdFlui, Nil})
 			Else		
 				If X3Uso(GetSx3Cache(aFields[nX],"X3_USADO"))
 
