@@ -51,8 +51,9 @@ WSRESTFUL PIWSEPRE DESCRIPTION "Serviço REST - Efetiva pre-produtos" FORMAT "app
 	WSDATA c_CodPre 	AS STRING OPTIONAL
 	WSDATA c_CodPro 	AS STRING OPTIONAL
 	WSDATA c_IdFlui	 	AS STRING OPTIONAL
+	WSDATA c_FilPro	 	AS STRING OPTIONAL //Filial produtiva.
 
-	WSMETHOD POST DESCRIPTION "Recebe dados e efetiva pre-produtos incluindo produto." WSSYNTAX "/PIWSEPRE?c_CodPre={param},c_CodPro={param},c_IdFlui={param}" //PATH "incluiCotacao" 
+	WSMETHOD POST DESCRIPTION "Recebe dados e efetiva pre-produtos incluindo produto." WSSYNTAX "/PIWSEPRE?c_CodPre={param},c_CodPro={param},c_IdFlui={param},c_FilPro={param}" //PATH "incluiCotacao" 
 	
 
 END WSRESTFUL
@@ -74,8 +75,8 @@ Data       	|Desenvolvedor    |Motivo
 ------------+-----------------+--------------------------------------------------------------
 /*/
 //----------------------------------------------------------------------------------------------
-WSMETHOD POST WSRECEIVE c_CodPre,c_CodPro,c_IdFlui WSSERVICE PIWSEPRE
-//User Function fIncPre()
+//WSMETHOD POST WSRECEIVE c_CodPre,c_CodPro,c_IdFlui,c_FilPro WSSERVICE PIWSEPRE
+User Function fIncPre()
 
     Local cTabela   := "SB1"
     Local aCabec    := {}
@@ -94,6 +95,9 @@ WSMETHOD POST WSRECEIVE c_CodPre,c_CodPro,c_IdFlui WSSERVICE PIWSEPRE
 	Local aAuxSB1:= {}
 	Local nPos := 0
 	Local cCodSeq := ""
+	Local cPrdSimi := ""
+	Local aRet := {}
+	Local cBody := ""
     Private lMsErroAuto := .F.
 	Private oModel      := Nil
 	Private aRotina     := {}
@@ -103,18 +107,21 @@ WSMETHOD POST WSRECEIVE c_CodPre,c_CodPro,c_IdFlui WSSERVICE PIWSEPRE
 	Private lMsHelpAuto   := .F.
 	Private lAutoErrNoFile:= .T.
 
-	/*DEFAULT c_fil := "01"
+	//DEFAULT c_fil := "01"
 	DEFAULT c_CodPre := "61383"
-	DEFAULT c_CodPro := ""
+	DEFAULT c_CodPro := "TSTLNT2"
+	DEFAULT c_filPro := "010025"
+	DEFAULT c_IdFlui := "00000003"
 
-	RpcSetEnv("01","010001","pontoini","Mudar.2023")*/
+	RpcSetEnv("01","010001","pontoini","Mudar.2023")
 
 	//aArea     := FWGetArea()
 	
+	Begin Transaction 
 
 	SZA->(dbSetOrder(1))
-	If !SZA->(dbSeek(xFilial("SZA")+self:c_CodPre))
-		SetRestFault(403, "Pre-produto nao encontrado: " + self:c_CodPre)
+	If !SZA->(dbSeek(xFilial("SZA")+/*self:*/c_CodPre))
+		SetRestFault(403, "Pre-produto nao encontrado: " + /*self:*/c_CodPre)
 		lRet := .F.
 	Else
 
@@ -122,18 +129,20 @@ WSMETHOD POST WSRECEIVE c_CodPre,c_CodPro,c_IdFlui WSSERVICE PIWSEPRE
 
 			SB1->(dbSetOrder(1))
 			SB1->(dbSeek(xFilial("SB1")+SZA->ZA_PRDSIMI))
+
+			cPrdSimi := SZA->ZA_PRDSIMI
 			
 			//--Faz a busca do codigo sequencial ou não, dependendo do grupo do produto e faz validações.
 			If Posicione("SBM",1,xFilial("SBM") + SB1->B1_GRUPO,"BM_ZCODAUT") == '1' 
-				If Empty(self:c_CodPro)
+				If Empty(/*self:*/c_CodPro)
 					cCodSeq := U_TIVRO061("SB1","B1_COD",4,7,SB1->B1_GRUPO)  
 				Else
 					SetRestFault(403, "Codigo do produto a ser gerado mao deve ser informado para grupo de produto que gera codigo automaticamente!")
 					lRet := .F.
 				EndIf
 			Else
-				If !Empty(self:c_CodPro)
-					cCodSeq := self:c_CodPro
+				If !Empty(/*self:*/c_CodPro)
+					cCodSeq := /*self:*/c_CodPro
 				Else
 					SetRestFault(403, "Codigo do produto a ser gerado nao informado (c_CodPro) ")
 					lRet := .F.
@@ -170,24 +179,37 @@ WSMETHOD POST WSRECEIVE c_CodPre,c_CodPro,c_IdFlui WSSERVICE PIWSEPRE
 			EndIf
 
 			If lRet 
-				If Empty(self:c_CodPre)
-				//If Empty(c_CodPre)
+				//If Empty(self:c_CodPre)
+				If Empty(c_CodPre)
 					SetRestFault(403, "Parametro obrigatorio vazio. (Codigo pre-produto)")
 					lRet := .F.
 				EndIf
 			EndIf
 
 			If lRet 
-				If Empty(self:c_IdFlui)
-				//If Empty(c_IdFlui)
+				//If Empty(self:c_IdFlui)
+				If Empty(c_IdFlui)
 					SetRestFault(403, "Parametro obrigatorio vazio. (Id do Fluig)")
 					lRet := .F.
 				EndIf
 			EndIf
 
+			if lRet
+				If Empty(/*self:*/c_FilPro) .and. !Empty(SB1->B1_ZKITACE)
+				//If Empty(c_IdFlui)
+					SetRestFault(403, "Parametro obrigatorio vazio para produto que criga estrutura. (Filial produtiva)")
+					lRet := .F.
+				EndIf
+			EndIf
+
+
 			If lRet 
 
-				cFilAnt := "010001"
+				If !Empty(/*self:*/c_FilPro)
+					cFilAnt := /*self:*/c_FilPro
+				Else
+					cFilAnt := "010001"
+				EndIf
 				cEmpAnt	:= substr(cFilAnt,1,2)
 				SM0->(dbSetOrder(1))
 				SM0->(DbSeek(cEmpAnt+cFilAnt))
@@ -202,8 +224,8 @@ WSMETHOD POST WSRECEIVE c_CodPre,c_CodPro,c_IdFlui WSSERVICE PIWSEPRE
 				cBody += '"B1_GRUPO" : "0002",'    
 				cBody += '"ZB1_PRDCUS" : "05"'    
 				cBody += ' }'*/
-				cBody := ::GetContent()
-				::SetContentType('application/json;charset=UTF-8')
+				/*cBody := ::GetContent()
+				::SetContentType('application/json;charset=UTF-8')*/
 				If !Empty(cBody)
 					cRet := oJsonRec:FromJson(cBody)
 					If ValType(cRet) == "C"
@@ -254,7 +276,7 @@ WSMETHOD POST WSRECEIVE c_CodPre,c_CodPro,c_IdFlui WSSERVICE PIWSEPRE
 					aErroExec := GetAutoGRLog() //Buscar o erro reportado pelo execauto
 					For nX := 1 To Len(aErroExec)
 						cLogMsg += aErroExec[nX]+ Chr(13) + Chr(10)
-					Next xI
+					Next nX
 					lErro := .T.
 				Else
 
@@ -276,6 +298,7 @@ WSMETHOD POST WSRECEIVE c_CodPre,c_CodPro,c_IdFlui WSSERVICE PIWSEPRE
 					Next nX
 
 					//--Atualiza ZB1 com informações passadas via integração.
+					cCodPro := SB1->B1_COD
 					aEmp := {"01","09"}
 					If !Empty(aComPro)
 						aEmp := {"01","09"}
@@ -286,7 +309,7 @@ WSMETHOD POST WSRECEIVE c_CodPre,c_CodPro,c_IdFlui WSSERVICE PIWSEPRE
 									For nX := 1 To Len(aComPro)
 										ZB1->&(aComPro[nX][1]) :=aComPro[nX][2]
 									Next nX 
-									ZB1->ZB1_IDFLUI := self:c_IdFlui
+									ZB1->ZB1_IDFLUI := /*self:*/c_IdFlui
 								ZB1->(MsUnLock())
 							Else
 								RecLock("ZB1",.T.)
@@ -298,10 +321,10 @@ WSMETHOD POST WSRECEIVE c_CodPre,c_CodPro,c_IdFlui WSSERVICE PIWSEPRE
 									For nX := 1 To Len(aComPro)
 										ZB1->&(aComPro[nX][1]) :=aComPro[nX][2]
 									Next nX 
-									ZB1_IDFLUI := self:c_IdFlui
+									ZB1_IDFLUI := /*self:*/c_IdFlui
 								ZB1->(MsUnLock())
 							EndIf
-							cCodPro := SB1->B1_COD
+							
 						Next nY 
 					EndIf
 
@@ -310,7 +333,7 @@ WSMETHOD POST WSRECEIVE c_CodPre,c_CodPro,c_IdFlui WSSERVICE PIWSEPRE
 						SB1->(dbSetOrder(1))
 						If SB1->(dbSeek(AvKey(aEmp[nY],"B1_FILIAL")+cCodPro))
 							RecLock("SB1",.F.)
-								B1_ZPREPRD := self:c_CodPre
+								B1_ZPREPRD := /*self:*/c_CodPre
 							SB1->(MsUnLock())
 						EndIf
 					Next nY
@@ -330,25 +353,220 @@ WSMETHOD POST WSRECEIVE c_CodPre,c_CodPro,c_IdFlui WSSERVICE PIWSEPRE
 					SetRestFault(403, StrTran( cLogMsg, CHR(13)+CHR(10), " " ))
 					lRet := .F.
 				Else
-					oJson1['status'] 		:= "200"
-					oJson1['mensagem'] 		:= "Sucesso na efetivacao do pre-produto!"	
 
-					//--Retorno ao json
-					::SetResponse(oJson1)
-					lRet := .T.
+					SB1->(dbSetOrder(1))
+					if SB1->(dbSeek(xFilial("SB1")+cPrdSimi))
+						If !Empty(SB1->B1_ZKITACE)
+
+							aRet := fPrdFan(aCabec,"6"+substring(cPrdSimi,2,len(cPrdSimi)),c_FilPro)
+
+							If aRet[1] //--Se Erro
+							
+								cLogMsg += aRet[2]
+								SetRestFault(403, StrTran( cLogMsg, CHR(13)+CHR(10), " " ))
+								lRet := .F.
+								lErro := .T.
+								DisarmTransaction()
+							EndIf
+
+						Else
+							
+						EndIf
+					Else
+						
+
+					EndIf
+					
+					if !lErro
+
+						oJson1['status'] 		:= "200"
+						oJson1['mensagem'] 		:= "Sucesso na efetivacao do pre-produto!"	
+
+						//--Retorno ao json
+						//::SetResponse(oJson1)
+						//lRet := .T.
+
+					EndIf
+
 				EndIf
 
 			EndIf
 
 		Else
-			SetRestFault(403, "Pre-produto "+AllTrim(self:c_CodPre)+" ja efetivado")
+			SetRestFault(403, "Pre-produto "+AllTrim(/*self:*/c_CodPre)+" ja efetivado")
 			lRet := .F.
 		EndIf
 
 	EndIf
 
+
+	End Transaction 
+
     //FWRestArea(aArea)
 
-	//RpcClearEnv()
+	RpcClearEnv()
 
 Return(lRet)
+
+
+Static Function fPrdFan(aCabec,cPrdSimi,c_FilPro)
+
+Local lErro := .F.
+Local aErroExec :={}
+Local cLogMsg := ""
+Local nX := 0
+Local cProd := ""
+Local aRet := {}
+Local nOpcao := MODEL_OPERATION_INSERT
+Private lMsErroAuto := .F.
+Private oModel      := Nil
+Private aRotina     := {}
+Private INCLUI      := .T.
+Private ALTERA      := .F.
+Private l010Auto    := .T.
+Private lMsHelpAuto   := .F.
+Private lAutoErrNoFile:= .T.
+
+	aCabec[aScan(aCabec,{|x|AllTrim(x[1])=="B1_COD"})][2] := "6"+substring(aCabec[aScan(aCabec,{|x|AllTrim(x[1])=="B1_COD"})][2],2,len(aCabec[aScan(aCabec,{|x|AllTrim(x[1])=="B1_COD"})][2]))
+
+	aAdd(aCabec, {"B1_FANTASM","S", Nil})	
+
+	aCabec := FWVetByDic( aCabec, 'SB1' )
+
+	oModel := FwLoadModel ("MATA010")
+	SetFunName("MATA010")
+
+	//Chamando a inclusão - Modelo 1
+	lMsErroAuto := .F.
+		
+	FWMVCRotAuto( oModel,"SB1",nOpcao,{{"SB1MASTER", aCabec}})
+			
+	//Se houve erro no ExecAuto, mostra mensagem
+	If lMsErroAuto
+		aErroExec := GetAutoGRLog() //Buscar o erro reportado pelo execauto
+		cLogMsg += "Erro na criação do produto fantasma"+Chr(13) + Chr(10)
+		For nX := 1 To Len(aErroExec)
+			cLogMsg += aErroExec[nX]+ Chr(13) + Chr(10)
+		Next nX
+		lErro := .T.
+	Else
+
+		cProd := aCabec[aScan(aCabec,{|x|AllTrim(x[1])=="B1_COD"})][2] 
+		//Incluo Estrutura do produto fantasma de acordo com produto similar.
+		aRet := fIncEst(cProd,cPrdSimi,c_FilPro)
+
+		If aRet[1] //--Se Erro
+			cLogMsg += aRet[2]
+			lRet := .F.
+			lErro := .T.
+			DisarmTransaction()
+		EndIf
+
+	EndIf
+
+Return({lErro,cLogMsg})
+
+
+
+Static Function fIncEst(cProd,cPrdSimi,c_FilPro)
+
+Local cQuery 	:= ""
+Local cAlias 	:= GetNextAlias()
+Local aCabec 	:={}
+Local aComp 	:= {}
+Local aGets 	:= {}
+Local lErro 	:= .F.
+Local aErroExec :={}
+Local cLogMsg 	:= ""
+Local nX 		:= 0
+Local cFili := ""
+Private lMsErroAuto := .F.
+Private lMsHelpAuto   := .F.
+Private lAutoErrNoFile:= .T.
+
+cQuery := "SELECT * FROM "+RetSqlName("SG1")+" SG1 " 
+cQuery += "WHERE G1_COD = '"+cPrdSimi+"' "
+cQuery += "AND G1_FILIAL =  '"+c_FilPro+"' "
+cQuery += "AND SG1.D_E_L_E_T_ <> '*' "
+
+dbUseArea(.T., "TOPCONN", TCGenQry(,,cQuery), cAlias, .T., .T.)	
+ 
+aCabec := {{"G1_COD",cProd,NIL},;
+            {"G1_QUANT",1,NIL},;
+            {"NIVALT","S",NIL}} // A variavel NIVALT eh utilizada pra recalcular ou nao a estrutura
+
+(cAlias)->(dbGoTop())
+If !(cAlias)->(Eof())
+	cFili := (cAlias)->G1_FILIAL
+	While !(cAlias)->(Eof()) .AND. cFili == (cAlias)->G1_FILIAL
+
+		aGets := {}
+		aadd(aGets,{"G1_COD",cProd,NIL})
+		aadd(aGets,{"G1_COMP",(cAlias)->G1_COMP,NIL})
+		aadd(aGets,{"G1_TRT",(cAlias)->G1_TRT,NIL})
+		aadd(aGets,{"G1_QUANT",(cAlias)->G1_QUANT,NIL})
+		aadd(aGets,{"G1_PERDA",(cAlias)->G1_PERDA,NIL})
+		aadd(aGets,{"G1_INI",(cAlias)->G1_ININIL})
+		aadd(aGets,{"G1_FIM",(cAlias)->G1_FIM,NIL})
+		aadd(aComp,aGets)
+
+		(cAlias)->(dbSkip())
+	EndDo 
+EndIf
+
+(cAlias)->(dbCloseArea())
+
+If Empty(aComp)
+
+	cAlias := GetNextALias()
+	cQuery := "SELECT * FROM "+RetSqlName("SG1")+" SG1 " 
+	cQuery += "WHERE G1_COD = '"+cPrdSimi+"' "
+	cQuery += "AND SG1.D_E_L_E_T_ <> '*' "
+
+	dbUseArea(.T., "TOPCONN", TCGenQry(,,cQuery), cAlias, .T., .T.)	
+
+	(cAlias)->(dbGoTop())
+	If !(cAlias)->(Eof())
+		cFili := (cAlias)->G1_FILIAL
+		While !(cAlias)->(Eof()) .AND. cFili == (cAlias)->G1_FILIAL
+
+			aGets := {}
+			aadd(aGets,{"G1_COD",cProd,NIL})
+			aadd(aGets,{"G1_COMP",(cAlias)->G1_COMP,NIL})
+			aadd(aGets,{"G1_TRT",(cAlias)->G1_TRT,NIL})
+			aadd(aGets,{"G1_QUANT",(cAlias)->G1_QUANT,NIL})
+			aadd(aGets,{"G1_PERDA",(cAlias)->G1_PERDA,NIL})
+			aadd(aGets,{"G1_INI",(cAlias)->G1_INI,NIL})
+			aadd(aGets,{"G1_FIM",(cAlias)->G1_FIM,NIL})
+			aadd(aComp,aGets)
+
+			(cAlias)->(dbSkip())
+		EndDo 
+	EndIf
+	(cAlias)->(dbCloseArea())
+
+EndIf
+
+If !Empty(aComp)
+ 
+	MSExecAuto({|x,y,z| mata200(x,y,z)},aCabec,aComp,3)
+
+	If lMsErroAuto
+		aErroExec := GetAutoGRLog() //Buscar o erro reportado pelo execauto
+		cLogMsg += "Erro na criação da estrutura do produto fantasma"+Chr(13) + Chr(10)
+		For nX := 1 To Len(aErroExec)
+			cLogMsg += aErroExec[nX]+ Chr(13) + Chr(10)
+		Next nX
+		lErro := .T.
+	Else
+	EndIf
+
+Else
+
+	cLogMsg += "Não encontrado estrutura de produto similar"
+	lErro := .T.
+
+EndIf
+
+Return({lErro,cLogMsg})
+
