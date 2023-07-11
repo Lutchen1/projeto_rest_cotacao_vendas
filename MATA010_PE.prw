@@ -1007,8 +1007,8 @@ Return(Nil)
 |Alterado por: Lutchen Oliveira 	Data: 02/12/2022
 |Descrição: Alterado para incluir ZB1 quando status for liberado.
 |-------------------------------------------------------------------------------->
-|Alterado por: 		Data:   /  /
-|Descrição:
+|Alterado por: Lutchen Oliveira  	Data: 11/07/2023
+|Descrição: Trazendo efetivação do pré-produto para a alteração do produto também.
 \*------------------------------------------------------------------------------*/
 Static Function TIVALTERACAO(aFiliais)
 	//If M->B1_ZSTATUS <> SB1->B1_ZSTATUS
@@ -1025,6 +1025,20 @@ Static Function TIVALTERACAO(aFiliais)
 	If M->B1_MSBLQL == "2".And. M->B1_RASTRO == "L"
 		TIVINCB5(aFiliais)
 	EndIf
+
+	//-- LTN - 11/07/2023 - Trazendo efetivação do pré-produto para a alteração do produto também.
+	If !Empty(SB1->B1_ZPREPRD) //-- IR -- Se tiver Pré-produto amarrado. Grava efetivação na SZA (Pré-Produto)
+		SZA->(dbSetOrder(1))
+		If SZA->(dbSeek(xFilial("SZA") + SB1->B1_ZPREPRD))
+			If Empty(SZA->ZA_PRDEFET) //Dayvid Nogueira - 08/07/2020 Inclusão da Validação para incluir o Codigo do produto somente se o campo estiver vazio.
+				Reclock("SZA",.F.)
+				Replace SZA->ZA_PRDEFET With SB1->B1_COD
+				Replace SZA->ZA_DTEFETI With dDataBase
+				SZA->(MsUnLock())
+			EndIF
+		EndIf
+	EndIf
+
 Return()
 
 /*------------------------------------------------------------------------------*\

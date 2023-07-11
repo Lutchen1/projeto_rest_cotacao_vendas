@@ -490,7 +490,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{ \r\n\"B1_GRUPO\" : \"0002\",   \r\n\"ZB1_PRDCUS\" : \"05\" \r\n}",
+					"raw": "{ \r\n\"B1_GRUPO\" : \"0002\",\r\n\"ZB1_PRDCUS\" : \"05\",\r\n\"EMB1\" : \"9190014\"\r\n}\r\n\r\n//caso deseje colocar mais embalagens colocar EMB2, EMB3 ...",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -498,7 +498,7 @@
 					}
 				},
 				"url": {
-					"raw": "http://192.168.4.192:8064/rest/PIWSEPRE?c_CodPre=123456&c_CodPro=TESTELT7&c_IdFlui=00000001",
+					"raw": "http://192.168.4.192:8064/rest/PIWSEPRE?c_CodPre=61383&c_CodPro=TSTLNT2&c_FilPro=010025&c_IdFlui=00000003",
 					"protocol": "http",
 					"host": [
 						"192",
@@ -514,15 +514,19 @@
 					"query": [
 						{
 							"key": "c_CodPre",
-							"value": "123456"
+							"value": "61383"
 						},
 						{
 							"key": "c_CodPro",
-							"value": "TESTELT7"
+							"value": "TSTLNT2"
+						},
+						{
+							"key": "c_FilPro",
+							"value": "010025"
 						},
 						{
 							"key": "c_IdFlui",
-							"value": "00000001"
+							"value": "00000003"
 						}
 					]
 				}
