@@ -631,7 +631,7 @@ cQuery += "AND SG1.D_E_L_E_T_ <> '*' "
 dbUseArea(.T., "TOPCONN", TCGenQry(,,cQuery), cAlias, .T., .T.)	
  
 aCabec := {{"G1_COD",cProd,NIL},;
-            {"G1_QUANT",1,NIL},;
+            {"G1_QUANT",100,NIL},;
             {"NIVALT","S",NIL}} // A variavel NIVALT eh utilizada pra recalcular ou nao a estrutura
 
 (cAlias)->(dbGoTop())
