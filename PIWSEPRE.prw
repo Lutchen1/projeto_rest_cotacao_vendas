@@ -75,8 +75,8 @@ Data       	|Desenvolvedor    |Motivo
 ------------+-----------------+--------------------------------------------------------------
 /*/
 //----------------------------------------------------------------------------------------------
-//WSMETHOD POST WSRECEIVE c_CodPre,c_CodPro,c_IdFlui,c_FilPro WSSERVICE PIWSEPRE
-User Function fIncPre()
+WSMETHOD POST WSRECEIVE c_CodPre,c_CodPro,c_IdFlui,c_FilPro WSSERVICE PIWSEPRE
+//User Function fIncPre()
 
     Local cTabela   := "SB1"
     Local aCabec    := {}
@@ -98,6 +98,10 @@ User Function fIncPre()
 	Local cPrdSimi := ""
 	Local aRet := {}
 	Local cBody := ""
+	Local cUmPSim := ""
+	Local cUmPKit := ""
+	Local aEmb := {}
+	Local cCodPro := ""
     Private lMsErroAuto := .F.
 	Private oModel      := Nil
 	Private aRotina     := {}
@@ -113,15 +117,15 @@ User Function fIncPre()
 	DEFAULT c_filPro := "010025"
 	DEFAULT c_IdFlui := "00000003"
 
-	RpcSetEnv("01","010001","pontoini","Mudar.2023")
+	//RpcSetEnv("01","010001","pontoini","Mudar.2023")
 
-	//aArea     := FWGetArea()
+	aArea     := FWGetArea()
 	
 	Begin Transaction 
 
 	SZA->(dbSetOrder(1))
-	If !SZA->(dbSeek(xFilial("SZA")+/*self:*/c_CodPre))
-		SetRestFault(403, "Pre-produto nao encontrado: " + /*self:*/c_CodPre)
+	If !SZA->(dbSeek(xFilial("SZA")+self:c_CodPre))
+		SetRestFault(403, "Pre-produto nao encontrado: " + self:c_CodPre)
 		lRet := .F.
 	Else
 
@@ -134,15 +138,15 @@ User Function fIncPre()
 			
 			//--Faz a busca do codigo sequencial ou não, dependendo do grupo do produto e faz validações.
 			If Posicione("SBM",1,xFilial("SBM") + SB1->B1_GRUPO,"BM_ZCODAUT") == '1' 
-				If Empty(/*self:*/c_CodPro)
+				If Empty(self:c_CodPro)
 					cCodSeq := U_TIVRO061("SB1","B1_COD",4,7,SB1->B1_GRUPO)  
 				Else
 					SetRestFault(403, "Codigo do produto a ser gerado mao deve ser informado para grupo de produto que gera codigo automaticamente!")
 					lRet := .F.
 				EndIf
 			Else
-				If !Empty(/*self:*/c_CodPro)
-					cCodSeq := /*self:*/c_CodPro
+				If !Empty(self:c_CodPro)
+					cCodSeq := self:c_CodPro
 				Else
 					SetRestFault(403, "Codigo do produto a ser gerado nao informado (c_CodPro) ")
 					lRet := .F.
@@ -179,23 +183,23 @@ User Function fIncPre()
 			EndIf
 
 			If lRet 
-				//If Empty(self:c_CodPre)
-				If Empty(c_CodPre)
+				If Empty(self:c_CodPre)
+				//If Empty(c_CodPre)
 					SetRestFault(403, "Parametro obrigatorio vazio. (Codigo pre-produto)")
 					lRet := .F.
 				EndIf
 			EndIf
 
 			If lRet 
-				//If Empty(self:c_IdFlui)
-				If Empty(c_IdFlui)
+				If Empty(self:c_IdFlui)
+				//If Empty(c_IdFlui)
 					SetRestFault(403, "Parametro obrigatorio vazio. (Id do Fluig)")
 					lRet := .F.
 				EndIf
 			EndIf
 
 			if lRet
-				If Empty(/*self:*/c_FilPro) .and. !Empty(SB1->B1_ZKITACE)
+				If Empty(self:c_FilPro) .and. !Empty(SB1->B1_ZKITACE)
 				//If Empty(c_IdFlui)
 					SetRestFault(403, "Parametro obrigatorio vazio para produto que criga estrutura. (Filial produtiva)")
 					lRet := .F.
@@ -205,8 +209,8 @@ User Function fIncPre()
 
 			If lRet 
 
-				If !Empty(/*self:*/c_FilPro)
-					cFilAnt := /*self:*/c_FilPro
+				If !Empty(self:c_FilPro)
+					cFilAnt := self:c_FilPro
 				Else
 					cFilAnt := "010001"
 				EndIf
@@ -222,10 +226,12 @@ User Function fIncPre()
 				//Campos vindo do webservice para substituir do array principal.
 				/*cBody := '{ '
 				cBody += '"B1_GRUPO" : "0002",'    
-				cBody += '"ZB1_PRDCUS" : "05"'    
+				cBody += '"ZB1_PRDCUS" : "05",'
+				cBody += '"EMB1" : "9190014"'    
+				//cBody += '"EMB2" : "05"'    
 				cBody += ' }'*/
-				/*cBody := ::GetContent()
-				::SetContentType('application/json;charset=UTF-8')*/
+				cBody := ::GetContent()
+				::SetContentType('application/json;charset=UTF-8')
 				If !Empty(cBody)
 					cRet := oJsonRec:FromJson(cBody)
 					If ValType(cRet) == "C"
@@ -309,7 +315,7 @@ User Function fIncPre()
 									For nX := 1 To Len(aComPro)
 										ZB1->&(aComPro[nX][1]) :=aComPro[nX][2]
 									Next nX 
-									ZB1->ZB1_IDFLUI := /*self:*/c_IdFlui
+									ZB1->ZB1_IDFLUI := self:c_IdFlui
 								ZB1->(MsUnLock())
 							Else
 								RecLock("ZB1",.T.)
@@ -321,7 +327,7 @@ User Function fIncPre()
 									For nX := 1 To Len(aComPro)
 										ZB1->&(aComPro[nX][1]) :=aComPro[nX][2]
 									Next nX 
-									ZB1_IDFLUI := /*self:*/c_IdFlui
+									ZB1_IDFLUI := self:c_IdFlui
 								ZB1->(MsUnLock())
 							EndIf
 							
@@ -333,7 +339,7 @@ User Function fIncPre()
 						SB1->(dbSetOrder(1))
 						If SB1->(dbSeek(AvKey(aEmp[nY],"B1_FILIAL")+cCodPro))
 							RecLock("SB1",.F.)
-								B1_ZPREPRD := /*self:*/c_CodPre
+								B1_ZPREPRD := self:c_CodPre
 							SB1->(MsUnLock())
 						EndIf
 					Next nY
@@ -355,21 +361,73 @@ User Function fIncPre()
 				Else
 
 					SB1->(dbSetOrder(1))
-					if SB1->(dbSeek(xFilial("SB1")+cPrdSimi))
+					If SB1->(dbSeek(xFilial("SB1")+cPrdSimi))
 						If !Empty(SB1->B1_ZKITACE)
 
-							aRet := fPrdFan(aCabec,"6"+substring(cPrdSimi,2,len(cPrdSimi)),c_FilPro)
-
-							If aRet[1] //--Se Erro
+							cUmPSim := SB1->B1_UM
 							
-								cLogMsg += aRet[2]
-								SetRestFault(403, StrTran( cLogMsg, CHR(13)+CHR(10), " " ))
+							SB1->(dbSetOrder(1))
+							If SB1->(dbSeek(xFilial("SB1")+SB1->B1_ZKITACE))
+								cUmPKit := SB1->B1_UM
+							EndIf
+
+							If cUmPSim != cUmPKit
+								SetRestFault(403, "Unidade de medida divergente do similar comparado ao kit acessorio vinculado a ele!")
 								lRet := .F.
 								lErro := .T.
+							Else
+								SB1->(dbSetOrder(1))
+								aFields := {"EMB1","EMB2","EMB3","EMB4","EMB5","EMB6","EMB7","EMB8","EMB9"}
+								For nX := 1 to Len(aFields)
+									IF VALTYPE(oJsonRec[aFields[nX]]) != "U"
+										
+										If SB1->(dbSeek(xFilial("SB1")+oJsonRec[aFields[nX]]))
+											If SB1->B1_GRUPO == '0121'
+												aadd(aEmb,{oJsonRec[aFields[nX]]})
+											Else
+												SetRestFault(403, "Codigo informado "+AllTrim(aFields[nX])+" nao e uma embalagem! Verifique!")
+												lRet := .F.
+												lErro := .T.
+											EndIf
+										Else
+											SetRestFault(403, "Embalagem não encontrada!")
+											lRet := .F.
+											lErro := .T.
+										EndIf
+									EndIf
+								Next nX
+							EndIf
+
+							If lRet
+
+								aRet := fPrdFan(aCabec,"6"+substring(cPrdSimi,2,len(cPrdSimi)),c_FilPro,aEmb,aComPro)
+
+								If aRet[1] //--Se Erro
+								
+									cLogMsg += aRet[2]
+									SetRestFault(403, StrTran( cLogMsg, CHR(13)+CHR(10), " " ))
+									lRet := .F.
+									lErro := .T.
+									DisarmTransaction()
+
+								Else
+									//--Posiciono no produto principal.
+									aEmp := {"01","09"}
+									For nY := 1 to Len(aEmp)
+										If SB1->(dbSeek(AvKey(aEmp[nY],"B1_FILIAL")+cCodPro))
+											Reclock("SB1",.F.)
+												SB1->B1_ZKITACE := aRet[3] //--Gravo produto fantasma como kit acessório do produto principal criado.
+											SB1->(MsUnLock())
+										EndIf
+									Next nY 
+								EndIf
+
+							Else
 								DisarmTransaction()
 							EndIf
 
-						Else
+						Else							
+							
 							
 						EndIf
 					Else
@@ -383,8 +441,8 @@ User Function fIncPre()
 						oJson1['mensagem'] 		:= "Sucesso na efetivacao do pre-produto!"	
 
 						//--Retorno ao json
-						//::SetResponse(oJson1)
-						//lRet := .T.
+						::SetResponse(oJson1)
+						lRet := .T.
 
 					EndIf
 
@@ -393,7 +451,7 @@ User Function fIncPre()
 			EndIf
 
 		Else
-			SetRestFault(403, "Pre-produto "+AllTrim(/*self:*/c_CodPre)+" ja efetivado")
+			SetRestFault(403, "Pre-produto "+AllTrim(self:c_CodPre)+" ja efetivado")
 			lRet := .F.
 		EndIf
 
@@ -402,30 +460,51 @@ User Function fIncPre()
 
 	End Transaction 
 
-    //FWRestArea(aArea)
+    FWRestArea(aArea)
 
-	RpcClearEnv()
+	//RpcClearEnv()
 
 Return(lRet)
 
+//-----------------------------------------------------------------------------------------------
+/*/
+{Protheus.doc} fPrdFan
+Função para criação do produto fantasma.
+@author		.iNi Sistemas
+@since     	10/07/2023
+@version  	P.12
+@param 		aCabec - Cabeçalho para criação do produto fantasma.
+@param 		cPrdSimi - Código do produto similar.
+@param 		c_FilPro - Filial de produção.
+@param 		aEmb - Embalagems passadas pela integração.
+@param 		aComPro - campos passados para substituição na ZB1.
+@return    	lErro - Retorna se deu erro de execução.
 
-Static Function fPrdFan(aCabec,cPrdSimi,c_FilPro)
+Alterações Realizadas desde a Estruturação Inicial
+------------+-----------------+--------------------------------------------------------------
+Data       	|Desenvolvedor    |Motivo
+------------+-----------------+--------------------------------------------------------------
+/*/
+//----------------------------------------------------------------------------------------------
+Static Function fPrdFan(aCabec,cPrdSimi,c_FilPro,aEmb,aComPro)
 
-Local lErro := .F.
+Local lErro 	:= .F.
 Local aErroExec :={}
-Local cLogMsg := ""
-Local nX := 0
-Local cProd := ""
-Local aRet := {}
-Local nOpcao := MODEL_OPERATION_INSERT
-Private lMsErroAuto := .F.
-Private oModel      := Nil
-Private aRotina     := {}
-Private INCLUI      := .T.
-Private ALTERA      := .F.
-Private l010Auto    := .T.
-Private lMsHelpAuto   := .F.
-Private lAutoErrNoFile:= .T.
+Local cLogMsg 	:= ""
+Local nX 		:= 0
+Local cProd  	:= ""
+Local aRet 	 	:= {}
+Local nOpcao 	:= MODEL_OPERATION_INSERT
+Local nY 	 	:= 0
+Local cCodPro := ""
+Private lMsErroAuto 	:= .F.
+Private oModel      	:= Nil
+Private aRotina     	:= {}
+Private INCLUI      	:= .T.
+Private ALTERA      	:= .F.
+Private l010Auto    	:= .T.
+Private lMsHelpAuto   	:= .F.
+Private lAutoErrNoFile	:= .T.
 
 	aCabec[aScan(aCabec,{|x|AllTrim(x[1])=="B1_COD"})][2] := "6"+substring(aCabec[aScan(aCabec,{|x|AllTrim(x[1])=="B1_COD"})][2],2,len(aCabec[aScan(aCabec,{|x|AllTrim(x[1])=="B1_COD"})][2]))
 
@@ -451,24 +530,83 @@ Private lAutoErrNoFile:= .T.
 		lErro := .T.
 	Else
 
+	//--Atualiza ZB1 com informações passadas via integração.
+		cCodPro := SB1->B1_COD
+		aEmp := {"01","09"}
+		If !Empty(aComPro)
+			aEmp := {"01","09"}
+			For nY := 1 to Len(aEmp)
+				ZB1->(dbSetOrder(1))
+				If ZB1->(dbSeek(AvKey(aEmp[nY],"ZB1_FILIAL")+SB1->B1_COD))
+					RecLock("ZB1",.F.)
+						For nX := 1 To Len(aComPro)
+							ZB1->&(aComPro[nX][1]) :=aComPro[nX][2]
+						Next nX 
+						ZB1->ZB1_IDFLUI := self:c_IdFlui
+					ZB1->(MsUnLock())
+				Else
+					RecLock("ZB1",.T.)
+						ZB1_FILIAL :=SB1->B1_FILIAL
+						ZB1_COD := SB1->B1_COD
+						ZB1_DTSTAT := DDATABASE
+						ZB1_HRSTAT := TIME()
+						ZB1_USSTAT := cUserName
+						For nX := 1 To Len(aComPro)
+							ZB1->&(aComPro[nX][1]) :=aComPro[nX][2]
+						Next nX 
+						ZB1_IDFLUI := self:c_IdFlui
+					ZB1->(MsUnLock())
+				EndIf
+							
+			Next nY 
+		EndIf
+
+		//--Atualizo produto com a informação do pré-produto que foi efetivado e gerou o produto.
+		/*For nY := 1 to Len(aEmp)
+			SB1->(dbSetOrder(1))
+			If SB1->(dbSeek(AvKey(aEmp[nY],"B1_FILIAL")+cCodPro))
+				RecLock("SB1",.F.)
+					SB1->B1_ZPREPRD := self:c_CodPre
+				SB1->(MsUnLock())
+			EndIf
+		Next nY*/
+
 		cProd := aCabec[aScan(aCabec,{|x|AllTrim(x[1])=="B1_COD"})][2] 
 		//Incluo Estrutura do produto fantasma de acordo com produto similar.
-		aRet := fIncEst(cProd,cPrdSimi,c_FilPro)
+		aRet := fIncEst(cProd,cPrdSimi,c_FilPro,aEmb)
 
 		If aRet[1] //--Se Erro
 			cLogMsg += aRet[2]
 			lRet := .F.
 			lErro := .T.
-			DisarmTransaction()
+			//DisarmTransaction()
 		EndIf
 
 	EndIf
 
-Return({lErro,cLogMsg})
+Return({lErro,cLogMsg,cProd})
 
 
+//-----------------------------------------------------------------------------------------------
+/*/
+{Protheus.doc} fIncEst
+Função para inclusão de estrutura do produto fantasma que foi criado.
+@author		.iNi Sistemas
+@since     	10/07/2023
+@version  	P.12
+@param 		cProd - Código do produto fantasma
+@param 		cPrdSimi - Código do fantasma similar.
+@param 		c_FilPro - Filial de produção.
+@param 		aEmb - Embalagems passadas pela integração.
+@return    	lErro - Retorna se deu erro de execução.
 
-Static Function fIncEst(cProd,cPrdSimi,c_FilPro)
+Alterações Realizadas desde a Estruturação Inicial
+------------+-----------------+--------------------------------------------------------------
+Data       	|Desenvolvedor    |Motivo
+------------+-----------------+--------------------------------------------------------------
+/*/
+//----------------------------------------------------------------------------------------------
+Static Function fIncEst(cProd,cPrdSimi,c_FilPro,aEmb)
 
 Local cQuery 	:= ""
 Local cAlias 	:= GetNextAlias()
@@ -480,6 +618,7 @@ Local aErroExec :={}
 Local cLogMsg 	:= ""
 Local nX 		:= 0
 Local cFili := ""
+Local lGrvEmb := .F.
 Private lMsErroAuto := .F.
 Private lMsHelpAuto   := .F.
 Private lAutoErrNoFile:= .T.
@@ -500,15 +639,50 @@ If !(cAlias)->(Eof())
 	cFili := (cAlias)->G1_FILIAL
 	While !(cAlias)->(Eof()) .AND. cFili == (cAlias)->G1_FILIAL
 
-		aGets := {}
-		aadd(aGets,{"G1_COD",cProd,NIL})
-		aadd(aGets,{"G1_COMP",(cAlias)->G1_COMP,NIL})
-		aadd(aGets,{"G1_TRT",(cAlias)->G1_TRT,NIL})
-		aadd(aGets,{"G1_QUANT",(cAlias)->G1_QUANT,NIL})
-		aadd(aGets,{"G1_PERDA",(cAlias)->G1_PERDA,NIL})
-		aadd(aGets,{"G1_INI",(cAlias)->G1_ININIL})
-		aadd(aGets,{"G1_FIM",(cAlias)->G1_FIM,NIL})
-		aadd(aComp,aGets)
+		IF Empty(aEmb)
+
+			aGets := {}
+			aadd(aGets,{"G1_COD",cProd,NIL})
+			aadd(aGets,{"G1_COMP",(cAlias)->G1_COMP,NIL})
+			aadd(aGets,{"G1_TRT",(cAlias)->G1_TRT,NIL})
+			aadd(aGets,{"G1_QUANT",(cAlias)->G1_QUANT,NIL})
+			aadd(aGets,{"G1_PERDA",(cAlias)->G1_PERDA,NIL})
+			aadd(aGets,{"G1_INI",(cAlias)->G1_INI,NIL})
+			aadd(aGets,{"G1_FIM",(cAlias)->G1_FIM,NIL})
+			aadd(aComp,aGets)
+
+		Else
+			if SB1->(dbSeek(xFilial("SB1")+(cAlias)->G1_COMP))
+				if SB1->B1_GRUPO != '0121'
+
+					aGets := {}
+					aadd(aGets,{"G1_COD",cProd,NIL})
+					aadd(aGets,{"G1_COMP",(cAlias)->G1_COMP,NIL})
+					aadd(aGets,{"G1_TRT",(cAlias)->G1_TRT,NIL})
+					aadd(aGets,{"G1_QUANT",(cAlias)->G1_QUANT,NIL})
+					aadd(aGets,{"G1_PERDA",(cAlias)->G1_PERDA,NIL})
+					aadd(aGets,{"G1_INI",(cAlias)->G1_INI,NIL})
+					aadd(aGets,{"G1_FIM",(cAlias)->G1_FIM,NIL})
+					aadd(aComp,aGets)	
+
+				Else
+					if !lGrvEmb
+						For nX := 1 to Len(aEmb)
+							aGets := {}
+							aadd(aGets,{"G1_COD",cProd,NIL})
+							aadd(aGets,{"G1_COMP",aEmb[nX][1],NIL})
+							aadd(aGets,{"G1_TRT",(cAlias)->G1_TRT,NIL})
+							aadd(aGets,{"G1_QUANT",100,NIL})
+							aadd(aGets,{"G1_PERDA",(cAlias)->G1_PERDA,NIL})
+							aadd(aGets,{"G1_INI",(cAlias)->G1_INI,NIL})
+							aadd(aGets,{"G1_FIM",(cAlias)->G1_FIM,NIL})
+							aadd(aComp,aGets)	
+							lGrvEmb := .T.
+						Next nX
+					EndIf
+				EndIf
+			EndIf
+		EndIf
 
 		(cAlias)->(dbSkip())
 	EndDo 
@@ -530,15 +704,48 @@ If Empty(aComp)
 		cFili := (cAlias)->G1_FILIAL
 		While !(cAlias)->(Eof()) .AND. cFili == (cAlias)->G1_FILIAL
 
-			aGets := {}
-			aadd(aGets,{"G1_COD",cProd,NIL})
-			aadd(aGets,{"G1_COMP",(cAlias)->G1_COMP,NIL})
-			aadd(aGets,{"G1_TRT",(cAlias)->G1_TRT,NIL})
-			aadd(aGets,{"G1_QUANT",(cAlias)->G1_QUANT,NIL})
-			aadd(aGets,{"G1_PERDA",(cAlias)->G1_PERDA,NIL})
-			aadd(aGets,{"G1_INI",(cAlias)->G1_INI,NIL})
-			aadd(aGets,{"G1_FIM",(cAlias)->G1_FIM,NIL})
-			aadd(aComp,aGets)
+			If Empty(aEmb)
+				aGets := {}
+				aadd(aGets,{"G1_COD",cProd,NIL})
+				aadd(aGets,{"G1_COMP",(cAlias)->G1_COMP,NIL})
+				aadd(aGets,{"G1_TRT",(cAlias)->G1_TRT,NIL})
+				aadd(aGets,{"G1_QUANT",(cAlias)->G1_QUANT,NIL})
+				aadd(aGets,{"G1_PERDA",(cAlias)->G1_PERDA,NIL})
+				aadd(aGets,{"G1_INI",(cAlias)->G1_INI,NIL})
+				aadd(aGets,{"G1_FIM",(cAlias)->G1_FIM,NIL})
+				aadd(aComp,aGets)
+			Else
+				If SB1->(dbSeek(xFilial("SB1")+(cAlias)->G1_COMP))
+					if SB1->B1_GRUPO != '0121'			
+
+						aGets := {}
+						aadd(aGets,{"G1_COD",cProd,NIL})
+						aadd(aGets,{"G1_COMP",(cAlias)->G1_COMP,NIL})
+						aadd(aGets,{"G1_TRT",(cAlias)->G1_TRT,NIL})
+						aadd(aGets,{"G1_QUANT",(cAlias)->G1_QUANT,NIL})
+						aadd(aGets,{"G1_PERDA",(cAlias)->G1_PERDA,NIL})
+						aadd(aGets,{"G1_INI",(cAlias)->G1_INI,NIL})
+						aadd(aGets,{"G1_FIM",(cAlias)->G1_FIM,NIL})
+						aadd(aComp,aGets)	
+
+					Else
+						if !lGrvEmb
+							For nX := 1 to Len(aEmb)
+								aGets := {}
+								aadd(aGets,{"G1_COD",cProd,NIL})
+								aadd(aGets,{"G1_COMP",aEmb[nX][1],NIL})
+								aadd(aGets,{"G1_TRT",(cAlias)->G1_TRT,NIL})
+								aadd(aGets,{"G1_QUANT",100,NIL})
+								aadd(aGets,{"G1_PERDA",(cAlias)->G1_PERDA,NIL})
+								aadd(aGets,{"G1_INI",(cAlias)->G1_INI,NIL})
+								aadd(aGets,{"G1_FIM",(cAlias)->G1_FIM,NIL})
+								aadd(aComp,aGets)	
+								lGrvEmb := .T.
+							Next nX
+						EndIf
+					EndIf
+				EndIf
+			EndIf
 
 			(cAlias)->(dbSkip())
 		EndDo 
